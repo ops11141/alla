@@ -133,7 +133,7 @@ function getEntityText(entity) {
 
 
 // ==================================================
-// EXTRACT TEXT ENTITIES
+// EXTRACT NORMAL TEXT ENTITIES
 // ==================================================
 
 const textEntities = [];
@@ -183,6 +183,268 @@ for (const entity of entities) {
 
 console.log(
   `Text entities: ${textEntities.length}`
+);
+
+
+// ==================================================
+// EXTRACT RAW ATTRIB / ATTDEF FROM DXF
+//
+// بعض أسماء المحطات داخل الرسم قد تكون
+// محفوظة كـ AutoCAD Block Attributes
+// وليس TEXT أو MTEXT عادي.
+// ==================================================
+
+function extractRawAttributeEntities(dxfText) {
+
+  const lines =
+    dxfText.split(/\r?\n/);
+
+  const results = [];
+
+  let current = null;
+
+
+  function finish() {
+
+    if (!current) {
+      return;
+    }
+
+    const text =
+      cleanText(
+        current.text
+      );
+
+    if (!text) {
+      current = null;
+      return;
+    }
+
+    results.push({
+
+      type:
+        current.type,
+
+      text,
+
+      layer:
+        current.layer || null,
+
+      position: {
+
+        x:
+          current.x ?? null,
+
+        y:
+          current.y ?? null,
+
+        z:
+          current.z ?? null
+
+      }
+
+    });
+
+    current = null;
+
+  }
+
+
+  for (
+    let i = 0;
+    i < lines.length - 1;
+    i += 2
+  ) {
+
+    const code =
+      Number(
+        String(lines[i])
+          .trim()
+      );
+
+    const value =
+      String(
+        lines[i + 1]
+      ).trim();
+
+
+    // ----------------------------------------------
+    // بداية Entity جديدة
+    // ----------------------------------------------
+
+    if (code === 0) {
+
+      finish();
+
+      if (
+        value === "ATTRIB" ||
+        value === "ATTDEF"
+      ) {
+
+        current = {
+
+          type:
+            value,
+
+          text:
+            "",
+
+          layer:
+            null,
+
+          x:
+            null,
+
+          y:
+            null,
+
+          z:
+            null
+
+        };
+
+      }
+
+      continue;
+    }
+
+
+    if (!current) {
+      continue;
+    }
+
+
+    switch (code) {
+
+
+      // --------------------------------------------
+      // النص الأساسي
+      // --------------------------------------------
+
+      case 1:
+
+        current.text =
+          value;
+
+        break;
+
+
+      // --------------------------------------------
+      // نص إضافي
+      // --------------------------------------------
+
+      case 3:
+
+        if (!current.text) {
+
+          current.text =
+            value;
+
+        }
+        else {
+
+          current.text +=
+            value;
+
+        }
+
+        break;
+
+
+      // --------------------------------------------
+      // Layer
+      // --------------------------------------------
+
+      case 8:
+
+        current.layer =
+          value;
+
+        break;
+
+
+      // --------------------------------------------
+      // X
+      // --------------------------------------------
+
+      case 10:
+
+        current.x =
+          Number(value);
+
+        break;
+
+
+      // --------------------------------------------
+      // Y
+      // --------------------------------------------
+
+      case 20:
+
+        current.y =
+          Number(value);
+
+        break;
+
+
+      // --------------------------------------------
+      // Z
+      // --------------------------------------------
+
+      case 30:
+
+        current.z =
+          Number(value);
+
+        break;
+
+    }
+
+  }
+
+
+  finish();
+
+  return results;
+}
+
+
+const rawAttributeEntities =
+  extractRawAttributeEntities(
+    dxfText
+  );
+
+
+console.log(
+  `Raw ATTRIB/ATTDEF entities: ${
+    rawAttributeEntities.length
+  }`
+);
+
+
+// ==================================================
+// ADD RAW ATTRIBUTES
+// ==================================================
+
+for (
+  const entity of rawAttributeEntities
+) {
+
+  if (!entity.text) {
+    continue;
+  }
+
+  textEntities.push(
+    entity
+  );
+
+}
+
+
+console.log(
+  `Total text + attributes: ${
+    textEntities.length
+  }`
 );
 
 
@@ -263,7 +525,7 @@ function extractFeederNames(text) {
 // SUB-8
 // SUB 8
 // SUB#8
-// SUB-12
+// SUB8
 // ==================================================
 
 function extractStationNames(text) {
@@ -278,20 +540,74 @@ function extractStationNames(text) {
   const cleaned =
     cleanText(text);
 
-  const pattern =
-    /\bSUB\s*[-#]?\s*\d+\b/gi;
+
+  // ----------------------------------------------
+  // Standard station format
+  // ----------------------------------------------
+
+  const patterns = [
+
+    /\bSUB\s*[-#]?\s*\d+\b/gi,
+
+    /\bSUBSTATION\s*[-#]?\s*\d+\b/gi,
+
+    /\bSUB\s*[-#]?\s*[A-Z]+\d+\b/gi
+
+  ];
+
 
   for (
-    const match of cleaned.matchAll(pattern)
+    const pattern of patterns
   ) {
 
-    const value =
-      match[0]
-        .replace(/\s+/g, "")
-        .replace(/^SUB[-#]?/i, "SUB-")
-        .toUpperCase();
+    for (
+      const match of cleaned.matchAll(pattern)
+    ) {
 
-    results.add(value);
+      let value =
+        match[0]
+          .replace(/\s+/g, "")
+          .toUpperCase();
+
+
+      // SUB8 -> SUB-8
+      value =
+        value.replace(
+          /^SUB(\d+)$/i,
+          "SUB-$1"
+        );
+
+
+      // SUB#8 -> SUB-8
+      value =
+        value.replace(
+          /^SUB#/i,
+          "SUB-"
+        );
+
+
+      // SUB 8 -> SUB-8
+      value =
+        value.replace(
+          /^SUB(\d+)$/i,
+          "SUB-$1"
+        );
+
+
+      // SUBSTATION8 -> SUBSTATION-8
+      value =
+        value.replace(
+          /^SUBSTATION(\d+)$/i,
+          "SUBSTATION-$1"
+        );
+
+
+      results.add(
+        value
+      );
+
+    }
+
   }
 
   return [...results];
@@ -304,26 +620,35 @@ function extractStationNames(text) {
 
 const stationEntities = [];
 
-for (const entity of textEntities) {
+for (
+  const entity of textEntities
+) {
 
   if (!entity.position) {
     continue;
   }
 
   const names =
-    extractStationNames(entity.text);
+    extractStationNames(
+      entity.text
+    );
 
-  for (const name of names) {
+  for (
+    const name of names
+  ) {
 
     stationEntities.push({
 
       name,
 
-      x: entity.position.x,
+      x:
+        entity.position.x,
 
-      y: entity.position.y,
+      y:
+        entity.position.y,
 
-      z: entity.position.z,
+      z:
+        entity.position.z,
 
       layer:
         entity.layer || null,
@@ -334,17 +659,23 @@ for (const entity of textEntities) {
     });
 
   }
+
 }
 
+
 console.log(
-  `Station labels: ${stationEntities.length}`
+  `Station labels: ${
+    stationEntities.length
+  }`
 );
+
 
 console.log(
   `Unique stations: ${
     new Set(
       stationEntities.map(
-        item => item.name
+        item =>
+          item.name
       )
     ).size
   }`
@@ -382,10 +713,14 @@ function nearestStation(position) {
     !position ||
     !stationEntities.length
   ) {
+
     return null;
+
   }
 
+
   let nearest = null;
+
 
   for (
     const station of stationEntities
@@ -396,6 +731,7 @@ function nearestStation(position) {
         position,
         station
       );
+
 
     if (
       !nearest ||
@@ -424,6 +760,7 @@ function nearestStation(position) {
 
   }
 
+
   return nearest;
 }
 
@@ -436,15 +773,23 @@ function resolveStation(positions) {
 
   const matches = [];
 
+
   for (
     const position of positions || []
   ) {
 
     const station =
-      nearestStation(position);
+      nearestStation(
+        position
+      );
+
 
     if (station) {
-      matches.push(station);
+
+      matches.push(
+        station
+      );
+
     }
 
   }
@@ -454,17 +799,20 @@ function resolveStation(positions) {
 
     return {
 
-      name: null,
+      name:
+        null,
 
       confidence:
         "unknown",
 
-      matchCount: 0,
+      matchCount:
+        0,
 
       averageDistance:
         null,
 
-      candidates: []
+      candidates:
+        []
 
     };
 
@@ -478,12 +826,15 @@ function resolveStation(positions) {
   const groups =
     new Map();
 
+
   for (
     const match of matches
   ) {
 
     if (
-      !groups.has(match.name)
+      !groups.has(
+        match.name
+      )
     ) {
 
       groups.set(
@@ -492,6 +843,7 @@ function resolveStation(positions) {
       );
 
     }
+
 
     groups
       .get(match.name)
@@ -517,7 +869,8 @@ function resolveStation(positions) {
           averageDistance:
             values.reduce(
               (sum, item) =>
-                sum + item.distance,
+                sum +
+                item.distance,
               0
             ) /
             values.length,
@@ -553,11 +906,22 @@ function resolveStation(positions) {
   let confidence =
     "low";
 
-  if (ratio >= 0.75) {
-    confidence = "high";
+
+  if (
+    ratio >= 0.75
+  ) {
+
+    confidence =
+      "high";
+
   }
-  else if (ratio >= 0.50) {
-    confidence = "medium";
+  else if (
+    ratio >= 0.50
+  ) {
+
+    confidence =
+      "medium";
+
   }
 
 
@@ -590,6 +954,7 @@ function resolveStation(positions) {
 
 const feederMap =
   new Map();
+
 
 for (
   const entity of textEntities
@@ -631,7 +996,9 @@ for (
 
 
     const feeder =
-      feederMap.get(name);
+      feederMap.get(
+        name
+      );
 
 
     feeder.occurrences++;
@@ -753,6 +1120,7 @@ const feederNames =
 
 const prefixStats = {};
 
+
 for (
   const feeder of feeders
 ) {
@@ -795,6 +1163,7 @@ for (
 // ==================================================
 
 const stationMap = {};
+
 
 for (
   const feeder of feeders
@@ -885,9 +1254,11 @@ const matchedFeeders =
       feeder.station
   ).length;
 
+
 const unmatchedFeeders =
   feeders.length -
   matchedFeeders;
+
 
 const highConfidence =
   feeders.filter(
@@ -896,12 +1267,14 @@ const highConfidence =
       "high"
   ).length;
 
+
 const mediumConfidence =
   feeders.filter(
     feeder =>
       feeder.stationConfidence ===
       "medium"
   ).length;
+
 
 const lowConfidence =
   feeders.filter(
@@ -968,13 +1341,13 @@ const manifest = {
     stationNames,
 
   description:
-    "Feeder database extracted directly from the DWG with spatial station matching."
+    "Feeder database extracted directly from the DWG with spatial station matching and raw AutoCAD attribute extraction."
 
 };
 
 
 // ==================================================
-// SAVE FEEDER DATABASE
+// SAVE FEEDERS.JSON
 // ==================================================
 
 console.log("");
@@ -1114,49 +1487,89 @@ fs.writeFileSync(
 // ==================================================
 
 console.log("");
-console.log("========================================");
-console.log("FEEDER DATABASE RESULT");
-console.log("========================================");
 
 console.log(
-  `Total feeders: ${feeders.length}`
+  "========================================"
 );
 
 console.log(
-  `Total stations: ${stationNames.length}`
+  "FEEDER DATABASE RESULT"
 );
 
 console.log(
-  `Station labels: ${stationEntities.length}`
+  "========================================"
 );
 
-console.log(
-  `Matched feeders: ${matchedFeeders}`
-);
 
 console.log(
-  `Unmatched feeders: ${unmatchedFeeders}`
+  `Total feeders: ${
+    feeders.length
+  }`
 );
+
+
+console.log(
+  `Total stations: ${
+    stationNames.length
+  }`
+);
+
+
+console.log(
+  `Station labels: ${
+    stationEntities.length
+  }`
+);
+
+
+console.log(
+  `Matched feeders: ${
+    matchedFeeders
+  }`
+);
+
+
+console.log(
+  `Unmatched feeders: ${
+    unmatchedFeeders
+  }`
+);
+
 
 console.log("");
 
-console.log("Confidence:");
-
 console.log(
-  `High: ${highConfidence}`
+  "Confidence:"
 );
 
-console.log(
-  `Medium: ${mediumConfidence}`
-);
 
 console.log(
-  `Low: ${lowConfidence}`
+  `High: ${
+    highConfidence
+  }`
 );
+
+
+console.log(
+  `Medium: ${
+    mediumConfidence
+  }`
+);
+
+
+console.log(
+  `Low: ${
+    lowConfidence
+  }`
+);
+
 
 console.log("");
 
-console.log("Categories:");
+console.log(
+  "Categories:"
+);
+
 
 console.log(
   JSON.stringify(
@@ -1166,11 +1579,18 @@ console.log(
   )
 );
 
+
 console.log("");
 
-console.log("FEEDER → STATION:");
+console.log(
+  "FEEDER → STATION:"
+);
 
-console.log("----------------------------------------");
+
+console.log(
+  "----------------------------------------"
+);
+
 
 for (
   const feeder of feeders
@@ -1191,11 +1611,20 @@ for (
 
 }
 
+
 console.log("");
 
-console.log("========================================");
-console.log("FEEDER DATABASE BUILD COMPLETED");
-console.log("========================================");
+console.log(
+  "========================================"
+);
+
+console.log(
+  "FEEDER DATABASE BUILD COMPLETED"
+);
+
+console.log(
+  "========================================"
+);
 
 
 // ==================================================
