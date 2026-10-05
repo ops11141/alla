@@ -1,8 +1,8 @@
 {
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "@mlightcad/libredwg-web": "0.7.14"
+  "scripts": {
+    "build:feeders": "node tools/build-feeders.mjs"
   },
-  "scripts": {"build:feeders": "node tools/build-feeders.mjs"}
+  "dependencies": {
+    "dxf-parser": "^1.1.2"
+  }
 }
