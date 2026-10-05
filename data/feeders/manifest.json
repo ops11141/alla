@@ -1,13 +1,15 @@
 {
   "source": "cad/FINAL DISPATCH - UPDATE.dwg",
-  "generatedAt": "2026-10-05T13:09:40.829Z",
+  "generatedAt": "2026-10-05T13:20:47.509Z",
   "dwgBytes": 7901364,
   "dxfBytes": 44810595,
-  "dxfCharacters": 44809417,
-  "totalDxfEntities": 116671,
+  "dxfEntities": 116671,
   "textEntities": 43644,
-  "uniqueTextValues": 14129,
-  "diagnosticCandidates": 3565,
-  "layers": 37,
-  "note": "Diagnostic extraction only. Candidate texts are NOT confirmed feeder names."
+  "totalFeeders": 473,
+  "categories": {
+    "PREFIX.F": 104,
+    "F": 292,
+    "FDR": 77
+  },
+  "description": "Feeder database extracted directly from the DWG. Names are taken from actual feeder labels found in the drawing."
 }
