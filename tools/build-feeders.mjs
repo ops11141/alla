@@ -1,6 +1,5 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { pathToFileURL } from "node:url";
 
 const ROOT = process.cwd();
 
@@ -15,35 +14,6 @@ const OUT_DIR = path.join(
   "data",
   "feeders"
 );
-
-/*
- * تحميل نسخة WASM مباشرة من داخل الحزمة.
- * نستخدم pathToFileURL لتجاوز مشكلة
- * ERR_PACKAGE_PATH_NOT_EXPORTED.
- */
-const wasmPath = path.join(
-  ROOT,
-  "node_modules",
-  "@mlightcad",
-  "libredwg-web",
-  "wasm",
-  "libredwg-web.js"
-);
-
-console.log("Loading LibreDWG WASM:");
-console.log(wasmPath);
-
-const wasmModule = await import(
-  pathToFileURL(wasmPath).href
-);
-
-const { createModule } = wasmModule;
-
-if (typeof createModule !== "function") {
-  throw new Error(
-    "createModule was not found in libredwg-web WASM module."
-  );
-}
 
 await fs.mkdir(
   OUT_DIR,
@@ -92,18 +62,12 @@ function extractText(
   value,
   output = []
 ) {
-
   if (value == null) {
     return output;
   }
 
-  if (
-    typeof value === "string"
-  ) {
-
-    const text =
-      value
-        .trim();
+  if (typeof value === "string") {
+    const text = value.trim();
 
     if (text) {
       output.push(text);
@@ -113,7 +77,6 @@ function extractText(
   }
 
   if (Array.isArray(value)) {
-
     for (const item of value) {
       extractText(
         item,
@@ -124,25 +87,20 @@ function extractText(
     return output;
   }
 
-  if (
-    typeof value === "object"
-  ) {
-
+  if (typeof value === "object") {
     for (
       const [key, val]
       of Object.entries(value)
     ) {
-
       if (
-        /text|value|name|contents|string/i
-          .test(key)
+        /text|value|name|contents|string/i.test(
+          key
+        )
       ) {
-
         extractText(
           val,
           output
         );
-
       }
     }
   }
@@ -156,29 +114,19 @@ function unique(array) {
   ];
 }
 
-/*
- * -------------------------------------------------------
- * 1. قراءة ملف DWG
- * -------------------------------------------------------
- */
-
 console.log("");
 console.log(
-  "======================================"
+  "========================================"
 );
 console.log(
   "FEEDER DATABASE BUILDER"
 );
 console.log(
-  "======================================"
-);
-console.log("");
-
-console.log(
-  "DWG file:"
+  "========================================"
 );
 
 console.log(
+  "DWG:",
   DWG_PATH
 );
 
@@ -187,609 +135,559 @@ const fileBuffer =
     DWG_PATH
   );
 
-const bytes =
-  new Uint8Array(
-    fileBuffer
-  );
-
 console.log(
-  `DWG size: ${bytes.length} bytes`
+  `DWG size: ${fileBuffer.length} bytes`
 );
 
 /*
- * إنشاء LibreDWG
+ * =====================================================
+ * LibreDWG الرسمي
+ * =====================================================
  */
 
-const lib =
-  await createModule();
+const {
+  Dwg_File_Type,
+  LibreDwg
+} = await import(
+  "@mlightcad/libredwg-web"
+);
 
 console.log(
-  "LibreDWG WASM loaded."
+  "Creating LibreDwg..."
+);
+
+const libredwg =
+  await LibreDwg.create(
+    path.join(
+      ROOT,
+      "node_modules",
+      "@mlightcad",
+      "libredwg-web",
+      "wasm"
+    )
+  );
+
+console.log(
+  "LibreDwg created successfully."
 );
 
 /*
- * -------------------------------------------------------
- * 2. قراءة DWG باستخدام FS + dwg_read_file
- * -------------------------------------------------------
+ * =====================================================
+ * قراءة DWG
+ * =====================================================
  */
 
-const tempFile =
-  "input.dwg";
-
 console.log(
-  "Writing DWG into WASM filesystem..."
+  "Reading DWG..."
 );
 
-lib.FS.writeFile(
-  tempFile,
-  bytes
-);
-
-let readResult;
-
-try {
-
-  console.log(
-    "Reading DWG..."
+const dwg =
+  libredwg.dwg_read_data(
+    fileBuffer.buffer.slice(
+      fileBuffer.byteOffset,
+      fileBuffer.byteOffset +
+        fileBuffer.byteLength
+    ),
+    Dwg_File_Type.DWG
   );
 
-  readResult =
-    lib.dwg_read_file(
-      tempFile
-    );
-
-} finally {
-
-  try {
-    lib.FS.unlink(
-      tempFile
-    );
-  } catch {}
-
+if (!dwg) {
+  throw new Error(
+    "LibreDwg returned an empty DWG pointer."
+  );
 }
 
+console.log(
+  "DWG pointer received."
+);
+
 /*
- * فحص نتيجة القراءة
+ * =====================================================
+ * معلومات DWG
+ * =====================================================
  */
+
+let dwgVersion = null;
+let codepage = null;
+
+try {
+  dwgVersion =
+    libredwg.dwg_get_version_type(
+      dwg
+    );
+} catch {}
+
+try {
+  codepage =
+    libredwg.dwg_get_codepage(
+      dwg
+    );
+} catch {}
+
+console.log(
+  "DWG version:",
+  dwgVersion
+);
+
+console.log(
+  "Codepage:",
+  codepage
+);
+
+/*
+ * =====================================================
+ * تحويل DWG إلى Database
+ * =====================================================
+ */
+
+console.log(
+  "Converting DWG..."
+);
+
+let db;
 
 if (
-  !readResult ||
-  readResult.error
+  typeof libredwg.convertEx ===
+  "function"
 ) {
 
-  const errorCode =
-    readResult?.error ??
-    "unknown";
-
-  const manifest = {
-
-    ok: false,
-
-    sourceFile:
-      "FINAL DISPATCH - UPDATE.dwg",
-
-    reader:
-      "LibreDWG raw WASM",
-
-    errorCode,
-
-    message:
-      "LibreDWG could not decode the DWG file.",
-
-    fileSize:
-      bytes.length
-
-  };
-
-  await writeJson(
-    "manifest.json",
-    manifest
+  console.log(
+    "Using convertEx()..."
   );
 
+  const converted =
+    libredwg.convertEx(
+      dwg
+    );
+
+  db =
+    converted?.database ??
+    converted;
+
+} else {
+
+  console.log(
+    "Using convert()..."
+  );
+
+  db =
+    libredwg.convert(
+      dwg
+    );
+}
+
+if (!db) {
   throw new Error(
-    `DWG read failed with error code ${errorCode}`
+    "DWG conversion returned an empty database."
   );
 }
 
 console.log(
-  "DWG read successful."
+  "Database conversion completed."
 );
 
-const dwgPtr =
-  readResult.data;
-
 /*
- * -------------------------------------------------------
- * 3. تحويل DWG إلى Database
- * -------------------------------------------------------
+ * =====================================================
+ * استخراج الجداول
+ * =====================================================
  */
 
-let db = null;
+const tables =
+  db?.tables ?? {};
 
-try {
+const blockRecords =
+  Array.isArray(
+    tables.blockRecords
+  )
+    ? tables.blockRecords
+    : [];
 
-  console.log(
-    "Converting DWG database..."
-  );
+const layers =
+  Array.isArray(
+    tables.layers
+  )
+    ? tables.layers
+    : [];
 
-  /*
-   * يجب أن تكون convert موجودة داخل
-   * نفس WASM module الذي قرأ DWG.
-   *
-   * لا نستخدم module ثاني حتى لا يحدث
-   * تعارض بين pointers الخاصة بالـ WASM.
-   */
+console.log("");
+console.log(
+  "Database:"
+);
 
-  if (
-    typeof lib.convert !==
-    "function"
-  ) {
+console.log(
+  "Block records:",
+  blockRecords.length
+);
 
-    throw new Error(
-      "LibreDWG WASM does not expose convert()."
-    );
+console.log(
+  "Layers:",
+  layers.length
+);
 
-  }
+/*
+ * =====================================================
+ * استخراج النصوص
+ * =====================================================
+ */
 
-  db =
-    lib.convert(
-      dwgPtr
-    );
+const allText = [];
 
-  if (!db) {
+const feederCandidates = [];
 
-    throw new Error(
-      "LibreDWG returned an empty database."
-    );
+const stationCandidates = [];
 
-  }
+for (
+  const block
+  of blockRecords
+) {
 
-  console.log(
-    "DWG database conversion successful."
-  );
+  const blockName =
+    block?.name ??
+    block?.id ??
+    "";
 
-  /*
-   * -----------------------------------------------------
-   * 4. استخراج الجداول
-   * -----------------------------------------------------
-   */
-
-  const tables =
-    db?.tables ?? {};
-
-  const blockRecords =
+  const entities =
     Array.isArray(
-      tables.blockRecords
+      block?.entities
     )
-      ? tables.blockRecords
+      ? block.entities
       : [];
-
-  const layers =
-    Array.isArray(
-      tables.layers
-    )
-      ? tables.layers
-      : [];
-
-  console.log("");
-  console.log(
-    "Database information:"
-  );
-
-  console.log(
-    `Block records: ${blockRecords.length}`
-  );
-
-  console.log(
-    `Layers: ${layers.length}`
-  );
-
-  /*
-   * -----------------------------------------------------
-   * 5. استخراج النصوص
-   * -----------------------------------------------------
-   */
-
-  const allText = [];
-
-  const feederCandidates = [];
-
-  const stationCandidates = [];
 
   for (
-    const block
-    of blockRecords
+    const entity
+    of entities
   ) {
 
-    const blockName =
-      block?.name ??
-      block?.id ??
-      "";
-
-    const entities =
-      Array.isArray(
-        block?.entities
-      )
-        ? block.entities
-        : [];
+    const texts =
+      unique(
+        extractText(
+          entity
+        )
+      );
 
     for (
-      const entity
-      of entities
+      const text
+      of texts
     ) {
 
-      const texts =
-        unique(
-          extractText(
-            entity
-          )
-        );
+      const entityType =
+        entity?.type ??
+        entity?.objectType ??
+        null;
 
-      for (
-        const text
-        of texts
+      allText.push({
+        block:
+          blockName,
+
+        entityType,
+
+        text
+      });
+
+      const upper =
+        text
+          .toUpperCase()
+          .replace(
+            /\s+/g,
+            " "
+          )
+          .trim();
+
+      /*
+       * ===============================================
+       * Feeder names
+       * ===============================================
+       */
+
+      if (
+        /^F(?:EEDER)?\s*[-_ ]?\s*\d+(?:\s*[.-]\s*\d+)?(?:\s*[A-Z])?$/i.test(
+          upper
+        )
       ) {
 
-        const entityType =
-          entity?.type ??
-          entity?.objectType ??
-          null;
+        feederCandidates.push({
 
-        /*
-         * حفظ جميع النصوص
-         */
+          text,
 
-        allText.push({
+          normalized:
+            upper,
 
           block:
             blockName,
 
-          entityType,
-
-          text
+          entityType
 
         });
 
-        const upper =
-          text
-            .toUpperCase()
-            .replace(
-              /\s+/g,
-              " "
-            )
-            .trim();
+      }
 
-        /*
-         * ---------------------------------------------
-         * Feeder detection
-         * ---------------------------------------------
-         *
-         * أمثلة:
-         *
-         * F-8.13
-         * F 8.13
-         * F-333 B
-         * F 333 B
-         * FEEDER 8.13
-         *
-         */
+      /*
+       * ===============================================
+       * Station names
+       * ===============================================
+       */
 
-        const isFeeder =
-          /^F(?:EEDER)?\s*[-_ ]?\s*\d+(?:\s*[.-]\s*\d+)?(?:\s*[A-Z])?$/i
-            .test(
-              upper
-            );
+      if (
+        /^(SUB|SS|STATION|محطة)\s*[-_ ]?\S+/i.test(
+          upper
+        )
+      ) {
 
-        if (
-          isFeeder
-        ) {
+        stationCandidates.push({
 
-          feederCandidates.push({
+          text,
 
-            text,
+          normalized:
+            upper,
 
-            normalized:
-              upper,
+          block:
+            blockName,
 
-            block:
-              blockName,
+          entityType
 
-            entityType
-
-          });
-
-        }
-
-        /*
-         * ---------------------------------------------
-         * Station detection
-         * ---------------------------------------------
-         *
-         * لا نخترع أي محطة.
-         */
-
-        const isStation =
-          /^(SUB|SS|STATION|محطة)\s*[-_ ]?\S+/i
-            .test(
-              upper
-            );
-
-        if (
-          isStation
-        ) {
-
-          stationCandidates.push({
-
-            text,
-
-            normalized:
-              upper,
-
-            block:
-              blockName,
-
-            entityType
-
-          });
-
-        }
+        });
 
       }
     }
   }
+}
 
-  /*
-   * -----------------------------------------------------
-   * 6. إزالة التكرارات
-   * -----------------------------------------------------
-   */
+/*
+ * =====================================================
+ * إزالة التكرارات
+ * =====================================================
+ */
 
-  const uniqueFeeders = [];
+const uniqueFeeders = [];
 
-  const feederSeen =
-    new Set();
+const feederSeen =
+  new Set();
 
-  for (
-    const feeder
-    of feederCandidates
-  ) {
+for (
+  const feeder
+  of feederCandidates
+) {
 
-    const key =
-      [
-        feeder.normalized,
-        feeder.block
-      ].join(
-        "|"
-      );
-
-    if (
-      feederSeen.has(
-        key
-      )
-    ) {
-      continue;
-    }
-
-    feederSeen.add(
-      key
+  const key =
+    [
+      feeder.normalized,
+      feeder.block
+    ].join(
+      "|"
     );
-
-    uniqueFeeders.push(
-      feeder
-    );
-  }
-
-  /*
-   * -----------------------------------------------------
-   * 7. إنشاء Manifest
-   * -----------------------------------------------------
-   */
-
-  const manifest = {
-
-    ok: true,
-
-    sourceFile:
-      "FINAL DISPATCH - UPDATE.dwg",
-
-    reader:
-      "LibreDWG raw WASM",
-
-    databaseConverter:
-      "LibreDWG convert()",
-
-    fileSize:
-      bytes.length,
-
-    counts: {
-
-      blockRecords:
-        blockRecords.length,
-
-      layers:
-        layers.length,
-
-      textEntities:
-        allText.length,
-
-      feederCandidates:
-        feederCandidates.length,
-
-      uniqueFeeders:
-        uniqueFeeders.length,
-
-      stationCandidates:
-        stationCandidates.length
-
-    },
-
-    rules: {
-
-      literalNamesOnly:
-        true,
-
-      noSyntheticStationNames:
-        true,
-
-      unresolvedRelationshipsAreNotGuessed:
-        true,
-
-      rawDatabaseFileDisabled:
-        true
-
-    }
-
-  };
-
-  /*
-   * -----------------------------------------------------
-   * 8. حفظ الملفات
-   * -----------------------------------------------------
-   */
-
-  await writeJson(
-    "manifest.json",
-    manifest
-  );
-
-  await writeJson(
-    "layers.json",
-    layers
-  );
-
-  await writeJson(
-    "all_text_entities.json",
-    allText
-  );
-
-  await writeJson(
-    "all_feeder_candidates.json",
-    feederCandidates
-  );
-
-  await writeJson(
-    "stations.json",
-    stationCandidates
-  );
-
-  await writeJson(
-    "feeders.json",
-    uniqueFeeders
-  );
-
-  /*
-   * -----------------------------------------------------
-   * 9. حذف قاعدة البيانات الضخمة القديمة
-   * -----------------------------------------------------
-   *
-   * raw_database.json كان حجمه أكثر من 150MB
-   * وGitHub يسمح بحد أقصى 100MB للملف.
-   */
-
-  await fs.rm(
-    path.join(
-      OUT_DIR,
-      "raw_database.json"
-    ),
-    {
-      force: true
-    }
-  );
-
-  /*
-   * -----------------------------------------------------
-   * 10. التحقق من النتيجة
-   * -----------------------------------------------------
-   */
 
   if (
-    blockRecords.length === 0 &&
-    allText.length === 0
-  ) {
-
-    throw new Error(
-      "DWG was read successfully, but no entities or text were found in the converted database."
-    );
-
-  }
-
-  console.log("");
-  console.log(
-    "======================================"
-  );
-
-  console.log(
-    "BUILD COMPLETED"
-  );
-
-  console.log(
-    "======================================"
-  );
-
-  console.log(
-    `Blocks: ${blockRecords.length}`
-  );
-
-  console.log(
-    `Layers: ${layers.length}`
-  );
-
-  console.log(
-    `Text entities: ${allText.length}`
-  );
-
-  console.log(
-    `Feeder candidates: ${feederCandidates.length}`
-  );
-
-  console.log(
-    `Unique feeders: ${uniqueFeeders.length}`
-  );
-
-  console.log(
-    `Station candidates: ${stationCandidates.length}`
-  );
-
-  console.log(
-    "======================================"
-  );
-
-  console.log(
-    JSON.stringify(
-      manifest,
-      null,
-      2
+    feederSeen.has(
+      key
     )
+  ) {
+    continue;
+  }
+
+  feederSeen.add(
+    key
   );
 
-} finally {
+  uniqueFeeders.push(
+    feeder
+  );
+}
 
-  /*
-   * تحرير DWG pointer
-   */
+/*
+ * =====================================================
+ * Manifest
+ * =====================================================
+ */
 
-  try {
+const manifest = {
 
-    if (
-      typeof lib.dwg_free ===
-      "function"
-    ) {
+  ok: true,
 
-      lib.dwg_free(
-        dwgPtr
-      );
+  sourceFile:
+    "FINAL DISPATCH - UPDATE.dwg",
 
-    }
+  reader:
+    "@mlightcad/libredwg-web",
 
-  } catch (
-    error
-  ) {
+  dwgVersion,
 
-    console.log(
-      "DWG cleanup warning:",
-      error.message
-    );
+  codepage,
+
+  counts: {
+
+    blockRecords:
+      blockRecords.length,
+
+    layers:
+      layers.length,
+
+    textEntities:
+      allText.length,
+
+    feederCandidates:
+      feederCandidates.length,
+
+    uniqueFeeders:
+      uniqueFeeders.length,
+
+    stationCandidates:
+      stationCandidates.length
+
+  },
+
+  rules: {
+
+    literalNamesOnly:
+      true,
+
+    noSyntheticStationNames:
+      true,
+
+    unresolvedRelationshipsAreNotGuessed:
+      true,
+
+    rawDatabaseFileDisabled:
+      true
 
   }
+
+};
+
+/*
+ * =====================================================
+ * حفظ البيانات
+ * =====================================================
+ */
+
+await writeJson(
+  "manifest.json",
+  manifest
+);
+
+await writeJson(
+  "layers.json",
+  layers
+);
+
+await writeJson(
+  "all_text_entities.json",
+  allText
+);
+
+await writeJson(
+  "all_feeder_candidates.json",
+  feederCandidates
+);
+
+await writeJson(
+  "stations.json",
+  stationCandidates
+);
+
+await writeJson(
+  "feeders.json",
+  uniqueFeeders
+);
+
+/*
+ * =====================================================
+ * حذف الملف الضخم القديم
+ * =====================================================
+ */
+
+await fs.rm(
+  path.join(
+    OUT_DIR,
+    "raw_database.json"
+  ),
+  {
+    force: true
+  }
+);
+
+/*
+ * =====================================================
+ * منع نجاح وهمي
+ * =====================================================
+ */
+
+if (
+  blockRecords.length === 0 &&
+  allText.length === 0
+) {
+
+  throw new Error(
+    "DWG was opened but the converted database contains no entities or text."
+  );
 
 }
+
+/*
+ * =====================================================
+ * النتيجة
+ * =====================================================
+ */
+
+console.log("");
+
+console.log(
+  "========================================"
+);
+
+console.log(
+  "FEEDER DATABASE BUILD COMPLETED"
+);
+
+console.log(
+  "========================================"
+);
+
+console.log(
+  `Blocks: ${blockRecords.length}`
+);
+
+console.log(
+  `Layers: ${layers.length}`
+);
+
+console.log(
+  `Text entities: ${allText.length}`
+);
+
+console.log(
+  `Feeder candidates: ${feederCandidates.length}`
+);
+
+console.log(
+  `Unique feeders: ${uniqueFeeders.length}`
+);
+
+console.log(
+  `Station candidates: ${stationCandidates.length}`
+);
+
+console.log(
+  "========================================"
+);
+
+console.log(
+  JSON.stringify(
+    manifest,
+    null,
+    2
+  )
+);
+
+/*
+ * =====================================================
+ * تحرير الذاكرة
+ * =====================================================
+ */
+
+try {
+
+  libredwg.dwg_free(
+    dwg
+  );
+
+} catch {}
