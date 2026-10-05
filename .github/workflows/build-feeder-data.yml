@@ -43,11 +43,11 @@ jobs:
           cd /tmp
 
           wget -q \
-            https://ftp.gnu.org/pub/gnu/libredwg/libredwg-0.14.1.tar.xz
+            https://ftp.gnu.org/pub/gnu/libredwg/libredwg-0.14.tar.xz
 
-          tar -xf libredwg-0.14.1.tar.xz
+          tar -xf libredwg-0.14.tar.xz
 
-          cd libredwg-0.14.1
+          cd libredwg-0.14
 
           ./configure \
             --disable-shared \
