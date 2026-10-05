@@ -7,6 +7,7 @@ on:
       - "cad/FINAL DISPATCH - UPDATE.dwg"
       - "tools/build-feeders.mjs"
       - "package.json"
+      - ".github/workflows/build-feeder-data.yml"
 
 permissions:
   contents: write
@@ -24,8 +25,43 @@ jobs:
         with:
           node-version: 20
 
+      - name: Install LibreDWG
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            autoconf \
+            automake \
+            libtool \
+            pkg-config \
+            libpcre2-dev \
+            libxml2-dev \
+            texinfo \
+            wget
 
-      - name: Install dependencies
+          cd /tmp
+
+          wget -q \
+            https://github.com/LibreDWG/libredwg/releases/download/0.14.1/libredwg-0.14.1.tar.xz
+
+          tar -xf libredwg-0.14.1.tar.xz
+
+          cd libredwg-0.14.1
+
+          ./configure \
+            --disable-shared \
+            --disable-bindings \
+            --disable-docs
+
+          make -j2
+
+          sudo make install
+
+          sudo ldconfig
+
+          dwg2dxf --version
+
+      - name: Install Node dependencies
         run: npm install
 
       - name: Build feeder database
@@ -35,7 +71,9 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add data/feeders
+
           if git diff --cached --quiet; then
             echo "No generated feeder database changes."
           else
