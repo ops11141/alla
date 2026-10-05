@@ -1,6 +1,11 @@
 [
   {
     "name": "BSP.F-01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "fedr no"
@@ -38,6 +43,11 @@
   },
   {
     "name": "BSP.F-02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -61,6 +71,11 @@
   },
   {
     "name": "BSP.F-03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "fedr no"
@@ -140,6 +155,11 @@
   },
   {
     "name": "BSP.F-04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -156,6 +176,11 @@
   },
   {
     "name": "BSP.F-05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -179,6 +204,11 @@
   },
   {
     "name": "BSP.F-06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -195,6 +225,11 @@
   },
   {
     "name": "BSP.F-07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -218,6 +253,11 @@
   },
   {
     "name": "BSP.F-08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -234,6 +274,11 @@
   },
   {
     "name": "BSP.F-09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -242,6 +287,11 @@
   },
   {
     "name": "BSP.F-11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -265,6 +315,11 @@
   },
   {
     "name": "BSP.F-14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -288,6 +343,11 @@
   },
   {
     "name": "BSP.F-15",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 15,
     "layers": [
       "fedr no"
@@ -395,6 +455,11 @@
   },
   {
     "name": "BSP.F-18",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -411,6 +476,11 @@
   },
   {
     "name": "BSP.F-19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -434,6 +504,11 @@
   },
   {
     "name": "BSP.F-20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -450,6 +525,11 @@
   },
   {
     "name": "D.F-01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "fedr no"
@@ -508,6 +588,11 @@
   },
   {
     "name": "D.F-1",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -516,6 +601,11 @@
   },
   {
     "name": "D.F-02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "GRID STATION  04",
@@ -554,6 +644,11 @@
   },
   {
     "name": "D.F-2",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -570,6 +665,11 @@
   },
   {
     "name": "D.F-03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 20,
     "layers": [
       "d_tf no",
@@ -713,6 +813,11 @@
   },
   {
     "name": "D.F-04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "fedr no"
@@ -743,6 +848,11 @@
   },
   {
     "name": "D.F-4",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -751,6 +861,11 @@
   },
   {
     "name": "D.F-05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_switch",
@@ -796,6 +911,11 @@
   },
   {
     "name": "D.F-06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -804,6 +924,11 @@
   },
   {
     "name": "D.F-07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -812,6 +937,11 @@
   },
   {
     "name": "D.F-08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -820,6 +950,11 @@
   },
   {
     "name": "D.F-09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "SECTOR BOUNDARY",
@@ -859,6 +994,11 @@
   },
   {
     "name": "D.F-10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "d_tf no",
@@ -925,6 +1065,11 @@
   },
   {
     "name": "D.F-11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -933,6 +1078,11 @@
   },
   {
     "name": "D.F-12",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "fedr no"
@@ -977,6 +1127,11 @@
   },
   {
     "name": "D.F-13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "SECTOR BOUNDARY",
@@ -1036,6 +1191,11 @@
   },
   {
     "name": "D.F-14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "fedr no"
@@ -1052,6 +1212,11 @@
   },
   {
     "name": "D.F-15",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -1060,6 +1225,11 @@
   },
   {
     "name": "D.F-16",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_tf no",
@@ -1077,6 +1247,11 @@
   },
   {
     "name": "D.F-17",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "SECTOR BOUNDARY",
@@ -1144,6 +1319,11 @@
   },
   {
     "name": "D.F-18",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "fedr no"
@@ -1202,6 +1382,11 @@
   },
   {
     "name": "D.F-19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "fedr no"
@@ -1246,6 +1431,11 @@
   },
   {
     "name": "D.F-20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "fedr no"
@@ -1290,6 +1480,11 @@
   },
   {
     "name": "D.F-22",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "fedr no"
@@ -1313,6 +1508,11 @@
   },
   {
     "name": "D.F-23",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -1329,6 +1529,11 @@
   },
   {
     "name": "D.F-24",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -1337,6 +1542,11 @@
   },
   {
     "name": "D.F-25",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "SECTOR BOUNDARY",
@@ -1354,6 +1564,11 @@
   },
   {
     "name": "D.F-26",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -1362,6 +1577,11 @@
   },
   {
     "name": "F-01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "FDR  4  02",
@@ -1388,6 +1608,11 @@
   },
   {
     "name": "F-1",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "Level 37",
@@ -1429,6 +1654,11 @@
   },
   {
     "name": "F-1.1",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "fedr no"
@@ -1473,6 +1703,11 @@
   },
   {
     "name": "F-1.01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "GRID STATION 01",
@@ -1482,6 +1717,11 @@
   },
   {
     "name": "F-1.2",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "d_switch",
@@ -1527,6 +1767,11 @@
   },
   {
     "name": "F-1.02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch",
@@ -1536,6 +1781,11 @@
   },
   {
     "name": "F-1.03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -1544,6 +1794,11 @@
   },
   {
     "name": "F-1.3",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -1596,6 +1851,11 @@
   },
   {
     "name": "F-1.04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "d_switch",
@@ -1627,6 +1887,11 @@
   },
   {
     "name": "F-1.05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_switch",
@@ -1672,6 +1937,11 @@
   },
   {
     "name": "F-1.6",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_switch"
@@ -1680,6 +1950,11 @@
   },
   {
     "name": "F-1.06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -1688,6 +1963,11 @@
   },
   {
     "name": "F-1.07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "d_switch",
@@ -1733,6 +2013,11 @@
   },
   {
     "name": "F-1.7",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -1741,6 +2026,11 @@
   },
   {
     "name": "F-1.8",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "d_switch"
@@ -1749,6 +2039,11 @@
   },
   {
     "name": "F-1.08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -1757,6 +2052,11 @@
   },
   {
     "name": "F-1.09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_switch",
@@ -1809,6 +2109,11 @@
   },
   {
     "name": "F-1.10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 12,
     "layers": [
       "d_switch",
@@ -1868,6 +2173,11 @@
   },
   {
     "name": "F-1.11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "d_switch",
@@ -1906,6 +2216,11 @@
   },
   {
     "name": "F-1.12",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "GRID STATION 01",
@@ -1937,6 +2252,11 @@
   },
   {
     "name": "F-1.13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_switch",
@@ -1961,6 +2281,11 @@
   },
   {
     "name": "F-1.14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "d_switch",
@@ -1985,6 +2310,11 @@
   },
   {
     "name": "F-1.15",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 12,
     "layers": [
       "d_switch",
@@ -2031,6 +2361,11 @@
   },
   {
     "name": "F-1.16",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -2083,6 +2418,11 @@
   },
   {
     "name": "F-1.17",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 14,
     "layers": [
       "d_switch",
@@ -2150,6 +2490,11 @@
   },
   {
     "name": "F-1.18",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "d_switch",
@@ -2181,6 +2526,11 @@
   },
   {
     "name": "F-1.19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -2197,6 +2547,11 @@
   },
   {
     "name": "F-1.20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -2235,6 +2590,11 @@
   },
   {
     "name": "F-1.21",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_eos",
@@ -2274,6 +2634,11 @@
   },
   {
     "name": "F-1.22",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "d_switch",
@@ -2299,6 +2664,11 @@
   },
   {
     "name": "F-1.23",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "d_switch",
@@ -2316,6 +2686,11 @@
   },
   {
     "name": "F-1.24",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "d_switch",
@@ -2340,6 +2715,11 @@
   },
   {
     "name": "F-1.25",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "fedr no"
@@ -2363,6 +2743,11 @@
   },
   {
     "name": "F-1.26",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 14,
     "layers": [
       "d_switch",
@@ -2415,6 +2800,11 @@
   },
   {
     "name": "F-1.27",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch",
@@ -2432,6 +2822,11 @@
   },
   {
     "name": "F-1.28",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_switch",
@@ -2441,6 +2836,11 @@
   },
   {
     "name": "F-02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "FDR  4  02",
@@ -2488,6 +2888,11 @@
   },
   {
     "name": "F-2",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "d_switch",
@@ -2497,6 +2902,11 @@
   },
   {
     "name": "F-2.1",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "GRID STATION 01",
@@ -2506,6 +2916,11 @@
   },
   {
     "name": "F-2.01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -2551,6 +2966,11 @@
   },
   {
     "name": "F-2.2",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "GRID STATION 01"
@@ -2559,6 +2979,11 @@
   },
   {
     "name": "F-2.02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "fedr no"
@@ -2631,6 +3056,11 @@
   },
   {
     "name": "F-2.3",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "GRID STATION 01"
@@ -2639,6 +3069,11 @@
   },
   {
     "name": "F-2.03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "ABS NUMBER",
@@ -2684,6 +3119,11 @@
   },
   {
     "name": "F-2.4",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION 01"
@@ -2692,6 +3132,11 @@
   },
   {
     "name": "F-2.04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "fedr no"
@@ -2750,6 +3195,11 @@
   },
   {
     "name": "F-2.05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch",
@@ -2759,6 +3209,11 @@
   },
   {
     "name": "F-2.5",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION 01"
@@ -2767,6 +3222,11 @@
   },
   {
     "name": "F-2.6",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION 01"
@@ -2775,6 +3235,11 @@
   },
   {
     "name": "F-2.06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "Level 37",
@@ -2807,6 +3272,11 @@
   },
   {
     "name": "F-2.7",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "GRID STATION 01",
@@ -2816,6 +3286,11 @@
   },
   {
     "name": "F-2.07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "fedr no"
@@ -2846,6 +3321,11 @@
   },
   {
     "name": "F-2.8",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "GRID STATION 01",
@@ -2856,6 +3336,11 @@
   },
   {
     "name": "F-2.08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "ABS NUMBER",
@@ -2889,6 +3374,11 @@
   },
   {
     "name": "F-2.09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "GRID STATION 01",
@@ -2914,6 +3404,11 @@
   },
   {
     "name": "F-2.9",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -2922,6 +3417,11 @@
   },
   {
     "name": "F-2.10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 17,
     "layers": [
       "GRID STATION  04",
@@ -2984,6 +3484,11 @@
   },
   {
     "name": "F-2.11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 14,
     "layers": [
       "GRID STATION 01",
@@ -3030,6 +3535,11 @@
   },
   {
     "name": "F-2.12",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 18,
     "layers": [
       "GRID STATION 01",
@@ -3118,6 +3628,11 @@
   },
   {
     "name": "F-2.13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "GRID STATION 01",
@@ -3142,6 +3657,11 @@
   },
   {
     "name": "F-2.14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "GRID STATION 01",
@@ -3160,6 +3680,11 @@
   },
   {
     "name": "F-2.15",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 13,
     "layers": [
       "GRID STATION 01",
@@ -3170,6 +3695,11 @@
   },
   {
     "name": "F-2.16",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 14,
     "layers": [
       "GRID STATION 01",
@@ -3232,6 +3762,11 @@
   },
   {
     "name": "F-2.17",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 19,
     "layers": [
       "GRID STATION 01",
@@ -3292,6 +3827,11 @@
   },
   {
     "name": "F-2.18",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "GRID STATION 01",
@@ -3303,6 +3843,11 @@
   },
   {
     "name": "F-2.19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 13,
     "layers": [
       "GRID STATION 01",
@@ -3350,6 +3895,11 @@
   },
   {
     "name": "F-2.20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 12,
     "layers": [
       "GRID STATION 01",
@@ -3360,6 +3910,11 @@
   },
   {
     "name": "F-03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 12,
     "layers": [
       "Level 37",
@@ -3392,6 +3947,11 @@
   },
   {
     "name": "F-3.1",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "fedr no"
@@ -3436,6 +3996,11 @@
   },
   {
     "name": "F-3.01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch",
@@ -3445,6 +4010,11 @@
   },
   {
     "name": "F-3.2",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_tf no",
@@ -3504,6 +4074,11 @@
   },
   {
     "name": "F-3.03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -3512,6 +4087,11 @@
   },
   {
     "name": "F-3.4",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -3535,6 +4115,11 @@
   },
   {
     "name": "F-3.04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -3543,6 +4128,11 @@
   },
   {
     "name": "F-3.5",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -3566,6 +4156,11 @@
   },
   {
     "name": "F-3.05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch",
@@ -3575,6 +4170,11 @@
   },
   {
     "name": "F-3.06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch",
@@ -3584,6 +4184,11 @@
   },
   {
     "name": "F-3.6",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -3600,6 +4205,11 @@
   },
   {
     "name": "F-3.07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "GRID STATION 01",
@@ -3610,6 +4220,11 @@
   },
   {
     "name": "F-3.8",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_switch",
@@ -3634,6 +4249,11 @@
   },
   {
     "name": "F-3.08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -3642,6 +4262,11 @@
   },
   {
     "name": "F-3.09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -3687,6 +4312,11 @@
   },
   {
     "name": "F-3.9",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "GRID STATION 01",
@@ -3705,6 +4335,11 @@
   },
   {
     "name": "F-3.10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch",
@@ -3729,6 +4364,11 @@
   },
   {
     "name": "F-04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_switch"
@@ -3737,6 +4377,11 @@
   },
   {
     "name": "F-4",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "Level 37",
@@ -3770,6 +4415,11 @@
   },
   {
     "name": "F-4.01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "fedr no"
@@ -3800,6 +4450,11 @@
   },
   {
     "name": "F-4.02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "fedr no"
@@ -3858,6 +4513,11 @@
   },
   {
     "name": "F-4.2",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_tf no"
@@ -3866,6 +4526,11 @@
   },
   {
     "name": "F-4.03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "fedr no"
@@ -3896,6 +4561,11 @@
   },
   {
     "name": "F-4.4",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -3912,6 +4582,11 @@
   },
   {
     "name": "F-4.04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "fedr no"
@@ -3963,6 +4638,11 @@
   },
   {
     "name": "F-4.5",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -3979,6 +4659,11 @@
   },
   {
     "name": "F-4.05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch",
@@ -3988,6 +4673,11 @@
   },
   {
     "name": "F-4.6",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "0",
@@ -4020,6 +4710,11 @@
   },
   {
     "name": "F-4.07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "GRID STATION 01",
@@ -4079,6 +4774,11 @@
   },
   {
     "name": "F-4.08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -4087,6 +4787,11 @@
   },
   {
     "name": "F-4.9",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "fedr no"
@@ -4124,6 +4829,11 @@
   },
   {
     "name": "F-4.09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_tf no",
@@ -4133,6 +4843,11 @@
   },
   {
     "name": "F-4.10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_switch",
@@ -4157,6 +4872,11 @@
   },
   {
     "name": "F-4.11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "GRID STATION  04",
@@ -4166,6 +4886,11 @@
   },
   {
     "name": "F-4.12",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_eos no",
@@ -4175,6 +4900,11 @@
   },
   {
     "name": "F-4.13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "fedr no"
@@ -4240,6 +4970,11 @@
   },
   {
     "name": "F-4.14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch",
@@ -4258,6 +4993,11 @@
   },
   {
     "name": "F-4.15",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "fedr no"
@@ -4295,6 +5035,11 @@
   },
   {
     "name": "F-4.16",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "d_switch",
@@ -4354,6 +5099,11 @@
   },
   {
     "name": "F-4.17",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "GRID STATION  04",
@@ -4393,6 +5143,11 @@
   },
   {
     "name": "F-4.18",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "d_tf no",
@@ -4431,6 +5186,11 @@
   },
   {
     "name": "F-4.19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "fedr no"
@@ -4468,6 +5228,11 @@
   },
   {
     "name": "F-4.20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "d_eos no",
@@ -4529,6 +5294,11 @@
   },
   {
     "name": "F-4.21",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "GRID STATION  04",
@@ -4569,6 +5339,11 @@
   },
   {
     "name": "F-4.22",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "GRID STATION  04",
@@ -4602,6 +5377,11 @@
   },
   {
     "name": "F-4.23",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "GRID STATION  04",
@@ -4648,6 +5428,11 @@
   },
   {
     "name": "F-4.24",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_tf no",
@@ -4679,6 +5464,11 @@
   },
   {
     "name": "F-05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "0",
@@ -4688,6 +5478,11 @@
   },
   {
     "name": "F-5.01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "GRID STATION 01",
@@ -4735,6 +5530,11 @@
   },
   {
     "name": "F-5.02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 13,
     "layers": [
       "GRID STATION 01",
@@ -4796,6 +5596,11 @@
   },
   {
     "name": "F-5.3",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch",
@@ -4820,6 +5625,11 @@
   },
   {
     "name": "F-5.03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "GRID STATION 01",
@@ -4831,6 +5641,11 @@
   },
   {
     "name": "F-5.04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "GRID STATION 01",
@@ -4842,6 +5657,11 @@
   },
   {
     "name": "F-5.4",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -4858,6 +5678,11 @@
   },
   {
     "name": "F-5.05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 14,
     "layers": [
       "GRID STATION 01",
@@ -4918,6 +5743,11 @@
   },
   {
     "name": "F-5.5",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_tf no"
@@ -4926,6 +5756,11 @@
   },
   {
     "name": "F-5.06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "GRID STATION 01",
@@ -4958,6 +5793,11 @@
   },
   {
     "name": "F-5.07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "GRID STATION 01",
@@ -4968,6 +5808,11 @@
   },
   {
     "name": "F-5.08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 12,
     "layers": [
       "GRID STATION 01",
@@ -4993,6 +5838,11 @@
   },
   {
     "name": "F-5.09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION 01",
@@ -5002,6 +5852,11 @@
   },
   {
     "name": "F-5.10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -5010,6 +5865,11 @@
   },
   {
     "name": "F-5.11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "GRID STATION 01",
@@ -5063,6 +5923,11 @@
   },
   {
     "name": "F-5.12",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "GRID STATION 01",
@@ -5081,6 +5946,11 @@
   },
   {
     "name": "F-5.13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 13,
     "layers": [
       "GRID STATION 01",
@@ -5120,6 +5990,11 @@
   },
   {
     "name": "F-5.14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 13,
     "layers": [
       "GRID STATION 01",
@@ -5146,6 +6021,11 @@
   },
   {
     "name": "F-5.15",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 15,
     "layers": [
       "GRID STATION 01",
@@ -5186,6 +6066,11 @@
   },
   {
     "name": "F-5.16",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "GRID STATION 01",
@@ -5197,6 +6082,11 @@
   },
   {
     "name": "F-5.17",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 17,
     "layers": [
       "GRID STATION 01",
@@ -5244,6 +6134,11 @@
   },
   {
     "name": "F-5.18",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION 01",
@@ -5253,6 +6148,11 @@
   },
   {
     "name": "F-5.19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -5261,6 +6161,11 @@
   },
   {
     "name": "F-5.20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -5269,6 +6174,11 @@
   },
   {
     "name": "F-5.21",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "GRID STATION 01",
@@ -5287,6 +6197,11 @@
   },
   {
     "name": "F-5.22",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "GRID STATION 01",
@@ -5326,6 +6241,11 @@
   },
   {
     "name": "F-5.23",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 17,
     "layers": [
       "GRID STATION 01",
@@ -5345,6 +6265,11 @@
   },
   {
     "name": "F-5.24",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 12,
     "layers": [
       "GRID STATION 01",
@@ -5364,6 +6289,11 @@
   },
   {
     "name": "F-5.25",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "GRID STATION 01",
@@ -5382,6 +6312,11 @@
   },
   {
     "name": "F-5.26",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 17,
     "layers": [
       "GRID STATION 01",
@@ -5421,6 +6356,11 @@
   },
   {
     "name": "F-5.27",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 19,
     "layers": [
       "GRID STATION 01",
@@ -5489,6 +6429,11 @@
   },
   {
     "name": "F-5.28",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 15,
     "layers": [
       "GRID STATION 01",
@@ -5521,6 +6466,11 @@
   },
   {
     "name": "F-5.29",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 14,
     "layers": [
       "GRID STATION 01",
@@ -5574,6 +6524,11 @@
   },
   {
     "name": "F-5.30",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 17,
     "layers": [
       "GRID STATION 01",
@@ -5634,6 +6589,11 @@
   },
   {
     "name": "F-06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 15,
     "layers": [
       "Level 37",
@@ -5653,6 +6613,11 @@
   },
   {
     "name": "F-6",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -5661,6 +6626,11 @@
   },
   {
     "name": "F-6.01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "Level 37",
@@ -5693,6 +6663,11 @@
   },
   {
     "name": "F-6.02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch",
@@ -5717,6 +6692,11 @@
   },
   {
     "name": "F-6.2",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -5725,6 +6705,11 @@
   },
   {
     "name": "F-6.03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "Level 37",
@@ -5771,6 +6756,11 @@
   },
   {
     "name": "F-6.04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "d_switch",
@@ -5803,6 +6793,11 @@
   },
   {
     "name": "F-6.4",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_switch",
@@ -5827,6 +6822,11 @@
   },
   {
     "name": "F-6.05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -5872,6 +6872,11 @@
   },
   {
     "name": "F-6.06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 12,
     "layers": [
       "Level 37",
@@ -5932,6 +6937,11 @@
   },
   {
     "name": "F-6.07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "d_switch",
@@ -6005,6 +7015,11 @@
   },
   {
     "name": "F-6.08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "d_switch",
@@ -6071,6 +7086,11 @@
   },
   {
     "name": "F-6.09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "d_switch",
@@ -6130,6 +7150,11 @@
   },
   {
     "name": "F-6.9",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -6138,6 +7163,11 @@
   },
   {
     "name": "F-6.10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_switch",
@@ -6197,6 +7227,11 @@
   },
   {
     "name": "F-6.11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "Level 37",
@@ -6264,6 +7299,11 @@
   },
   {
     "name": "F-6.12",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "d_switch",
@@ -6351,6 +7391,11 @@
   },
   {
     "name": "F-6.13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "d_switch",
@@ -6417,6 +7462,11 @@
   },
   {
     "name": "F-6.14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "d_switch",
@@ -6476,6 +7526,11 @@
   },
   {
     "name": "F-6.15",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "Level 37",
@@ -6523,6 +7578,11 @@
   },
   {
     "name": "F-6.16",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "Level 37",
@@ -6548,6 +7608,11 @@
   },
   {
     "name": "F-6.17",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "d_switch",
@@ -6586,6 +7651,11 @@
   },
   {
     "name": "F-6.18",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -6631,6 +7701,11 @@
   },
   {
     "name": "F-6.19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "d_switch",
@@ -6697,6 +7772,11 @@
   },
   {
     "name": "F-6.20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -6749,6 +7829,11 @@
   },
   {
     "name": "F-6.21",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "d_switch",
@@ -6829,6 +7914,11 @@
   },
   {
     "name": "F-6.22",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "ABS NUMBER",
@@ -6876,6 +7966,11 @@
   },
   {
     "name": "F-6.23",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_switch",
@@ -6928,6 +8023,11 @@
   },
   {
     "name": "F-6.24",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -6980,6 +8080,11 @@
   },
   {
     "name": "F-6.25",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "d_switch",
@@ -7032,6 +8137,11 @@
   },
   {
     "name": "F-6.26",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "d_switch",
@@ -7078,6 +8188,11 @@
   },
   {
     "name": "F-6.27",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "Level 37",
@@ -7124,6 +8239,11 @@
   },
   {
     "name": "F-6.28",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "0",
@@ -7156,6 +8276,11 @@
   },
   {
     "name": "F-6.29",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 14,
     "layers": [
       "d_switch",
@@ -7236,6 +8361,11 @@
   },
   {
     "name": "F-6.30",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_switch",
@@ -7295,6 +8425,11 @@
   },
   {
     "name": "F-6.31",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "GRID STATION 01",
@@ -7348,6 +8483,11 @@
   },
   {
     "name": "F-6.32",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "d_switch",
@@ -7393,6 +8533,11 @@
   },
   {
     "name": "F-6.33",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "d_switch",
@@ -7466,6 +8611,11 @@
   },
   {
     "name": "F-6.34",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "d_switch",
@@ -7518,6 +8668,11 @@
   },
   {
     "name": "F-6.35",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "d_switch",
@@ -7577,6 +8732,11 @@
   },
   {
     "name": "F-6.36",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -7629,6 +8789,11 @@
   },
   {
     "name": "F-6.37",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "d_switch",
@@ -7702,6 +8867,11 @@
   },
   {
     "name": "F-6.38",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "ABS NUMBER",
@@ -7762,6 +8932,11 @@
   },
   {
     "name": "F-07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 15,
     "layers": [
       "Level 37",
@@ -7794,6 +8969,11 @@
   },
   {
     "name": "F-7",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "0",
@@ -7820,6 +9000,11 @@
   },
   {
     "name": "F-7.01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "d_switch",
@@ -7844,6 +9029,11 @@
   },
   {
     "name": "F-7.02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_switch",
@@ -7861,6 +9051,11 @@
   },
   {
     "name": "F-7.03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "d_switch",
@@ -7885,6 +9080,11 @@
   },
   {
     "name": "F-7.3",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -7901,6 +9101,11 @@
   },
   {
     "name": "F-7.04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 17,
     "layers": [
       "0",
@@ -7940,6 +9145,11 @@
   },
   {
     "name": "F-7.05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 13,
     "layers": [
       "d_switch",
@@ -7978,6 +9188,11 @@
   },
   {
     "name": "F-7.06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 13,
     "layers": [
       "0",
@@ -8018,6 +9233,11 @@
   },
   {
     "name": "F-7.07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 15,
     "layers": [
       "d_switch",
@@ -8035,6 +9255,11 @@
   },
   {
     "name": "F-7.08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 14,
     "layers": [
       "0",
@@ -8054,6 +9279,11 @@
   },
   {
     "name": "F-7.09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 12,
     "layers": [
       "GRID STATION 01",
@@ -8074,6 +9304,11 @@
   },
   {
     "name": "F-7.10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -8083,6 +9318,11 @@
   },
   {
     "name": "F-7.11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 12,
     "layers": [
       "d_switch",
@@ -8114,6 +9354,11 @@
   },
   {
     "name": "F-7.12",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "d_switch",
@@ -8166,6 +9411,11 @@
   },
   {
     "name": "F-7.13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 12,
     "layers": [
       "0",
@@ -8192,6 +9442,11 @@
   },
   {
     "name": "F-7.14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 13,
     "layers": [
       "d_switch",
@@ -8230,6 +9485,11 @@
   },
   {
     "name": "F-7.15",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "d_switch",
@@ -8268,6 +9528,11 @@
   },
   {
     "name": "F-7.16",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "d_switch",
@@ -8306,6 +9571,11 @@
   },
   {
     "name": "F-7.17",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "Level 37",
@@ -8353,6 +9623,11 @@
   },
   {
     "name": "F-7.18",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 15,
     "layers": [
       "Level 37",
@@ -8406,6 +9681,11 @@
   },
   {
     "name": "F-7.19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "d_switch",
@@ -8415,6 +9695,11 @@
   },
   {
     "name": "F-7.20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 16,
     "layers": [
       "d_switch",
@@ -8475,6 +9760,11 @@
   },
   {
     "name": "F-7.21",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 14,
     "layers": [
       "Level 37",
@@ -8528,6 +9818,11 @@
   },
   {
     "name": "F-7.22",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 16,
     "layers": [
       "0",
@@ -8567,6 +9862,11 @@
   },
   {
     "name": "F-7.23",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 13,
     "layers": [
       "0",
@@ -8599,6 +9899,11 @@
   },
   {
     "name": "F-7.24",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "GRID STATION  04",
@@ -8625,6 +9930,11 @@
   },
   {
     "name": "F-7.25",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "Level 37",
@@ -8657,6 +9967,11 @@
   },
   {
     "name": "F-7.26",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 12,
     "layers": [
       "GRID STATION  04",
@@ -8682,6 +9997,11 @@
   },
   {
     "name": "F-7.27",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_switch",
@@ -8699,6 +10019,11 @@
   },
   {
     "name": "F-7.28",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 19,
     "layers": [
       "d_switch",
@@ -8730,6 +10055,11 @@
   },
   {
     "name": "F-7.29",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 17,
     "layers": [
       "Level 37",
@@ -8740,6 +10070,11 @@
   },
   {
     "name": "F-7.30",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "0",
@@ -8759,6 +10094,11 @@
   },
   {
     "name": "F-7.31",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 16,
     "layers": [
       "0",
@@ -8777,6 +10117,11 @@
   },
   {
     "name": "F-7.32",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 15,
     "layers": [
       "0",
@@ -8817,6 +10162,11 @@
   },
   {
     "name": "F-7.33",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "Level 37",
@@ -8856,6 +10206,11 @@
   },
   {
     "name": "F-7.34",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 14,
     "layers": [
       "d_switch",
@@ -8922,6 +10277,11 @@
   },
   {
     "name": "F-08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 13,
     "layers": [
       "0",
@@ -8947,6 +10307,11 @@
   },
   {
     "name": "F-8",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_switch",
@@ -8985,6 +10350,11 @@
   },
   {
     "name": "F-8.1",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -9008,6 +10378,11 @@
   },
   {
     "name": "F-8.01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "Level 37",
@@ -9018,6 +10393,11 @@
   },
   {
     "name": "F-8.02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_switch",
@@ -9049,6 +10429,11 @@
   },
   {
     "name": "F-8.03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "d_switch",
@@ -9101,6 +10486,11 @@
   },
   {
     "name": "F-8.3",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -9109,6 +10499,11 @@
   },
   {
     "name": "F-8.04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -9133,6 +10528,11 @@
   },
   {
     "name": "F-8.05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "GRID STATION 01",
@@ -9165,6 +10565,11 @@
   },
   {
     "name": "F-8.06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_switch",
@@ -9174,6 +10579,11 @@
   },
   {
     "name": "F-8.07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "d_switch",
@@ -9198,6 +10608,11 @@
   },
   {
     "name": "F-8.08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 12,
     "layers": [
       "d_switch",
@@ -9236,6 +10651,11 @@
   },
   {
     "name": "F-8.09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "d_switch",
@@ -9274,6 +10694,11 @@
   },
   {
     "name": "F-8.10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 13,
     "layers": [
       "d_switch",
@@ -9320,6 +10745,11 @@
   },
   {
     "name": "F-8.11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "d_fco text",
@@ -9345,6 +10775,11 @@
   },
   {
     "name": "F-8.12",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "d_switch",
@@ -9383,6 +10818,11 @@
   },
   {
     "name": "F-8.13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "GRID STATION 01",
@@ -9422,6 +10862,11 @@
   },
   {
     "name": "F-8.14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "d_switch",
@@ -9460,6 +10905,11 @@
   },
   {
     "name": "F-8.15",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_switch",
@@ -9498,6 +10948,11 @@
   },
   {
     "name": "F-8.16",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "GRID STATION 01",
@@ -9537,6 +10992,11 @@
   },
   {
     "name": "F-8.17",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -9546,6 +11006,11 @@
   },
   {
     "name": "F-8.18",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "d_switch",
@@ -9563,6 +11028,11 @@
   },
   {
     "name": "F-8.19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_switch",
@@ -9587,6 +11057,11 @@
   },
   {
     "name": "F-8.20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "d_switch",
@@ -9625,6 +11100,11 @@
   },
   {
     "name": "F-8.21",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "GRID STATION 01",
@@ -9657,6 +11137,11 @@
   },
   {
     "name": "F-8.22",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "Level 37",
@@ -9703,6 +11188,11 @@
   },
   {
     "name": "F-8.23",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "d_switch",
@@ -9727,6 +11217,11 @@
   },
   {
     "name": "F-8.24",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -9758,6 +11253,11 @@
   },
   {
     "name": "F-8.25",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "d_switch",
@@ -9796,6 +11296,11 @@
   },
   {
     "name": "F-8.26",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -9827,6 +11332,11 @@
   },
   {
     "name": "F-8.27",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "Level 37",
@@ -9845,6 +11355,11 @@
   },
   {
     "name": "F-8.28",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "d_switch",
@@ -9883,6 +11398,11 @@
   },
   {
     "name": "F-8.29",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "Level 37",
@@ -9922,6 +11442,11 @@
   },
   {
     "name": "F-8.30",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_switch",
@@ -9939,6 +11464,11 @@
   },
   {
     "name": "F-8.31",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "Level 37",
@@ -9971,6 +11501,11 @@
   },
   {
     "name": "F-8.32",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_switch",
@@ -10009,6 +11544,11 @@
   },
   {
     "name": "F-8.33",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -10026,6 +11566,11 @@
   },
   {
     "name": "F-8.34",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -10043,6 +11588,11 @@
   },
   {
     "name": "F-09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "0",
@@ -10076,6 +11626,11 @@
   },
   {
     "name": "F-10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 15,
     "layers": [
       "0",
@@ -10145,6 +11700,11 @@
   },
   {
     "name": "F-11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 13,
     "layers": [
       "0",
@@ -10165,6 +11725,11 @@
   },
   {
     "name": "F-12",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "Level 37",
@@ -10197,6 +11762,11 @@
   },
   {
     "name": "F-13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 13,
     "layers": [
       "Level 37",
@@ -10251,6 +11821,11 @@
   },
   {
     "name": "F-14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "0",
@@ -10269,6 +11844,11 @@
   },
   {
     "name": "F-15",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "Level 37",
@@ -10278,6 +11858,11 @@
   },
   {
     "name": "F-16",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "Level 37",
@@ -10310,6 +11895,11 @@
   },
   {
     "name": "F-17",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 14,
     "layers": [
       "Level 37",
@@ -10356,6 +11946,11 @@
   },
   {
     "name": "F-18",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "Level 37",
@@ -10366,6 +11961,11 @@
   },
   {
     "name": "F-19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "Level 37",
@@ -10375,6 +11975,11 @@
   },
   {
     "name": "F-20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "Level 37",
@@ -10386,6 +11991,11 @@
   },
   {
     "name": "F-21",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "Level 37",
@@ -10396,6 +12006,11 @@
   },
   {
     "name": "F-22",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 14,
     "layers": [
       "0",
@@ -10430,6 +12045,11 @@
   },
   {
     "name": "F-23",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10438,6 +12058,11 @@
   },
   {
     "name": "F-24",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "0",
@@ -10448,6 +12073,11 @@
   },
   {
     "name": "F-25",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_switch"
@@ -10456,6 +12086,11 @@
   },
   {
     "name": "F-26",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10464,6 +12099,11 @@
   },
   {
     "name": "F-27",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch"
@@ -10472,6 +12112,11 @@
   },
   {
     "name": "F-28",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch"
@@ -10480,6 +12125,11 @@
   },
   {
     "name": "F-29",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch"
@@ -10488,6 +12138,11 @@
   },
   {
     "name": "F-30",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10496,6 +12151,11 @@
   },
   {
     "name": "F-31",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_eos no",
@@ -10505,6 +12165,11 @@
   },
   {
     "name": "F-32",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10513,6 +12178,11 @@
   },
   {
     "name": "F-33",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04",
@@ -10522,6 +12192,11 @@
   },
   {
     "name": "F-34",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04",
@@ -10531,6 +12206,11 @@
   },
   {
     "name": "FDR#01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04"
@@ -10539,6 +12219,11 @@
   },
   {
     "name": "FDR#1",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10547,6 +12232,11 @@
   },
   {
     "name": "FDR#1.23",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -10555,6 +12245,11 @@
   },
   {
     "name": "FDR#02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04"
@@ -10563,6 +12258,11 @@
   },
   {
     "name": "FDR#2",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10571,6 +12271,11 @@
   },
   {
     "name": "FDR#2.01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10579,6 +12284,11 @@
   },
   {
     "name": "FDR#2.02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_switch"
@@ -10587,6 +12297,11 @@
   },
   {
     "name": "FDR#2.03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch"
@@ -10595,6 +12310,11 @@
   },
   {
     "name": "FDR#2.04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_switch"
@@ -10603,6 +12323,11 @@
   },
   {
     "name": "FDR#2.05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10611,6 +12336,11 @@
   },
   {
     "name": "FDR#2.06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch"
@@ -10619,6 +12349,11 @@
   },
   {
     "name": "FDR#2.07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "d_switch"
@@ -10627,6 +12362,11 @@
   },
   {
     "name": "FDR#2.09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10635,6 +12375,11 @@
   },
   {
     "name": "FDR#2.10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "d_switch"
@@ -10643,6 +12388,11 @@
   },
   {
     "name": "FDR#2.11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10651,6 +12401,11 @@
   },
   {
     "name": "FDR#2.12",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10659,6 +12414,11 @@
   },
   {
     "name": "FDR#2.13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "d_switch"
@@ -10667,6 +12427,11 @@
   },
   {
     "name": "FDR#2.14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_switch"
@@ -10675,6 +12440,11 @@
   },
   {
     "name": "FDR#2.15",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch"
@@ -10683,6 +12453,11 @@
   },
   {
     "name": "FDR#2.16",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "d_switch"
@@ -10691,6 +12466,11 @@
   },
   {
     "name": "FDR#2.17",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10699,6 +12479,11 @@
   },
   {
     "name": "FDR#2.18",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10707,6 +12492,11 @@
   },
   {
     "name": "FDR#2.19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 10,
     "layers": [
       "d_switch"
@@ -10715,6 +12505,11 @@
   },
   {
     "name": "FDR#2.20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 12,
     "layers": [
       "d_switch"
@@ -10723,6 +12518,11 @@
   },
   {
     "name": "FDR#03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "GRID STATION  04"
@@ -10731,6 +12531,11 @@
   },
   {
     "name": "FDR#04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04"
@@ -10739,6 +12544,11 @@
   },
   {
     "name": "FDR#4.04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_switch"
@@ -10747,6 +12557,11 @@
   },
   {
     "name": "FDR#4.06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -10755,6 +12570,11 @@
   },
   {
     "name": "FDR#4.08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -10763,6 +12583,11 @@
   },
   {
     "name": "FDR#4.09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_switch"
@@ -10771,6 +12596,11 @@
   },
   {
     "name": "FDR#4.21",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_switch"
@@ -10779,6 +12609,11 @@
   },
   {
     "name": "FDR#4.22",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch"
@@ -10787,6 +12622,11 @@
   },
   {
     "name": "FDR#4.23",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_switch"
@@ -10795,6 +12635,11 @@
   },
   {
     "name": "FDR#4.24",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_switch"
@@ -10803,6 +12648,11 @@
   },
   {
     "name": "FDR#05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04"
@@ -10811,6 +12661,11 @@
   },
   {
     "name": "FDR#5.08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -10819,6 +12674,11 @@
   },
   {
     "name": "FDR#06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04"
@@ -10827,6 +12687,11 @@
   },
   {
     "name": "FDR#6.01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -10835,6 +12700,11 @@
   },
   {
     "name": "FDR#6.02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -10843,6 +12713,11 @@
   },
   {
     "name": "FDR#6.23",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -10851,6 +12726,11 @@
   },
   {
     "name": "FDR#6.30",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -10859,6 +12739,11 @@
   },
   {
     "name": "FDR#6.31",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_switch"
@@ -10867,6 +12752,11 @@
   },
   {
     "name": "FDR#07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "0"
@@ -10875,6 +12765,11 @@
   },
   {
     "name": "FDR#7.05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_switch"
@@ -10883,6 +12778,11 @@
   },
   {
     "name": "FDR#7.09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_switch"
@@ -10891,6 +12791,11 @@
   },
   {
     "name": "FDR#7.13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_switch"
@@ -10899,6 +12804,11 @@
   },
   {
     "name": "FDR#7.14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -10907,6 +12817,11 @@
   },
   {
     "name": "FDR#7.17",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -10915,6 +12830,11 @@
   },
   {
     "name": "FDR#7.19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10923,6 +12843,11 @@
   },
   {
     "name": "FDR#7.20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -10931,6 +12856,11 @@
   },
   {
     "name": "FDR#7.24",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_switch"
@@ -10939,6 +12869,11 @@
   },
   {
     "name": "FDR#7.25",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10947,6 +12882,11 @@
   },
   {
     "name": "FDR#7.26",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10955,6 +12895,11 @@
   },
   {
     "name": "FDR#7.28",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10963,6 +12908,11 @@
   },
   {
     "name": "FDR#7.30",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -10971,6 +12921,11 @@
   },
   {
     "name": "FDR#7.33",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -10979,6 +12934,11 @@
   },
   {
     "name": "FDR#7.34",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch"
@@ -10987,6 +12947,11 @@
   },
   {
     "name": "FDR#8.3",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -10995,6 +12960,11 @@
   },
   {
     "name": "FDR#8.7",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -11003,6 +12973,11 @@
   },
   {
     "name": "FDR#8.9",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -11011,6 +12986,11 @@
   },
   {
     "name": "FDR#8.10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -11019,6 +12999,11 @@
   },
   {
     "name": "FDR#8.13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "d_switch"
@@ -11027,6 +13012,11 @@
   },
   {
     "name": "FDR#8.14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch",
@@ -11036,6 +13026,11 @@
   },
   {
     "name": "FDR#8.20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -11052,6 +13047,11 @@
   },
   {
     "name": "FDR#09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04"
@@ -11060,6 +13060,11 @@
   },
   {
     "name": "FDR#10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04"
@@ -11068,6 +13073,11 @@
   },
   {
     "name": "FDR#11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "0"
@@ -11076,6 +13086,11 @@
   },
   {
     "name": "FDR#12",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04"
@@ -11084,6 +13099,11 @@
   },
   {
     "name": "FDR#13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04"
@@ -11092,6 +13112,11 @@
   },
   {
     "name": "FDR#14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "GRID STATION  04"
@@ -11100,6 +13125,11 @@
   },
   {
     "name": "FDR#16",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "GRID STATION  04"
@@ -11108,6 +13138,11 @@
   },
   {
     "name": "FDR#17",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "GRID STATION  04"
@@ -11116,6 +13151,11 @@
   },
   {
     "name": "FDR#18",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04"
@@ -11124,6 +13164,11 @@
   },
   {
     "name": "FDR#19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04"
@@ -11132,6 +13177,11 @@
   },
   {
     "name": "FDR#20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04"
@@ -11140,6 +13190,11 @@
   },
   {
     "name": "FDR#22",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "GRID STATION  04"
@@ -11148,6 +13203,11 @@
   },
   {
     "name": "FDR#23",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "GRID STATION  04"
@@ -11156,6 +13216,11 @@
   },
   {
     "name": "Q.F-10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "fedr no"
@@ -11186,6 +13251,11 @@
   },
   {
     "name": "Q.F-11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -11202,6 +13272,11 @@
   },
   {
     "name": "QAI.F-01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "Level 37",
@@ -11275,6 +13350,11 @@
   },
   {
     "name": "QAI.F-02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "fedr no"
@@ -11312,6 +13392,11 @@
   },
   {
     "name": "QAI.F-03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "0",
@@ -11336,6 +13421,11 @@
   },
   {
     "name": "QAI.F-04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "fedr no"
@@ -11401,6 +13491,11 @@
   },
   {
     "name": "QAI.F-05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 17,
     "layers": [
       "GRID STATION  04",
@@ -11517,6 +13612,11 @@
   },
   {
     "name": "QAI.F-06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 13,
     "layers": [
       "fedr no"
@@ -11617,6 +13717,11 @@
   },
   {
     "name": "QAI.F-07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_switch",
@@ -11626,6 +13731,11 @@
   },
   {
     "name": "QAI.F-08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -11634,6 +13744,11 @@
   },
   {
     "name": "QAI.F-09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -11642,6 +13757,11 @@
   },
   {
     "name": "QAI.F-11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 17,
     "layers": [
       "d_switch",
@@ -11750,6 +13870,11 @@
   },
   {
     "name": "QBSP.F-5",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -11766,6 +13891,11 @@
   },
   {
     "name": "QBSP.F-14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "Level 37"
@@ -11774,6 +13904,11 @@
   },
   {
     "name": "QPP.F-02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "Level 37"
@@ -11782,6 +13917,11 @@
   },
   {
     "name": "U.F-01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 7,
     "layers": [
       "d_switch",
@@ -11814,6 +13954,11 @@
   },
   {
     "name": "U.F-02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 11,
     "layers": [
       "d_switch",
@@ -11873,6 +14018,11 @@
   },
   {
     "name": "U.F-04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_eos no",
@@ -11882,6 +14032,11 @@
   },
   {
     "name": "U.F-06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_eos no",
@@ -11891,6 +14046,11 @@
   },
   {
     "name": "U.F-10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_eos no",
@@ -11900,6 +14060,11 @@
   },
   {
     "name": "U.F-12",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_eos no",
@@ -11909,6 +14074,11 @@
   },
   {
     "name": "U.F-13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "d_switch"
@@ -11917,6 +14087,11 @@
   },
   {
     "name": "U.F-14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch"
@@ -11925,6 +14100,11 @@
   },
   {
     "name": "U.F-19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch",
@@ -11942,6 +14122,11 @@
   },
   {
     "name": "U.F-22",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "GRID STATION  04",
@@ -11960,6 +14145,11 @@
   },
   {
     "name": "U.F-24",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "GRID STATION  04",
@@ -11987,6 +14177,11 @@
   },
   {
     "name": "U.F-25",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 5,
     "layers": [
       "d_switch",
@@ -12018,6 +14213,11 @@
   },
   {
     "name": "U.F-31",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 4,
     "layers": [
       "d_switch",
@@ -12027,6 +14227,11 @@
   },
   {
     "name": "U.F-33",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 8,
     "layers": [
       "d_switch",
@@ -12045,6 +14250,11 @@
   },
   {
     "name": "U.F-34",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_eos no",
@@ -12054,6 +14264,11 @@
   },
   {
     "name": "UNI.F-01",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "fedr no"
@@ -12105,6 +14320,11 @@
   },
   {
     "name": "UNI.F-02",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12113,6 +14333,11 @@
   },
   {
     "name": "UNI.F-03",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12121,6 +14346,11 @@
   },
   {
     "name": "UNI.F-04",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "fedr no"
@@ -12137,6 +14367,11 @@
   },
   {
     "name": "UNI.F-05",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12145,6 +14380,11 @@
   },
   {
     "name": "UNI.F-06",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12153,6 +14393,11 @@
   },
   {
     "name": "UNI.F-07",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12161,6 +14406,11 @@
   },
   {
     "name": "UNI.F-08",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12169,6 +14419,11 @@
   },
   {
     "name": "UNI.F-09",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12177,6 +14432,11 @@
   },
   {
     "name": "UNI.F-10",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12185,6 +14445,11 @@
   },
   {
     "name": "UNI.F-11",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12193,6 +14458,11 @@
   },
   {
     "name": "UNI.F-12",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12201,6 +14471,11 @@
   },
   {
     "name": "UNI.F-13",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -12224,6 +14499,11 @@
   },
   {
     "name": "UNI.F-14",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "fedr no"
@@ -12247,6 +14527,11 @@
   },
   {
     "name": "UNI.F-15",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12255,6 +14540,11 @@
   },
   {
     "name": "UNI.F-16",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12263,6 +14553,11 @@
   },
   {
     "name": "UNI.F-17",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12279,6 +14574,11 @@
   },
   {
     "name": "UNI.F-18",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12287,6 +14587,11 @@
   },
   {
     "name": "UNI.F-19",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12295,6 +14600,11 @@
   },
   {
     "name": "UNI.F-20",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12303,6 +14613,11 @@
   },
   {
     "name": "UNI.F-21",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12311,6 +14626,11 @@
   },
   {
     "name": "UNI.F-22",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "fedr no"
@@ -12319,6 +14639,11 @@
   },
   {
     "name": "UNI.F-23",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12327,6 +14652,11 @@
   },
   {
     "name": "UNI.F-24",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 9,
     "layers": [
       "fedr no"
@@ -12385,6 +14715,11 @@
   },
   {
     "name": "UNI.F-25",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12393,6 +14728,11 @@
   },
   {
     "name": "UNI.F-27",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12409,6 +14749,11 @@
   },
   {
     "name": "UNI.F-28",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12425,6 +14770,11 @@
   },
   {
     "name": "UNI.F-29",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 1,
     "layers": [
       "fedr no"
@@ -12441,6 +14791,11 @@
   },
   {
     "name": "UNI.F-31",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 2,
     "layers": [
       "fedr no"
@@ -12464,6 +14819,11 @@
   },
   {
     "name": "UNI.F-33",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 6,
     "layers": [
       "fedr no"
@@ -12515,6 +14875,11 @@
   },
   {
     "name": "UNI.F-34",
+    "station": null,
+    "stationConfidence": "unknown",
+    "stationMatchCount": 0,
+    "stationAverageDistance": null,
+    "stationCandidates": [],
     "occurrences": 3,
     "layers": [
       "d_switch",

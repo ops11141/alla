@@ -1,15 +1,25 @@
 {
   "source": "cad/FINAL DISPATCH - UPDATE.dwg",
-  "generatedAt": "2026-10-05T13:27:42.748Z",
+  "generatedAt": "2026-10-05T13:58:26.103Z",
   "dwgBytes": 7901364,
   "dxfBytes": 44810595,
   "dxfEntities": 116671,
   "textEntities": 43644,
   "totalFeeders": 473,
+  "stationLabels": 0,
+  "totalStations": 0,
+  "matchedFeeders": 0,
+  "unmatchedFeeders": 473,
+  "confidence": {
+    "high": 0,
+    "medium": 0,
+    "low": 0
+  },
   "categories": {
     "PREFIX.F": 104,
     "F": 292,
     "FDR": 77
   },
-  "description": "Feeder database extracted directly from the DWG. Names are taken from actual feeder labels found in the drawing."
+  "stations": [],
+  "description": "Feeder database extracted directly from the DWG with spatial station matching."
 }
