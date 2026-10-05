@@ -1,35 +1,1213 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>مواقع المغذيات | قسم الصيانة</title>
+
 <style>
-:root{--g:#075f49;--g2:#0b7a5d;--bg:#eef5f3;--card:#fff;--muted:#66736f;--line:#d9e6e2}*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Tahoma,Arial,sans-serif;color:#17332c}header{background:linear-gradient(135deg,#075f49,#0a7a5d);color:#fff;padding:22px 18px}header .top{max-width:1200px;margin:auto;display:flex;gap:12px;align-items:center;justify-content:space-between}h1{margin:0;font-size:25px}a{color:inherit}.nav{max-width:1200px;margin:12px auto 0;display:flex;gap:8px;flex-wrap:wrap}.nav a{background:#fff;color:var(--g);padding:10px 14px;border-radius:12px;text-decoration:none;font-weight:700}.wrap{max-width:1200px;margin:18px auto;padding:0 14px}.card{background:var(--card);border-radius:24px;padding:20px;margin-bottom:18px;box-shadow:0 8px 30px #1b57420e;border:1px solid #e2ece9}.toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.btn,select,input{border:1px solid var(--line);border-radius:14px;padding:12px 14px;font:inherit;background:#fff}.btn{background:var(--g);color:#fff;border:0;cursor:pointer;font-weight:700}.btn.secondary{background:#e5f2ee;color:var(--g)}input{flex:1;min-width:220px}.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:15px}.stat{background:#edf7f4;border-radius:16px;padding:14px;text-align:center}.stat b{display:block;font-size:23px;color:var(--g);margin-top:4px}.status{padding:14px;border-radius:14px;background:#eef7f4;margin-top:14px}.error{background:#fff0f0;color:#a21e1e}.warn{background:#fff8e6;color:#775600}.station{border:1px solid var(--line);border-radius:18px;margin:12px 0;overflow:hidden}.station>button{width:100%;border:0;background:#f3faf7;padding:15px;text-align:right;font:inherit;font-weight:800;color:#12483a;cursor:pointer}.feeders{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:12px}.feeder{border:1px solid var(--line);border-radius:14px;padding:13px;background:#fff;cursor:pointer}.feeder:hover{border-color:var(--g2)}.muted{color:var(--muted);font-size:13px}.detail{display:none}.detail.open{display:block}.pre{white-space:pre-wrap;background:#101817;color:#dff8ef;padding:15px;border-radius:14px;overflow:auto;max-height:480px;direction:ltr;text-align:left;font-family:monospace;font-size:12px}.tableWrap{overflow:auto}table{border-collapse:collapse;width:100%;min-width:700px}th,td{border-bottom:1px solid var(--line);padding:9px;text-align:right;vertical-align:top}th{background:#f3f8f6}.small{font-size:12px}.badge{display:inline-block;background:#e7f3ef;color:var(--g);padding:5px 8px;border-radius:999px;margin:2px}.loading{animation:pulse 1.2s infinite}@keyframes pulse{50%{opacity:.45}}@media(max-width:800px){.stats{grid-template-columns:repeat(2,1fr)}.feeders{grid-template-columns:1fr 1fr}}@media(max-width:520px){h1{font-size:20px}.feeders{grid-template-columns:1fr}.card{padding:15px;border-radius:18px}}
-</style></head>
-<body>
-<header><div class="top"><h1>🔌 دليل المغذيات</h1><span>دراسة المغذي حسب المحطة والرسم</span></div><div class="nav"><a href="index.html">الرئيسية</a><a href="equipment.html">⚡ مواقع المعدات</a><a href="meters.html">🔢 مواقع العدادات</a><a href="dwg-inspector.html">🧰 بيانات الرسم</a></div></header>
-<div class="wrap">
-<section class="card"><h2>قاعدة المغذيات</h2><p class="muted">الأسماء هنا لا يتم اختراعها أو إعادة تسميتها. يتم عرض اسم المحطة والمغذي كما وردا في الرسم، مع إبقاء الحالات غير المؤكدة منفصلة.</p>
-<div class="toolbar"><input id="q" placeholder="ابحث باسم المحطة أو المغذي..." oninput="render()"><select id="stationFilter" onchange="render()"><option value="">كل المحطات</option></select><button class="btn secondary" onclick="loadAll()">↻ تحديث البيانات</button></div>
-<div id="status" class="status loading">جاري قراءة قاعدة البيانات الثابتة...</div>
-<div class="stats"><div class="stat">المحطات<b id="nStations">0</b></div><div class="stat">سجلات المغذيات<b id="nFeeders">0</b></div><div class="stat">النصوص<b id="nTexts">0</b></div><div class="stat">Layers<b id="nLayers">0</b></div><div class="stat">الكيانات<b id="nEntities">0</b></div></div></section>
-<section class="card"><h2>المحطات والمغذيات</h2><div id="list"><p class="muted">لا توجد بيانات مولدة بعد. شغّل GitHub Action «Build feeder database» بعد رفع المشروع.</p></div></section>
-<section id="detail" class="card detail"><h2 id="detailTitle"></h2><div id="detailBody"></div></section>
-</div>
-<script>
-let manifest=null,data=null,loaded=false;
-const get=async p=>{const r=await fetch(p,{cache:'no-store'});if(!r.ok)throw new Error(r.status+' '+p);return r.json()};
-async function loadAll(){
- const status=document.getElementById('status');status.className='status loading';status.textContent='جاري قراءة البيانات المولدة من DWG...';
- try{[manifest,data]=await Promise.all([get('data/feeders/manifest.json'),get('data/feeders/feeders.json')]);loaded=true;
-  document.getElementById('nStations').textContent=manifest.counts.explicitStationLabels??0;document.getElementById('nFeeders').textContent=manifest.counts.groupedFeeders??0;document.getElementById('nTexts').textContent=manifest.counts.textEntities??0;document.getElementById('nLayers').textContent=manifest.counts.layers??0;document.getElementById('nEntities').textContent=manifest.counts.entities??0;
-  const sel=document.getElementById('stationFilter');sel.innerHTML='<option value="">كل المحطات</option>';
-  [...new Set((data.feeders||[]).map(x=>x.stationName).filter(Boolean))].sort().forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sel.appendChild(o)});
-  status.className='status';status.textContent='تم تحميل قاعدة البيانات الثابتة بنجاح.';render();
- }catch(e){status.className='status error';status.innerHTML='تعذر تحميل قاعدة بيانات المغذيات: <b>'+escapeHtml(e.message)+'</b><br><span class="small">إذا ظهرت هذه الرسالة بعد الرفع على GitHub، افتح Actions وشغّل Build feeder database مرة واحدة.</span>';}
+:root{
+  --green:#075f49;
+  --green2:#0b7a5d;
+  --light:#eef7f4;
+  --bg:#f1f6f4;
+  --card:#ffffff;
+  --text:#17332c;
+  --muted:#6b7773;
+  --border:#dbe7e3;
+  --shadow:0 8px 30px rgba(20,70,55,.08);
 }
-function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function render(){if(!loaded)return;const q=document.getElementById('q').value.trim().toLowerCase(),sf=document.getElementById('stationFilter').value;const rows=(data.feeders||[]).filter(r=>(!sf||r.stationName===sf)&&(!q||String(r.stationName||'').toLowerCase().includes(q)||String(r.feederName||'').toLowerCase().includes(q)));const groups=new Map();rows.forEach(r=>{const k=r.stationName||'[المحطة غير محددة]';if(!groups.has(k))groups.set(k,[]);groups.get(k).push(r)});const box=document.getElementById('list');box.innerHTML='';if(!rows.length){box.innerHTML='<p class="muted">لا توجد نتائج.</p>';return}for(const [station,items] of groups){const s=document.createElement('div');s.className='station';const b=document.createElement('button');b.textContent=station+'  ·  '+items.length+' مغذي';b.onclick=()=>s.classList.toggle('open');const f=document.createElement('div');f.className='feeders';items.forEach(item=>{const c=document.createElement('div');c.className='feeder';c.innerHTML='<b>'+escapeHtml(item.feederName)+'</b><div class="muted">مطابقة المحطة: '+escapeHtml(item.match)+' · مرات الظهور: '+item.occurrences.length+'</div>';c.onclick=()=>showDetail(item);f.appendChild(c)});s.append(b,f);box.appendChild(s)}}
-function showDetail(item){const d=document.getElementById('detail');d.classList.add('open');document.getElementById('detailTitle').textContent=(item.stationName||'[المحطة غير محددة]')+'  ←  '+item.feederName;const occ=item.occurrences||[];document.getElementById('detailBody').innerHTML='<p><span class="badge">الاسم الحرفي: '+escapeHtml(item.feederName)+'</span><span class="badge">مطابقة: '+escapeHtml(item.match)+'</span></p><div class="tableWrap"><table><thead><tr><th>#</th><th>النص</th><th>Layer</th><th>Block</th><th>X</th><th>Y</th></tr></thead><tbody>'+occ.map((o,i)=>'<tr><td>'+(i+1)+'</td><td>'+escapeHtml(o.rawText)+'</td><td>'+escapeHtml(o.layer)+'</td><td>'+escapeHtml(o.block)+'</td><td>'+escapeHtml(o.x)+'</td><td>'+escapeHtml(o.y)+'</td></tr>').join('')+'</tbody></table></div><p class="muted">هذه الصفحة تعرض بيانات الرسم فقط؛ ربط معدات الموقع سيضاف بعد تثبيت علاقة المحطة/المغذي.</p>';d.scrollIntoView({behavior:'smooth'})}
-loadAll();
-</script></body></html>
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Tahoma,Arial,sans-serif;
+}
+
+header{
+  background:linear-gradient(135deg,var(--green),var(--green2));
+  color:#fff;
+  padding:22px 16px;
+}
+
+.header-inner{
+  max-width:1250px;
+  margin:auto;
+}
+
+.header-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:15px;
+  flex-wrap:wrap;
+}
+
+.header-title h1{
+  margin:0;
+  font-size:25px;
+}
+
+.header-title span{
+  opacity:.9;
+  font-size:14px;
+}
+
+.nav{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:18px;
+}
+
+.nav a{
+  background:#fff;
+  color:var(--green);
+  text-decoration:none;
+  padding:10px 14px;
+  border-radius:12px;
+  font-weight:bold;
+}
+
+.container{
+  max-width:1250px;
+  margin:20px auto;
+  padding:0 14px;
+}
+
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:22px;
+  padding:20px;
+  margin-bottom:18px;
+  box-shadow:var(--shadow);
+}
+
+.card h2{
+  margin-top:0;
+}
+
+.muted{
+  color:var(--muted);
+  font-size:13px;
+}
+
+.search-area{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.search-area input{
+  flex:1;
+  min-width:230px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:14px;
+  font:inherit;
+  outline:none;
+}
+
+.search-area input:focus{
+  border-color:var(--green2);
+  box-shadow:0 0 0 3px rgba(11,122,93,.1);
+}
+
+button{
+  font:inherit;
+}
+
+.btn{
+  border:0;
+  border-radius:14px;
+  padding:13px 18px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.btn-green{
+  background:var(--green);
+  color:#fff;
+}
+
+.btn-light{
+  background:#e5f2ee;
+  color:var(--green);
+}
+
+.status{
+  margin-top:14px;
+  padding:13px;
+  border-radius:13px;
+  background:var(--light);
+}
+
+.status.error{
+  background:#fff0f0;
+  color:#a21e1e;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-top:16px;
+}
+
+.stat{
+  background:#edf7f4;
+  border-radius:16px;
+  padding:15px;
+  text-align:center;
+}
+
+.stat span{
+  display:block;
+  color:var(--muted);
+  font-size:13px;
+}
+
+.stat strong{
+  display:block;
+  color:var(--green);
+  font-size:25px;
+  margin-top:5px;
+}
+
+.toolbar{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:15px;
+}
+
+.toolbar select{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:12px;
+  background:#fff;
+  font:inherit;
+}
+
+.results-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-bottom:12px;
+}
+
+.results-count{
+  color:var(--green);
+  font-weight:bold;
+}
+
+.feeders-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+}
+
+.feeder-card{
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:14px;
+  background:#fff;
+  cursor:pointer;
+  transition:.15s;
+}
+
+.feeder-card:hover{
+  border-color:var(--green2);
+  transform:translateY(-1px);
+  box-shadow:0 5px 15px rgba(20,70,55,.08);
+}
+
+.feeder-name{
+  color:var(--green);
+  font-size:17px;
+  font-weight:bold;
+  direction:ltr;
+  text-align:right;
+}
+
+.feeder-meta{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:7px;
+  line-height:1.7;
+}
+
+.detail{
+  display:none;
+}
+
+.detail.show{
+  display:block;
+}
+
+.detail-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.detail-title h2{
+  margin:0;
+  color:var(--green);
+}
+
+.badges{
+  margin:12px 0;
+}
+
+.badge{
+  display:inline-block;
+  background:#e7f3ef;
+  color:var(--green);
+  padding:6px 10px;
+  border-radius:999px;
+  margin:3px;
+  font-size:12px;
+}
+
+.table-wrap{
+  overflow:auto;
+}
+
+table{
+  border-collapse:collapse;
+  width:100%;
+  min-width:700px;
+}
+
+th,
+td{
+  padding:10px;
+  border-bottom:1px solid var(--border);
+  text-align:right;
+}
+
+th{
+  background:#f2f8f6;
+  color:var(--green);
+}
+
+.coordinate{
+  direction:ltr;
+  text-align:left;
+  font-family:monospace;
+}
+
+.empty{
+  padding:30px;
+  text-align:center;
+  color:var(--muted);
+}
+
+.loading{
+  animation:pulse 1.2s infinite;
+}
+
+@keyframes pulse{
+  50%{
+    opacity:.45;
+  }
+}
+
+@media(max-width:1000px){
+  .feeders-grid{
+    grid-template-columns:repeat(3,1fr);
+  }
+
+  .stats{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:700px){
+  .feeders-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media(max-width:520px){
+
+  header{
+    padding:18px 12px;
+  }
+
+  .header-title h1{
+    font-size:20px;
+  }
+
+  .container{
+    padding:0 10px;
+  }
+
+  .card{
+    padding:15px;
+    border-radius:18px;
+  }
+
+  .feeders-grid{
+    grid-template-columns:1fr;
+  }
+
+  .stats{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .search-area{
+    display:block;
+  }
+
+  .search-area input{
+    width:100%;
+    margin-bottom:8px;
+  }
+
+  .btn{
+    width:100%;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+<div class="header-inner">
+
+<div class="header-title">
+
+<h1>🔌 دليل المغذيات</h1>
+
+<span>قاعدة المغذيات المستخرجة من الرسم الكهربائي</span>
+
+</div>
+
+<div class="nav">
+
+<a href="index.html">الرئيسية</a>
+
+<a href="equipment.html">⚡ مواقع المعدات</a>
+
+<a href="meters.html">🔢 مواقع العدادات</a>
+
+<a href="feeders.html">🔌 مواقع المغذيات</a>
+
+<a href="dwg-inspector.html">🧰 بيانات الرسم</a>
+
+</div>
+
+</div>
+
+</header>
+
+
+<div class="container">
+
+
+<!-- البحث -->
+
+<section class="card">
+
+<h2>🔎 البحث عن مغذي</h2>
+
+<p class="muted">
+ابحث بالاسم كما ورد في ملف الرسم، مثل:
+F-8.13 أو FDR#2.20 أو BSP.F-15
+</p>
+
+<div class="search-area">
+
+<input
+id="search"
+type="search"
+placeholder="اكتب اسم المغذي..."
+autocomplete="off"
+>
+
+<button
+class="btn btn-light"
+onclick="clearSearch()"
+>
+مسح البحث
+</button>
+
+</div>
+
+
+<div class="toolbar">
+
+<select id="categoryFilter">
+<option value="">جميع الأنواع</option>
+<option value="F">F-...</option>
+<option value="FDR">FDR#...</option>
+<option value="PREFIX">XXX.F-...</option>
+</select>
+
+<button
+class="btn btn-green"
+onclick="loadDatabase()"
+>
+↻ تحديث البيانات
+</button>
+
+</div>
+
+
+<div id="status" class="status loading">
+جاري تحميل قاعدة بيانات المغذيات...
+</div>
+
+
+<div class="stats">
+
+<div class="stat">
+<span>إجمالي المغذيات</span>
+<strong id="totalFeeders">0</strong>
+</div>
+
+<div class="stat">
+<span>F-...</span>
+<strong id="totalF">0</strong>
+</div>
+
+<div class="stat">
+<span>FDR#...</span>
+<strong id="totalFDR">0</strong>
+</div>
+
+<div class="stat">
+<span>XXX.F-...</span>
+<strong id="totalPrefix">0</strong>
+</div>
+
+</div>
+
+</section>
+
+
+<!-- النتائج -->
+
+<section class="card">
+
+<div class="results-header">
+
+<h2>📋 قائمة المغذيات</h2>
+
+<div
+class="results-count"
+id="resultsCount"
+>
+0 نتيجة
+</div>
+
+</div>
+
+<div
+id="feedersList"
+class="feeders-grid"
+>
+<div class="empty">
+جاري تحميل البيانات...
+</div>
+</div>
+
+</section>
+
+
+<!-- التفاصيل -->
+
+<section
+id="detail"
+class="card detail"
+>
+
+<div class="detail-title">
+
+<h2 id="detailName">
+تفاصيل المغذي
+</h2>
+
+<button
+class="btn btn-light"
+onclick="closeDetail()"
+>
+إغلاق
+</button>
+
+</div>
+
+<div
+id="detailContent"
+>
+</div>
+
+</section>
+
+
+</div>
+
+
+<script>
+
+let database = [];
+let manifest = null;
+
+
+/* ------------------------------------------
+   قراءة JSON
+------------------------------------------ */
+
+async function getJSON(url){
+
+    const response = await fetch(
+        url + "?v=" + Date.now(),
+        {
+            cache:"no-store"
+        }
+    );
+
+    if(!response.ok){
+
+        throw new Error(
+            response.status + " - " + url
+        );
+
+    }
+
+    return await response.json();
+
+}
+
+
+/* ------------------------------------------
+   تحميل قاعدة البيانات
+------------------------------------------ */
+
+async function loadDatabase(){
+
+    const status =
+        document.getElementById("status");
+
+    status.className =
+        "status loading";
+
+    status.textContent =
+        "جاري تحميل قاعدة المغذيات...";
+
+    try{
+
+        const results =
+            await Promise.all([
+
+                getJSON(
+                    "data/feeders/manifest.json"
+                ),
+
+                getJSON(
+                    "data/feeders/feeders.json"
+                )
+
+            ]);
+
+
+        manifest = results[0];
+
+        const raw = results[1];
+
+
+        /*
+          قاعدة البيانات الحالية عبارة عن:
+          [
+            {
+              name,
+              occurrences,
+              layers,
+              positions
+            }
+          ]
+        */
+
+        if(!Array.isArray(raw)){
+
+            throw new Error(
+                "صيغة feeders.json غير صحيحة"
+            );
+
+        }
+
+
+        database =
+            raw.map(item => {
+
+                const name =
+                    String(
+                        item.name || ""
+                    ).trim();
+
+
+                let category = "F";
+
+                if(
+                    /^FDR#/i.test(name)
+                ){
+
+                    category = "FDR";
+
+                }
+                else if(
+                    name.includes(".F-")
+                ){
+
+                    category = "PREFIX";
+
+                }
+
+
+                return {
+
+                    name:name,
+
+                    category:category,
+
+                    occurrences:
+                        Number(
+                            item.occurrences || 0
+                        ),
+
+                    layers:
+                        Array.isArray(item.layers)
+                        ? item.layers
+                        : [],
+
+                    positions:
+                        Array.isArray(item.positions)
+                        ? item.positions
+                        : []
+
+                };
+
+            });
+
+
+        updateStatistics();
+
+        status.className =
+            "status";
+
+        status.textContent =
+            "✅ تم تحميل قاعدة البيانات بنجاح — " +
+            database.length +
+            " مغذي.";
+
+
+        render();
+
+    }
+    catch(error){
+
+        console.error(error);
+
+        status.className =
+            "status error";
+
+        status.innerHTML =
+            "❌ تعذر تحميل قاعدة البيانات.<br>" +
+            "<small>" +
+            escapeHTML(
+                error.message
+            ) +
+            "</small>";
+
+    }
+
+}
+
+
+/* ------------------------------------------
+   الإحصائيات
+------------------------------------------ */
+
+function updateStatistics(){
+
+    document.getElementById(
+        "totalFeeders"
+    ).textContent =
+        database.length;
+
+
+    document.getElementById(
+        "totalF"
+    ).textContent =
+        database.filter(
+            x => x.category === "F"
+        ).length;
+
+
+    document.getElementById(
+        "totalFDR"
+    ).textContent =
+        database.filter(
+            x => x.category === "FDR"
+        ).length;
+
+
+    document.getElementById(
+        "totalPrefix"
+    ).textContent =
+        database.filter(
+            x => x.category === "PREFIX"
+        ).length;
+
+}
+
+
+/* ------------------------------------------
+   البحث
+------------------------------------------ */
+
+function render(){
+
+    const query =
+        document.getElementById(
+            "search"
+        ).value
+        .trim()
+        .toUpperCase();
+
+
+    const category =
+        document.getElementById(
+            "categoryFilter"
+        ).value;
+
+
+    let results =
+        database.filter(item => {
+
+            const matchSearch =
+                !query ||
+                item.name
+                .toUpperCase()
+                .includes(query);
+
+
+            const matchCategory =
+                !category ||
+                item.category === category;
+
+
+            return (
+                matchSearch &&
+                matchCategory
+            );
+
+        });
+
+
+    results.sort(
+        (a,b) =>
+            a.name.localeCompare(
+                b.name,
+                undefined,
+                {
+                    numeric:true,
+                    sensitivity:"base"
+                }
+            )
+    );
+
+
+    document.getElementById(
+        "resultsCount"
+    ).textContent =
+        results.length +
+        " نتيجة";
+
+
+    const container =
+        document.getElementById(
+            "feedersList"
+        );
+
+
+    if(!results.length){
+
+        container.innerHTML =
+            '<div class="empty">' +
+            'لا توجد نتائج مطابقة للبحث.' +
+            '</div>';
+
+        return;
+
+    }
+
+
+    container.innerHTML =
+        results.map(
+            item => feederCard(item)
+        ).join("");
+
+}
+
+
+/* ------------------------------------------
+   بطاقة المغذي
+------------------------------------------ */
+
+function feederCard(item){
+
+    const layer =
+        item.layers.length
+        ? item.layers.join(", ")
+        : "غير محدد";
+
+
+    return `
+
+<div
+class="feeder-card"
+onclick="showDetail('${escapeAttribute(item.name)}')"
+>
+
+<div class="feeder-name">
+${escapeHTML(item.name)}
+</div>
+
+<div class="feeder-meta">
+
+عدد مرات الظهور:
+<b>${item.occurrences}</b>
+
+<br>
+
+Layer:
+${escapeHTML(layer)}
+
+</div>
+
+</div>
+
+`;
+
+}
+
+
+/* ------------------------------------------
+   تفاصيل المغذي
+------------------------------------------ */
+
+function showDetail(name){
+
+    const item =
+        database.find(
+            x => x.name === name
+        );
+
+
+    if(!item){
+        return;
+    }
+
+
+    const detail =
+        document.getElementById(
+            "detail"
+        );
+
+
+    document.getElementById(
+        "detailName"
+    ).textContent =
+        "🔌 " + item.name;
+
+
+    let html = `
+
+<div class="badges">
+
+<span class="badge">
+الاسم: ${escapeHTML(item.name)}
+</span>
+
+<span class="badge">
+مرات الظهور: ${item.occurrences}
+</span>
+
+<span class="badge">
+Layer:
+${escapeHTML(
+    item.layers.join(", ") ||
+    "غير محدد"
+)}
+</span>
+
+</div>
+
+`;
+
+
+    if(!item.positions.length){
+
+        html += `
+<div class="empty">
+لا توجد إحداثيات لهذا المغذي في البيانات المستخرجة.
+</div>
+`;
+
+    }
+    else{
+
+        html += `
+
+<div class="table-wrap">
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>#</th>
+<th>X</th>
+<th>Y</th>
+<th>Z</th>
+<th>Layer</th>
+<th>النوع</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+${item.positions.map(
+    (p,index) => `
+
+<tr>
+
+<td>${index + 1}</td>
+
+<td class="coordinate">
+${formatNumber(p.x)}
+</td>
+
+<td class="coordinate">
+${formatNumber(p.y)}
+</td>
+
+<td class="coordinate">
+${formatNumber(p.z)}
+</td>
+
+<td>
+${escapeHTML(
+    p.layer || ""
+)}
+</td>
+
+<td>
+${escapeHTML(
+    p.type || ""
+)}
+</td>
+
+</tr>
+
+`
+).join("")}
+
+</tbody>
+
+</table>
+
+</div>
+
+`;
+
+    }
+
+
+    html += `
+
+<p class="muted" style="margin-top:15px">
+
+المصدر:
+FINAL DISPATCH - UPDATE.dwg
+
+<br>
+
+الإحداثيات أعلاه هي إحداثيات الرسم الأصلية
+وليست إحداثيات GPS.
+
+</p>
+
+`;
+
+
+    document.getElementById(
+        "detailContent"
+    ).innerHTML =
+        html;
+
+
+    detail.classList.add(
+        "show"
+    );
+
+
+    detail.scrollIntoView({
+        behavior:"smooth",
+        block:"start"
+    });
+
+}
+
+
+/* ------------------------------------------
+   إغلاق التفاصيل
+------------------------------------------ */
+
+function closeDetail(){
+
+    document
+        .getElementById("detail")
+        .classList.remove("show");
+
+}
+
+
+/* ------------------------------------------
+   مسح البحث
+------------------------------------------ */
+
+function clearSearch(){
+
+    document.getElementById(
+        "search"
+    ).value = "";
+
+    document.getElementById(
+        "categoryFilter"
+    ).value = "";
+
+    render();
+
+}
+
+
+/* ------------------------------------------
+   حماية HTML
+------------------------------------------ */
+
+function escapeHTML(value){
+
+    return String(
+        value ?? ""
+    ).replace(
+        /[&<>"']/g,
+        char => ({
+
+            "&":"&amp;",
+            "<":"&lt;",
+            ">":"&gt;",
+            '"':"&quot;",
+            "'":"&#039;"
+
+        }[char])
+    );
+
+}
+
+
+function escapeAttribute(value){
+
+    return String(
+        value ?? ""
+    )
+    .replace(
+        /\\/g,
+        "\\\\"
+    )
+    .replace(
+        /'/g,
+        "\\'"
+    );
+
+}
+
+
+function formatNumber(value){
+
+    if(
+        value === null ||
+        value === undefined ||
+        value === ""
+    ){
+
+        return "-";
+
+    }
+
+
+    const number =
+        Number(value);
+
+
+    if(!Number.isFinite(number)){
+
+        return escapeHTML(value);
+
+    }
+
+
+    return number.toFixed(3);
+
+}
+
+
+/* ------------------------------------------
+   البحث أثناء الكتابة
+------------------------------------------ */
+
+document
+    .getElementById("search")
+    .addEventListener(
+        "input",
+        render
+    );
+
+
+document
+    .getElementById("categoryFilter")
+    .addEventListener(
+        "change",
+        render
+    );
+
+
+/* ------------------------------------------
+   البداية
+------------------------------------------ */
+
+loadDatabase();
+
+</script>
+
+</body>
+</html>
