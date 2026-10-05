@@ -1,4 +1,3 @@
-```javascript
 import fs from "node:fs/promises";
 import path from "node:path";
 import { execFile } from "node:child_process";
@@ -52,20 +51,6 @@ function normalize(value) {
     .trim();
 }
 
-/*
- * أسماء المغذيات:
- *
- * نقبل الأسماء الموجودة فعليًا في الرسم فقط.
- *
- * أمثلة:
- * F-8.13
- * F8.13
- * F 8.13
- * FEEDER 8.13
- * F-333 B
- *
- * لا يتم إنشاء أي اسم جديد.
- */
 function isFeederName(text) {
   const s = normalize(text);
 
@@ -75,9 +60,6 @@ function isFeederName(text) {
   );
 }
 
-/*
- * أسماء المحطات التي تظهر حرفيًا في الرسم.
- */
 function isStationName(text) {
   const s = normalize(text);
 
@@ -87,26 +69,12 @@ function isStationName(text) {
   );
 }
 
-/*
- * استخراج TEXT و MTEXT من DXF.
- *
- * DXF عبارة عن أزواج:
- *
- * 0
- * TEXT
- * 8
- * LAYER
- * 1
- * النص
- */
 function parseDxfText(dxf) {
   const lines = dxf.split(/\r?\n/);
 
   const entities = [];
 
-  let section = null;
   let entity = null;
-  let lastCode = null;
 
   function finishEntity() {
     if (!entity) return;
@@ -138,25 +106,14 @@ function parseDxfText(dxf) {
     if (code === 0) {
       finishEntity();
 
-      if (value.trim() === "SECTION") {
-        section = "SECTION";
-        lastCode = code;
-        continue;
-      }
-
-      if (value.trim() === "ENDSEC") {
-        finishEntity();
-        section = null;
-        lastCode = code;
-        continue;
-      }
+      const type = value.trim();
 
       if (
-        value.trim() === "TEXT" ||
-        value.trim() === "MTEXT"
+        type === "TEXT" ||
+        type === "MTEXT"
       ) {
         entity = {
-          type: value.trim(),
+          type,
           layer: null,
           text: "",
           x: null,
@@ -164,12 +121,10 @@ function parseDxfText(dxf) {
         };
       }
 
-      lastCode = code;
       continue;
     }
 
     if (!entity) {
-      lastCode = code;
       continue;
     }
 
@@ -186,14 +141,20 @@ function parseDxfText(dxf) {
     }
 
     if (code === 10) {
-      entity.x = Number(value);
+      const x = Number(value);
+
+      if (Number.isFinite(x)) {
+        entity.x = x;
+      }
     }
 
     if (code === 20) {
-      entity.y = Number(value);
-    }
+      const y = Number(value);
 
-    lastCode = code;
+      if (Number.isFinite(y)) {
+        entity.y = y;
+      }
+    }
   }
 
   finishEntity();
@@ -213,12 +174,6 @@ const stat = await fs.stat(DWG_PATH);
 console.log(
   `DWG size: ${stat.size.toLocaleString()} bytes`
 );
-
-/*
- * =====================================================
- * تحويل DWG → DXF
- * =====================================================
- */
 
 console.log("");
 console.log("Converting DWG to DXF using LibreDWG...");
@@ -264,12 +219,6 @@ if (dxfStat.size === 0) {
   );
 }
 
-/*
- * =====================================================
- * قراءة DXF
- * =====================================================
- */
-
 console.log("");
 console.log("Reading DXF...");
 
@@ -288,12 +237,6 @@ console.log(
   `TEXT/MTEXT entities found: ${textEntities.length}`
 );
 
-/*
- * =====================================================
- * استخراج أسماء الطبقات
- * =====================================================
- */
-
 const layers = [
   ...new Set(
     textEntities
@@ -301,12 +244,6 @@ const layers = [
       .filter(Boolean)
   )
 ].sort();
-
-/*
- * =====================================================
- * استخراج جميع النصوص
- * =====================================================
- */
 
 const allTextEntities = textEntities.map(
   (item, index) => ({
@@ -318,12 +255,6 @@ const allTextEntities = textEntities.map(
     y: item.y
   })
 );
-
-/*
- * =====================================================
- * استخراج المغذيات
- * =====================================================
- */
 
 const feederCandidates = [];
 
@@ -343,15 +274,6 @@ for (const item of textEntities) {
     source: "DWG_TEXT"
   });
 }
-
-/*
- * =====================================================
- * إزالة التكرارات الحرفية
- *
- * نحتفظ بالموقع إذا كان الاسم مكررًا في أماكن
- * مختلفة داخل الرسم.
- * =====================================================
- */
 
 const uniqueFeeders = [];
 
@@ -374,12 +296,6 @@ for (const feeder of feederCandidates) {
   uniqueFeeders.push(feeder);
 }
 
-/*
- * =====================================================
- * استخراج المحطات
- * =====================================================
- */
-
 const stationCandidates = [];
 
 for (const item of textEntities) {
@@ -398,12 +314,6 @@ for (const item of textEntities) {
     source: "DWG_TEXT"
   });
 }
-
-/*
- * =====================================================
- * ترتيب
- * =====================================================
- */
 
 uniqueFeeders.sort((a, b) =>
   a.normalized.localeCompare(
@@ -426,12 +336,6 @@ stationCandidates.sort((a, b) =>
     }
   )
 );
-
-/*
- * =====================================================
- * Manifest
- * =====================================================
- */
 
 const manifest = {
   ok: true,
@@ -475,12 +379,6 @@ const manifest = {
   }
 };
 
-/*
- * =====================================================
- * حفظ النتائج
- * =====================================================
- */
-
 await writeJson(
   "manifest.json",
   manifest
@@ -511,21 +409,12 @@ await writeJson(
   uniqueFeeders
 );
 
-/*
- * لا نريد رفع DXF إلى GitHub لأنه قد يكون كبيرًا.
- * نستخدمه مؤقتًا فقط أثناء البناء.
- */
-
 await fs.rm(
   DXF_PATH,
   {
     force: true
   }
 );
-
-/*
- * حذف الملف الضخم القديم إن وجد.
- */
 
 await fs.rm(
   path.join(
@@ -536,12 +425,6 @@ await fs.rm(
     force: true
   }
 );
-
-/*
- * =====================================================
- * منع النجاح الوهمي
- * =====================================================
- */
 
 if (
   textEntities.length === 0
@@ -558,12 +441,6 @@ if (
     "DXF was read successfully, but no literal feeder names were found."
   );
 }
-
-/*
- * =====================================================
- * النتيجة
- * =====================================================
- */
 
 console.log("");
 console.log("========================================");
@@ -591,9 +468,7 @@ console.log(
 );
 
 console.log("");
-console.log(
-  "First feeder names:"
-);
+console.log("First feeder names:");
 
 for (
   const feeder
@@ -614,4 +489,3 @@ console.log(
     2
   )
 );
-```
