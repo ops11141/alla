@@ -1,6 +1,6 @@
 {
   "source": "cad/FINAL DISPATCH - UPDATE.dwg",
-  "generatedAt": "2026-10-05T13:58:26.103Z",
+  "generatedAt": "2026-10-05T14:17:40.427Z",
   "dwgBytes": 7901364,
   "dxfBytes": 44810595,
   "dxfEntities": 116671,
@@ -21,5 +21,5 @@
     "FDR": 77
   },
   "stations": [],
-  "description": "Feeder database extracted directly from the DWG with spatial station matching."
+  "description": "Feeder database extracted directly from the DWG with spatial station matching and raw AutoCAD attribute extraction."
 }
