@@ -1,5 +1,10 @@
+```javascript
 import fs from "node:fs/promises";
 import path from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 const ROOT = process.cwd();
 
@@ -15,483 +20,412 @@ const OUT_DIR = path.join(
   "feeders"
 );
 
-await fs.mkdir(
+const DXF_PATH = path.join(
   OUT_DIR,
-  { recursive: true }
+  "FINAL DISPATCH - UPDATE.dxf"
 );
 
-function jsonSafe(value) {
-  return JSON.stringify(
-    value,
-    (key, v) => {
-      if (typeof v === "bigint") {
-        return Number(v);
-      }
+await fs.mkdir(OUT_DIR, { recursive: true });
 
-      if (v instanceof Uint8Array) {
-        return Array.from(v);
-      }
-
-      return v;
-    },
-    2
-  );
-}
-
-async function writeJson(
-  filename,
-  data
-) {
-  const filePath = path.join(
-    OUT_DIR,
-    filename
-  );
-
-  await fs.writeFile(
-    filePath,
-    jsonSafe(data),
+function writeJson(filename, data) {
+  return fs.writeFile(
+    path.join(OUT_DIR, filename),
+    JSON.stringify(data, null, 2),
     "utf8"
   );
+}
 
-  console.log(
-    `Written: ${filename}`
+function cleanText(value) {
+  return String(value ?? "")
+    .replace(/\\P/gi, " ")
+    .replace(/\{\\[^;{}]*;?/g, "")
+    .replace(/[{}]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalize(value) {
+  return cleanText(value)
+    .toUpperCase()
+    .replace(/[‐-‒–—−]/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/*
+ * أسماء المغذيات:
+ *
+ * نقبل الأسماء الموجودة فعليًا في الرسم فقط.
+ *
+ * أمثلة:
+ * F-8.13
+ * F8.13
+ * F 8.13
+ * FEEDER 8.13
+ * F-333 B
+ *
+ * لا يتم إنشاء أي اسم جديد.
+ */
+function isFeederName(text) {
+  const s = normalize(text);
+
+  return (
+    /^F\s*[-_]?\s*\d+(?:\s*[.-]\s*\d+)?(?:\s*[A-Z])?$/.test(s) ||
+    /^FEEDER\s*[-_]?\s*\d+(?:\s*[.-]\s*\d+)?(?:\s*[A-Z])?$/.test(s)
   );
 }
 
-function extractText(
-  value,
-  output = []
-) {
-  if (value == null) {
-    return output;
-  }
+/*
+ * أسماء المحطات التي تظهر حرفيًا في الرسم.
+ */
+function isStationName(text) {
+  const s = normalize(text);
 
-  if (typeof value === "string") {
-    const text = value.trim();
+  return (
+    /^(SUB|SS|STATION)\s*[-_]?\s*[A-Z0-9.-]+$/i.test(s) ||
+    /^SUB\s*[-_]?\s*\d+$/i.test(s)
+  );
+}
 
-    if (text) {
-      output.push(text);
-    }
+/*
+ * استخراج TEXT و MTEXT من DXF.
+ *
+ * DXF عبارة عن أزواج:
+ *
+ * 0
+ * TEXT
+ * 8
+ * LAYER
+ * 1
+ * النص
+ */
+function parseDxfText(dxf) {
+  const lines = dxf.split(/\r?\n/);
 
-    return output;
-  }
+  const entities = [];
 
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      extractText(
-        item,
-        output
-      );
-    }
+  let section = null;
+  let entity = null;
+  let lastCode = null;
 
-    return output;
-  }
+  function finishEntity() {
+    if (!entity) return;
 
-  if (typeof value === "object") {
-    for (
-      const [key, val]
-      of Object.entries(value)
+    if (
+      entity.type === "TEXT" ||
+      entity.type === "MTEXT"
     ) {
-      if (
-        /text|value|name|contents|string/i.test(
-          key
-        )
-      ) {
-        extractText(
-          val,
-          output
-        );
-      }
+      entities.push(entity);
     }
+
+    entity = null;
   }
 
-  return output;
-}
+  for (let i = 0; i < lines.length - 1; i += 1) {
+    const codeLine = lines[i].trim();
+    const valueLine = lines[i + 1];
 
-function unique(array) {
-  return [
-    ...new Set(array)
-  ];
+    if (!codeLine) continue;
+
+    const code = Number(codeLine);
+
+    if (!Number.isFinite(code)) {
+      continue;
+    }
+
+    const value = valueLine ?? "";
+
+    if (code === 0) {
+      finishEntity();
+
+      if (value.trim() === "SECTION") {
+        section = "SECTION";
+        lastCode = code;
+        continue;
+      }
+
+      if (value.trim() === "ENDSEC") {
+        finishEntity();
+        section = null;
+        lastCode = code;
+        continue;
+      }
+
+      if (
+        value.trim() === "TEXT" ||
+        value.trim() === "MTEXT"
+      ) {
+        entity = {
+          type: value.trim(),
+          layer: null,
+          text: "",
+          x: null,
+          y: null
+        };
+      }
+
+      lastCode = code;
+      continue;
+    }
+
+    if (!entity) {
+      lastCode = code;
+      continue;
+    }
+
+    if (code === 8) {
+      entity.layer = value.trim();
+    }
+
+    if (code === 1) {
+      entity.text = cleanText(value);
+    }
+
+    if (code === 3 && entity.type === "MTEXT") {
+      entity.text += cleanText(value);
+    }
+
+    if (code === 10) {
+      entity.x = Number(value);
+    }
+
+    if (code === 20) {
+      entity.y = Number(value);
+    }
+
+    lastCode = code;
+  }
+
+  finishEntity();
+
+  return entities;
 }
 
 console.log("");
-console.log(
-  "========================================"
-);
-console.log(
-  "FEEDER DATABASE BUILDER"
-);
-console.log(
-  "========================================"
-);
+console.log("========================================");
+console.log("FEEDER DATABASE BUILDER");
+console.log("========================================");
+
+console.log("DWG:", DWG_PATH);
+
+const stat = await fs.stat(DWG_PATH);
 
 console.log(
-  "DWG:",
-  DWG_PATH
-);
-
-const fileBuffer =
-  await fs.readFile(
-    DWG_PATH
-  );
-
-console.log(
-  `DWG size: ${fileBuffer.length} bytes`
+  `DWG size: ${stat.size.toLocaleString()} bytes`
 );
 
 /*
  * =====================================================
- * LibreDWG الرسمي
+ * تحويل DWG → DXF
  * =====================================================
  */
-
-const {
-  Dwg_File_Type,
-  LibreDwg
-} = await import(
-  "@mlightcad/libredwg-web"
-);
-
-console.log(
-  "Creating LibreDwg..."
-);
-
-const libredwg =
-  await LibreDwg.create(
-    path.join(
-      ROOT,
-      "node_modules",
-      "@mlightcad",
-      "libredwg-web",
-      "wasm"
-    )
-  );
-
-console.log(
-  "LibreDwg created successfully."
-);
-
-/*
- * =====================================================
- * قراءة DWG
- * =====================================================
- */
-
-console.log(
-  "Reading DWG..."
-);
-
-const dwg =
-  libredwg.dwg_read_data(
-    fileBuffer.buffer.slice(
-      fileBuffer.byteOffset,
-      fileBuffer.byteOffset +
-        fileBuffer.byteLength
-    ),
-    Dwg_File_Type.DWG
-  );
-
-if (!dwg) {
-  throw new Error(
-    "LibreDwg returned an empty DWG pointer."
-  );
-}
-
-console.log(
-  "DWG pointer received."
-);
-
-/*
- * =====================================================
- * معلومات DWG
- * =====================================================
- */
-
-let dwgVersion = null;
-let codepage = null;
-
-try {
-  dwgVersion =
-    libredwg.dwg_get_version_type(
-      dwg
-    );
-} catch {}
-
-try {
-  codepage =
-    libredwg.dwg_get_codepage(
-      dwg
-    );
-} catch {}
-
-console.log(
-  "DWG version:",
-  dwgVersion
-);
-
-console.log(
-  "Codepage:",
-  codepage
-);
-
-/*
- * =====================================================
- * تحويل DWG إلى Database
- * =====================================================
- */
-
-console.log(
-  "Converting DWG..."
-);
-
-let db;
-
-if (
-  typeof libredwg.convertEx ===
-  "function"
-) {
-
-  console.log(
-    "Using convertEx()..."
-  );
-
-  const converted =
-    libredwg.convertEx(
-      dwg
-    );
-
-  db =
-    converted?.database ??
-    converted;
-
-} else {
-
-  console.log(
-    "Using convert()..."
-  );
-
-  db =
-    libredwg.convert(
-      dwg
-    );
-}
-
-if (!db) {
-  throw new Error(
-    "DWG conversion returned an empty database."
-  );
-}
-
-console.log(
-  "Database conversion completed."
-);
-
-/*
- * =====================================================
- * استخراج الجداول
- * =====================================================
- */
-
-const tables =
-  db?.tables ?? {};
-
-const blockRecords =
-  Array.isArray(
-    tables.blockRecords
-  )
-    ? tables.blockRecords
-    : [];
-
-const layers =
-  Array.isArray(
-    tables.layers
-  )
-    ? tables.layers
-    : [];
 
 console.log("");
+console.log("Converting DWG to DXF using LibreDWG...");
+
+try {
+  await execFileAsync(
+    "dwg2dxf",
+    [
+      "-y",
+      "-o",
+      DXF_PATH,
+      DWG_PATH
+    ],
+    {
+      maxBuffer: 1024 * 1024 * 20
+    }
+  );
+} catch (error) {
+  console.error(
+    "dwg2dxf stdout:",
+    error.stdout ?? ""
+  );
+
+  console.error(
+    "dwg2dxf stderr:",
+    error.stderr ?? ""
+  );
+
+  throw new Error(
+    `DWG to DXF conversion failed: ${error.message}`
+  );
+}
+
+const dxfStat = await fs.stat(DXF_PATH);
+
 console.log(
-  "Database:"
+  `DXF created: ${dxfStat.size.toLocaleString()} bytes`
+);
+
+if (dxfStat.size === 0) {
+  throw new Error(
+    "LibreDWG produced an empty DXF file."
+  );
+}
+
+/*
+ * =====================================================
+ * قراءة DXF
+ * =====================================================
+ */
+
+console.log("");
+console.log("Reading DXF...");
+
+const dxf = await fs.readFile(
+  DXF_PATH,
+  "utf8"
 );
 
 console.log(
-  "Block records:",
-  blockRecords.length
+  `DXF text size: ${dxf.length.toLocaleString()} characters`
 );
 
+const textEntities = parseDxfText(dxf);
+
 console.log(
-  "Layers:",
-  layers.length
+  `TEXT/MTEXT entities found: ${textEntities.length}`
 );
 
 /*
  * =====================================================
- * استخراج النصوص
+ * استخراج أسماء الطبقات
  * =====================================================
  */
 
-const allText = [];
+const layers = [
+  ...new Set(
+    textEntities
+      .map((x) => x.layer)
+      .filter(Boolean)
+  )
+].sort();
+
+/*
+ * =====================================================
+ * استخراج جميع النصوص
+ * =====================================================
+ */
+
+const allTextEntities = textEntities.map(
+  (item, index) => ({
+    id: index + 1,
+    type: item.type,
+    layer: item.layer,
+    text: item.text,
+    x: item.x,
+    y: item.y
+  })
+);
+
+/*
+ * =====================================================
+ * استخراج المغذيات
+ * =====================================================
+ */
 
 const feederCandidates = [];
 
-const stationCandidates = [];
+for (const item of textEntities) {
+  if (!item.text) continue;
 
-for (
-  const block
-  of blockRecords
-) {
-
-  const blockName =
-    block?.name ??
-    block?.id ??
-    "";
-
-  const entities =
-    Array.isArray(
-      block?.entities
-    )
-      ? block.entities
-      : [];
-
-  for (
-    const entity
-    of entities
-  ) {
-
-    const texts =
-      unique(
-        extractText(
-          entity
-        )
-      );
-
-    for (
-      const text
-      of texts
-    ) {
-
-      const entityType =
-        entity?.type ??
-        entity?.objectType ??
-        null;
-
-      allText.push({
-        block:
-          blockName,
-
-        entityType,
-
-        text
-      });
-
-      const upper =
-        text
-          .toUpperCase()
-          .replace(
-            /\s+/g,
-            " "
-          )
-          .trim();
-
-      /*
-       * ===============================================
-       * Feeder names
-       * ===============================================
-       */
-
-      if (
-        /^F(?:EEDER)?\s*[-_ ]?\s*\d+(?:\s*[.-]\s*\d+)?(?:\s*[A-Z])?$/i.test(
-          upper
-        )
-      ) {
-
-        feederCandidates.push({
-
-          text,
-
-          normalized:
-            upper,
-
-          block:
-            blockName,
-
-          entityType
-
-        });
-
-      }
-
-      /*
-       * ===============================================
-       * Station names
-       * ===============================================
-       */
-
-      if (
-        /^(SUB|SS|STATION|محطة)\s*[-_ ]?\S+/i.test(
-          upper
-        )
-      ) {
-
-        stationCandidates.push({
-
-          text,
-
-          normalized:
-            upper,
-
-          block:
-            blockName,
-
-          entityType
-
-        });
-
-      }
-    }
+  if (!isFeederName(item.text)) {
+    continue;
   }
+
+  feederCandidates.push({
+    name: item.text,
+    normalized: normalize(item.text),
+    layer: item.layer,
+    x: item.x,
+    y: item.y,
+    source: "DWG_TEXT"
+  });
 }
 
 /*
  * =====================================================
- * إزالة التكرارات
+ * إزالة التكرارات الحرفية
+ *
+ * نحتفظ بالموقع إذا كان الاسم مكررًا في أماكن
+ * مختلفة داخل الرسم.
  * =====================================================
  */
 
 const uniqueFeeders = [];
 
-const feederSeen =
-  new Set();
+const feederKeys = new Set();
 
-for (
-  const feeder
-  of feederCandidates
-) {
+for (const feeder of feederCandidates) {
+  const key = [
+    feeder.normalized,
+    feeder.layer ?? "",
+    feeder.x ?? "",
+    feeder.y ?? ""
+  ].join("|");
 
-  const key =
-    [
-      feeder.normalized,
-      feeder.block
-    ].join(
-      "|"
-    );
-
-  if (
-    feederSeen.has(
-      key
-    )
-  ) {
+  if (feederKeys.has(key)) {
     continue;
   }
 
-  feederSeen.add(
-    key
-  );
+  feederKeys.add(key);
 
-  uniqueFeeders.push(
-    feeder
-  );
+  uniqueFeeders.push(feeder);
 }
+
+/*
+ * =====================================================
+ * استخراج المحطات
+ * =====================================================
+ */
+
+const stationCandidates = [];
+
+for (const item of textEntities) {
+  if (!item.text) continue;
+
+  if (!isStationName(item.text)) {
+    continue;
+  }
+
+  stationCandidates.push({
+    name: item.text,
+    normalized: normalize(item.text),
+    layer: item.layer,
+    x: item.x,
+    y: item.y,
+    source: "DWG_TEXT"
+  });
+}
+
+/*
+ * =====================================================
+ * ترتيب
+ * =====================================================
+ */
+
+uniqueFeeders.sort((a, b) =>
+  a.normalized.localeCompare(
+    b.normalized,
+    undefined,
+    {
+      numeric: true,
+      sensitivity: "base"
+    }
+  )
+);
+
+stationCandidates.sort((a, b) =>
+  a.normalized.localeCompare(
+    b.normalized,
+    undefined,
+    {
+      numeric: true,
+      sensitivity: "base"
+    }
+  )
+);
 
 /*
  * =====================================================
@@ -500,29 +434,23 @@ for (
  */
 
 const manifest = {
-
   ok: true,
 
   sourceFile:
     "FINAL DISPATCH - UPDATE.dwg",
 
+  convertedFile:
+    "FINAL DISPATCH - UPDATE.dxf",
+
   reader:
-    "@mlightcad/libredwg-web",
-
-  dwgVersion,
-
-  codepage,
+    "LibreDWG dwg2dxf 0.14",
 
   counts: {
-
-    blockRecords:
-      blockRecords.length,
+    textEntities:
+      allTextEntities.length,
 
     layers:
       layers.length,
-
-    textEntities:
-      allText.length,
 
     feederCandidates:
       feederCandidates.length,
@@ -532,30 +460,24 @@ const manifest = {
 
     stationCandidates:
       stationCandidates.length
-
   },
 
   rules: {
+    literalNamesOnly: true,
 
-    literalNamesOnly:
-      true,
+    noSyntheticFeederNames: true,
 
-    noSyntheticStationNames:
-      true,
+    noSyntheticStationNames: true,
 
-    unresolvedRelationshipsAreNotGuessed:
-      true,
+    unresolvedRelationshipsAreNotGuessed: true,
 
-    rawDatabaseFileDisabled:
-      true
-
+    rawDatabaseFileDisabled: true
   }
-
 };
 
 /*
  * =====================================================
- * حفظ البيانات
+ * حفظ النتائج
  * =====================================================
  */
 
@@ -571,7 +493,7 @@ await writeJson(
 
 await writeJson(
   "all_text_entities.json",
-  allText
+  allTextEntities
 );
 
 await writeJson(
@@ -590,9 +512,19 @@ await writeJson(
 );
 
 /*
- * =====================================================
- * حذف الملف الضخم القديم
- * =====================================================
+ * لا نريد رفع DXF إلى GitHub لأنه قد يكون كبيرًا.
+ * نستخدمه مؤقتًا فقط أثناء البناء.
+ */
+
+await fs.rm(
+  DXF_PATH,
+  {
+    force: true
+  }
+);
+
+/*
+ * حذف الملف الضخم القديم إن وجد.
  */
 
 await fs.rm(
@@ -607,19 +539,24 @@ await fs.rm(
 
 /*
  * =====================================================
- * منع نجاح وهمي
+ * منع النجاح الوهمي
  * =====================================================
  */
 
 if (
-  blockRecords.length === 0 &&
-  allText.length === 0
+  textEntities.length === 0
 ) {
-
   throw new Error(
-    "DWG was opened but the converted database contains no entities or text."
+    "No TEXT or MTEXT entities were extracted from the DXF."
   );
+}
 
+if (
+  uniqueFeeders.length === 0
+) {
+  throw new Error(
+    "DXF was read successfully, but no literal feeder names were found."
+  );
 }
 
 /*
@@ -629,29 +566,16 @@ if (
  */
 
 console.log("");
-
-console.log(
-  "========================================"
-);
-
-console.log(
-  "FEEDER DATABASE BUILD COMPLETED"
-);
-
-console.log(
-  "========================================"
-);
-
-console.log(
-  `Blocks: ${blockRecords.length}`
-);
+console.log("========================================");
+console.log("FEEDER DATABASE BUILD COMPLETED");
+console.log("========================================");
 
 console.log(
   `Layers: ${layers.length}`
 );
 
 console.log(
-  `Text entities: ${allText.length}`
+  `Text entities: ${allTextEntities.length}`
 );
 
 console.log(
@@ -666,9 +590,22 @@ console.log(
   `Station candidates: ${stationCandidates.length}`
 );
 
+console.log("");
 console.log(
-  "========================================"
+  "First feeder names:"
 );
+
+for (
+  const feeder
+  of uniqueFeeders.slice(0, 30)
+) {
+  console.log(
+    `- ${feeder.name}`
+  );
+}
+
+console.log("");
+console.log("========================================");
 
 console.log(
   JSON.stringify(
@@ -677,17 +614,4 @@ console.log(
     2
   )
 );
-
-/*
- * =====================================================
- * تحرير الذاكرة
- * =====================================================
- */
-
-try {
-
-  libredwg.dwg_free(
-    dwg
-  );
-
-} catch {}
+```
