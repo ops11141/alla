@@ -10,21 +10,17 @@ const DXF = "/tmp/final-dispatch.dxf";
 fs.mkdirSync(OUT, { recursive: true });
 
 console.log("========================================");
-console.log("FEEDER DWG DIAGNOSTIC");
+console.log("FINAL FEEDER DATABASE BUILDER");
 console.log("========================================");
 
 if (!fs.existsSync(DWG)) {
   throw new Error(`DWG file not found: ${DWG}`);
 }
 
-console.log(`DWG: ${DWG}`);
-console.log(`DWG size: ${fs.statSync(DWG).size} bytes`);
-
 // --------------------------------------------------
-// 1. Convert DWG -> DXF
+// Convert DWG -> DXF
 // --------------------------------------------------
 
-console.log("");
 console.log("Converting DWG to DXF...");
 
 execFileSync("dwg2dxf", ["-o", DXF, DWG], {
@@ -37,14 +33,13 @@ if (!fs.existsSync(DXF)) {
 
 const dxfText = fs.readFileSync(DXF, "utf8");
 
+console.log(`DWG size: ${fs.statSync(DWG).size} bytes`);
 console.log(`DXF size: ${fs.statSync(DXF).size} bytes`);
-console.log(`DXF text size: ${dxfText.length} characters`);
 
 // --------------------------------------------------
-// 2. Parse DXF
+// Parse DXF
 // --------------------------------------------------
 
-console.log("");
 console.log("Parsing DXF...");
 
 const parser = new DxfParser();
@@ -52,10 +47,10 @@ const dxf = parser.parseSync(dxfText);
 
 const entities = dxf.entities || [];
 
-console.log(`Total DXF entities: ${entities.length}`);
+console.log(`DXF entities: ${entities.length}`);
 
 // --------------------------------------------------
-// Helpers
+// Clean DXF text
 // --------------------------------------------------
 
 function cleanText(value) {
@@ -65,13 +60,16 @@ function cleanText(value) {
 
   let text = String(value);
 
-  // DXF MTEXT formatting
+  // Remove common AutoCAD MTEXT formatting codes
   text = text
     .replace(/\\P/gi, " ")
     .replace(/\\A\d+;/gi, "")
     .replace(/\\H[^;]+;/gi, "")
     .replace(/\\C\d+;/gi, "")
     .replace(/\\F[^;]+;/gi, "")
+    .replace(/\\W[^;]+;/gi, "")
+    .replace(/\\T[^;]+;/gi, "")
+    .replace(/\\Q[^;]+;/gi, "")
     .replace(/\\S([^;]+);/gi, "$1")
     .replace(/[{}]/g, " ");
 
@@ -114,7 +112,7 @@ function getEntityText(entity) {
 }
 
 // --------------------------------------------------
-// 3. Extract TEXT / MTEXT
+// Extract text entities
 // --------------------------------------------------
 
 const textEntities = [];
@@ -137,207 +135,216 @@ for (const entity of entities) {
     continue;
   }
 
-  const item = {
+  textEntities.push({
     type,
     text,
-    layer: entity.layer || null
-  };
-
-  if (entity.position) {
-    item.position = {
-      x: entity.position.x ?? null,
-      y: entity.position.y ?? null,
-      z: entity.position.z ?? null
-    };
-  }
-
-  textEntities.push(item);
-}
-
-console.log(`TEXT/MTEXT entities found: ${textEntities.length}`);
-
-// --------------------------------------------------
-// 4. Count text values
-// --------------------------------------------------
-
-const textCounts = new Map();
-
-for (const item of textEntities) {
-  const value = item.text;
-
-  textCounts.set(
-    value,
-    (textCounts.get(value) || 0) + 1
-  );
-}
-
-const textValueCounts = [...textCounts.entries()]
-  .map(([text, count]) => ({
-    text,
-    count
-  }))
-  .sort((a, b) => {
-    if (b.count !== a.count) {
-      return b.count - a.count;
-    }
-
-    return a.text.localeCompare(b.text);
+    layer: entity.layer || null,
+    position: entity.position
+      ? {
+          x: entity.position.x ?? null,
+          y: entity.position.y ?? null,
+          z: entity.position.z ?? null
+        }
+      : null
   });
+}
 
-console.log(`Unique text values: ${textValueCounts.length}`);
+console.log(`Text entities: ${textEntities.length}`);
 
 // --------------------------------------------------
-// 5. Broad diagnostic candidates
+// FEEDER NAME DETECTION
 //
-// IMPORTANT:
-// This does NOT declare these to be feeders.
-// It only finds interesting text for inspection.
+// Supported examples:
+//
+// F-8.13
+// F-03
+// F-2.20
+// FDR#2.20
+// QAI.F-05
+// BSP.F-15
+// D.F-03
+// U.F-02
+// UNI.F-24
 // --------------------------------------------------
 
-const candidates = [];
-
-for (const item of textValueCounts) {
-  const text = item.text;
+function extractFeederNames(text) {
+  const results = new Set();
 
   if (!text) {
-    continue;
+    return [];
   }
 
-  // Ignore extremely long paragraphs.
-  if (text.length > 100) {
-    continue;
+  // Remove DXF formatting
+  const cleaned = cleanText(text);
+
+  // ------------------------------------------------
+  // Pattern 1:
+  // F-8.13
+  // F-03
+  // F-2.20
+  //
+  // Also accepts prefixes:
+  // QAI.F-05
+  // BSP.F-15
+  // D.F-03
+  // U.F-02
+  // UNI.F-24
+  // ------------------------------------------------
+
+  const fPattern =
+    /\b(?:[A-Z][A-Z0-9]*\.)*F\s*-\s*\d+(?:\.\d+)?\b/gi;
+
+  for (const match of cleaned.matchAll(fPattern)) {
+    const value = match[0]
+      .replace(/\s+/g, "")
+      .toUpperCase();
+
+    results.add(value);
   }
 
-  const upper = text.toUpperCase();
+  // ------------------------------------------------
+  // Pattern 2:
+  // FDR#2.20
+  // FDR#2.07
+  // FDR # 2.16
+  // ------------------------------------------------
 
-  const hasNumber = /\d/.test(text);
-  const hasLetter = /[A-Z\u0600-\u06FF]/i.test(text);
+  const fdrPattern =
+    /\bFDR\s*#\s*\d+(?:\.\d+)?\b/gi;
 
-  if (!hasNumber || !hasLetter) {
-    continue;
+  for (const match of cleaned.matchAll(fdrPattern)) {
+    const value = match[0]
+      .replace(/\s+/g, "")
+      .toUpperCase();
+
+    results.add(value);
   }
 
-  const keyword =
-    /\bFEEDER\b/i.test(text) ||
-    /\bFDR\b/i.test(text) ||
-    /\bFD\b/i.test(text) ||
-    /\bOUTGOING\b/i.test(text) ||
-    /\bINCOMING\b/i.test(text) ||
-    /\bRMU\b/i.test(text) ||
-    /\bSUB\b/i.test(text) ||
-    /\bSUB-/i.test(text) ||
-    /\b11\s*KV\b/i.test(text) ||
-    /\b13\.8\s*KV\b/i.test(text) ||
-    /\b33\s*KV\b/i.test(text);
+  return [...results];
+}
 
-  const compactElectrical =
-    /^[A-Z]{1,8}[-_/ ]?\d+[A-Z0-9._/-]*$/i.test(text);
+// --------------------------------------------------
+// Build feeder occurrences
+// --------------------------------------------------
 
-  const mixedNumber =
-    /[A-Z]+\s*[-_/]?\s*\d+/i.test(text);
+const feederMap = new Map();
 
-  if (keyword || compactElectrical || mixedNumber) {
-    candidates.push({
-      text,
-      count: item.count
-    });
+for (const entity of textEntities) {
+  const names = extractFeederNames(entity.text);
+
+  for (const name of names) {
+    if (!feederMap.has(name)) {
+      feederMap.set(name, {
+        name,
+        occurrences: 0,
+        layers: new Set(),
+        positions: []
+      });
+    }
+
+    const feeder = feederMap.get(name);
+
+    feeder.occurrences++;
+
+    if (entity.layer) {
+      feeder.layers.add(entity.layer);
+    }
+
+    if (entity.position) {
+      feeder.positions.push({
+        x: entity.position.x,
+        y: entity.position.y,
+        z: entity.position.z,
+        layer: entity.layer || null,
+        type: entity.type
+      });
+    }
   }
 }
 
 // --------------------------------------------------
-// 6. Layer statistics
+// Convert Sets to arrays
 // --------------------------------------------------
 
-const layerCounts = new Map();
-
-for (const item of textEntities) {
-  const layer = item.layer || "(NO LAYER)";
-
-  layerCounts.set(
-    layer,
-    (layerCounts.get(layer) || 0) + 1
-  );
-}
-
-const layers = [...layerCounts.entries()]
-  .map(([layer, count]) => ({
-    layer,
-    count
+const feeders = [...feederMap.values()]
+  .map(feeder => ({
+    name: feeder.name,
+    occurrences: feeder.occurrences,
+    layers: [...feeder.layers].sort(),
+    positions: feeder.positions
   }))
-  .sort((a, b) => b.count - a.count);
+  .sort((a, b) =>
+    a.name.localeCompare(b.name, undefined, {
+      numeric: true,
+      sensitivity: "base"
+    })
+  );
 
 // --------------------------------------------------
-// 7. Candidate entities with positions/layers
+// Simple name list
 // --------------------------------------------------
 
-const candidateSet = new Set(
-  candidates.map(item => item.text)
-);
-
-const candidateEntities = textEntities
-  .filter(item => candidateSet.has(item.text))
-  .map(item => ({
-    text: item.text,
-    type: item.type,
-    layer: item.layer,
-    position: item.position || null
-  }));
+const feederNames = feeders.map(feeder => feeder.name);
 
 // --------------------------------------------------
-// 8. Save diagnostic files
+// Statistics
 // --------------------------------------------------
 
-console.log("");
-console.log("Writing diagnostic database...");
+const prefixStats = {};
 
-fs.writeFileSync(
-  path.join(OUT, "text_value_counts.json"),
-  JSON.stringify(textValueCounts, null, 2),
-  "utf8"
-);
+for (const feeder of feeders) {
+  let category = "F";
 
-fs.writeFileSync(
-  path.join(OUT, "keyword_candidates.json"),
-  JSON.stringify(candidates, null, 2),
-  "utf8"
-);
+  if (feeder.name.startsWith("FDR#")) {
+    category = "FDR";
+  } else if (feeder.name.includes(".F-")) {
+    category = "PREFIX.F";
+  }
 
-fs.writeFileSync(
-  path.join(OUT, "candidate_entities.json"),
-  JSON.stringify(candidateEntities, null, 2),
-  "utf8"
-);
-
-fs.writeFileSync(
-  path.join(OUT, "layers.json"),
-  JSON.stringify(layers, null, 2),
-  "utf8"
-);
-
-fs.writeFileSync(
-  path.join(OUT, "all_text_entities.json"),
-  JSON.stringify(textEntities, null, 2),
-  "utf8"
-);
+  prefixStats[category] =
+    (prefixStats[category] || 0) + 1;
+}
 
 // --------------------------------------------------
-// 9. Manifest
+// Manifest
 // --------------------------------------------------
 
 const manifest = {
   source: DWG,
   generatedAt: new Date().toISOString(),
+
   dwgBytes: fs.statSync(DWG).size,
   dxfBytes: fs.statSync(DXF).size,
-  dxfCharacters: dxfText.length,
-  totalDxfEntities: entities.length,
+
+  dxfEntities: entities.length,
   textEntities: textEntities.length,
-  uniqueTextValues: textValueCounts.length,
-  diagnosticCandidates: candidates.length,
-  layers: layers.length,
-  note:
-    "Diagnostic extraction only. Candidate texts are NOT confirmed feeder names."
+
+  totalFeeders: feeders.length,
+
+  categories: prefixStats,
+
+  description:
+    "Feeder database extracted directly from the DWG. Names are taken from actual feeder labels found in the drawing."
 };
+
+// --------------------------------------------------
+// Save files
+// --------------------------------------------------
+
+console.log("");
+console.log("Writing feeder database...");
+
+fs.writeFileSync(
+  path.join(OUT, "feeders.json"),
+  JSON.stringify(feeders, null, 2),
+  "utf8"
+);
+
+fs.writeFileSync(
+  path.join(OUT, "feeder_names.json"),
+  JSON.stringify(feederNames, null, 2),
+  "utf8"
+);
 
 fs.writeFileSync(
   path.join(OUT, "manifest.json"),
@@ -346,55 +353,49 @@ fs.writeFileSync(
 );
 
 // --------------------------------------------------
-// 10. Print useful results to GitHub Actions log
+// Save all text entities for later equipment matching
+// --------------------------------------------------
+
+fs.writeFileSync(
+  path.join(OUT, "all_text_entities.json"),
+  JSON.stringify(textEntities, null, 2),
+  "utf8"
+);
+
+// --------------------------------------------------
+// Print results
 // --------------------------------------------------
 
 console.log("");
 console.log("========================================");
-console.log("DIAGNOSTIC RESULT");
+console.log("FEEDER DATABASE RESULT");
 console.log("========================================");
 
-console.log(`TEXT entities       : ${textEntities.length}`);
-console.log(`Unique text values  : ${textValueCounts.length}`);
-console.log(`Candidate values    : ${candidates.length}`);
-console.log(`Layers              : ${layers.length}`);
+console.log(`Total feeders: ${feeders.length}`);
 
 console.log("");
-console.log("TOP POSSIBLE FEEDER / ELECTRICAL TEXT:");
-console.log("----------------------------------------");
-
-const preview = candidates.slice(0, 200);
-
-if (preview.length === 0) {
-  console.log("No diagnostic candidates found.");
-} else {
-  for (const item of preview) {
-    console.log(`[${item.count}] ${item.text}`);
-  }
-}
+console.log("Categories:");
+console.log(JSON.stringify(prefixStats, null, 2));
 
 console.log("");
-console.log("TOP TEXT VALUES:");
+console.log("FEEDER LIST:");
 console.log("----------------------------------------");
 
-for (const item of textValueCounts.slice(0, 100)) {
-  console.log(`[${item.count}] ${item.text}`);
-}
-
-console.log("");
-console.log("TOP TEXT LAYERS:");
-console.log("----------------------------------------");
-
-for (const item of layers.slice(0, 100)) {
-  console.log(`[${item.count}] ${item.layer}`);
+for (const feeder of feeders) {
+  console.log(
+    `${feeder.name} | occurrences: ${feeder.occurrences} | layers: ${feeder.layers.join(", ")}`
+  );
 }
 
 console.log("");
 console.log("========================================");
-console.log("DIAGNOSTIC BUILD COMPLETED");
+console.log("FEEDER DATABASE BUILD COMPLETED");
 console.log("========================================");
 
-// Remove temporary DXF
+// --------------------------------------------------
+// Cleanup
+// --------------------------------------------------
+
 try {
   fs.unlinkSync(DXF);
 } catch {
