@@ -11,15 +11,17 @@ fs.mkdirSync(OUT, { recursive: true });
 
 console.log("========================================");
 console.log("FINAL FEEDER DATABASE BUILDER");
+console.log("WITH STATION MATCHING");
 console.log("========================================");
 
 if (!fs.existsSync(DWG)) {
   throw new Error(`DWG file not found: ${DWG}`);
 }
 
-// --------------------------------------------------
-// Convert DWG -> DXF
-// --------------------------------------------------
+
+// ==================================================
+// CONVERT DWG -> DXF
+// ==================================================
 
 console.log("Converting DWG to DXF...");
 
@@ -33,12 +35,18 @@ if (!fs.existsSync(DXF)) {
 
 const dxfText = fs.readFileSync(DXF, "utf8");
 
-console.log(`DWG size: ${fs.statSync(DWG).size} bytes`);
-console.log(`DXF size: ${fs.statSync(DXF).size} bytes`);
+console.log(
+  `DWG size: ${fs.statSync(DWG).size} bytes`
+);
 
-// --------------------------------------------------
-// Parse DXF
-// --------------------------------------------------
+console.log(
+  `DXF size: ${fs.statSync(DXF).size} bytes`
+);
+
+
+// ==================================================
+// PARSE DXF
+// ==================================================
 
 console.log("Parsing DXF...");
 
@@ -47,20 +55,26 @@ const dxf = parser.parseSync(dxfText);
 
 const entities = dxf.entities || [];
 
-console.log(`DXF entities: ${entities.length}`);
+console.log(
+  `DXF entities: ${entities.length}`
+);
 
-// --------------------------------------------------
-// Clean DXF text
-// --------------------------------------------------
+
+// ==================================================
+// CLEAN AUTOCAD TEXT
+// ==================================================
 
 function cleanText(value) {
-  if (value === undefined || value === null) {
+
+  if (
+    value === undefined ||
+    value === null
+  ) {
     return "";
   }
 
   let text = String(value);
 
-  // Remove common AutoCAD MTEXT formatting codes
   text = text
     .replace(/\\P/gi, " ")
     .replace(/\\A\d+;/gi, "")
@@ -78,7 +92,13 @@ function cleanText(value) {
     .trim();
 }
 
+
+// ==================================================
+// GET ENTITY TEXT
+// ==================================================
+
 function getEntityText(entity) {
+
   const values = [];
 
   if (typeof entity.text === "string") {
@@ -111,14 +131,18 @@ function getEntityText(entity) {
     .join(" ");
 }
 
-// --------------------------------------------------
-// Extract text entities
-// --------------------------------------------------
+
+// ==================================================
+// EXTRACT TEXT ENTITIES
+// ==================================================
 
 const textEntities = [];
 
 for (const entity of entities) {
-  const type = String(entity.type || "").toUpperCase();
+
+  const type =
+    String(entity.type || "")
+      .toUpperCase();
 
   if (
     type !== "TEXT" &&
@@ -129,93 +153,100 @@ for (const entity of entities) {
     continue;
   }
 
-  const text = getEntityText(entity);
+  const text =
+    getEntityText(entity);
 
   if (!text) {
     continue;
   }
 
   textEntities.push({
+
     type,
+
     text,
-    layer: entity.layer || null,
-    position: entity.position
-      ? {
-          x: entity.position.x ?? null,
-          y: entity.position.y ?? null,
-          z: entity.position.z ?? null
-        }
-      : null
+
+    layer:
+      entity.layer || null,
+
+    position:
+      entity.position
+        ? {
+            x: entity.position.x ?? null,
+            y: entity.position.y ?? null,
+            z: entity.position.z ?? null
+          }
+        : null
+
   });
 }
 
-console.log(`Text entities: ${textEntities.length}`);
+console.log(
+  `Text entities: ${textEntities.length}`
+);
 
-// --------------------------------------------------
+
+// ==================================================
 // FEEDER NAME DETECTION
-//
-// Supported examples:
-//
-// F-8.13
-// F-03
-// F-2.20
-// FDR#2.20
-// QAI.F-05
-// BSP.F-15
-// D.F-03
-// U.F-02
-// UNI.F-24
-// --------------------------------------------------
+// ==================================================
 
 function extractFeederNames(text) {
-  const results = new Set();
+
+  const results =
+    new Set();
 
   if (!text) {
     return [];
   }
 
-  // Remove DXF formatting
-  const cleaned = cleanText(text);
+  const cleaned =
+    cleanText(text);
 
-  // ------------------------------------------------
-  // Pattern 1:
+
+  // ----------------------------------------------
   // F-8.13
   // F-03
   // F-2.20
   //
-  // Also accepts prefixes:
   // QAI.F-05
   // BSP.F-15
   // D.F-03
   // U.F-02
   // UNI.F-24
-  // ------------------------------------------------
+  // ----------------------------------------------
 
   const fPattern =
     /\b(?:[A-Z][A-Z0-9]*\.)*F\s*-\s*\d+(?:\.\d+)?\b/gi;
 
-  for (const match of cleaned.matchAll(fPattern)) {
-    const value = match[0]
-      .replace(/\s+/g, "")
-      .toUpperCase();
+  for (
+    const match of cleaned.matchAll(fPattern)
+  ) {
+
+    const value =
+      match[0]
+        .replace(/\s+/g, "")
+        .toUpperCase();
 
     results.add(value);
   }
 
-  // ------------------------------------------------
-  // Pattern 2:
+
+  // ----------------------------------------------
   // FDR#2.20
-  // FDR#2.07
   // FDR # 2.16
-  // ------------------------------------------------
+  // ----------------------------------------------
 
   const fdrPattern =
     /\bFDR\s*#\s*\d+(?:\.\d+)?\b/gi;
 
-  for (const match of cleaned.matchAll(fdrPattern)) {
-    const value = match[0]
-      .replace(/\s+/g, "")
-      .toUpperCase();
+  for (
+    const match of cleaned.matchAll(fdrPattern)
+  ) {
+
+    const value =
+      match[0]
+        .replace(/\s+/g, "")
+        .toUpperCase();
 
     results.add(value);
   }
@@ -223,181 +254,963 @@ function extractFeederNames(text) {
   return [...results];
 }
 
-// --------------------------------------------------
-// Build feeder occurrences
-// --------------------------------------------------
 
-const feederMap = new Map();
+// ==================================================
+// STATION NAME DETECTION
+//
+// Examples:
+//
+// SUB-8
+// SUB 8
+// SUB#8
+// SUB-12
+// ==================================================
+
+function extractStationNames(text) {
+
+  const results =
+    new Set();
+
+  if (!text) {
+    return [];
+  }
+
+  const cleaned =
+    cleanText(text);
+
+  const pattern =
+    /\bSUB\s*[-#]?\s*\d+\b/gi;
+
+  for (
+    const match of cleaned.matchAll(pattern)
+  ) {
+
+    const value =
+      match[0]
+        .replace(/\s+/g, "")
+        .replace(/^SUB[-#]?/i, "SUB-")
+        .toUpperCase();
+
+    results.add(value);
+  }
+
+  return [...results];
+}
+
+
+// ==================================================
+// EXTRACT STATION LABELS
+// ==================================================
+
+const stationEntities = [];
 
 for (const entity of textEntities) {
-  const names = extractFeederNames(entity.text);
+
+  if (!entity.position) {
+    continue;
+  }
+
+  const names =
+    extractStationNames(entity.text);
 
   for (const name of names) {
-    if (!feederMap.has(name)) {
-      feederMap.set(name, {
-        name,
-        occurrences: 0,
-        layers: new Set(),
-        positions: []
-      });
+
+    stationEntities.push({
+
+      name,
+
+      x: entity.position.x,
+
+      y: entity.position.y,
+
+      z: entity.position.z,
+
+      layer:
+        entity.layer || null,
+
+      type:
+        entity.type
+
+    });
+
+  }
+}
+
+console.log(
+  `Station labels: ${stationEntities.length}`
+);
+
+console.log(
+  `Unique stations: ${
+    new Set(
+      stationEntities.map(
+        item => item.name
+      )
+    ).size
+  }`
+);
+
+
+// ==================================================
+// DISTANCE BETWEEN TWO POINTS
+// ==================================================
+
+function distance2D(a, b) {
+
+  const dx =
+    Number(a.x) -
+    Number(b.x);
+
+  const dy =
+    Number(a.y) -
+    Number(b.y);
+
+  return Math.sqrt(
+    dx * dx +
+    dy * dy
+  );
+}
+
+
+// ==================================================
+// FIND NEAREST STATION
+// ==================================================
+
+function nearestStation(position) {
+
+  if (
+    !position ||
+    !stationEntities.length
+  ) {
+    return null;
+  }
+
+  let nearest = null;
+
+  for (
+    const station of stationEntities
+  ) {
+
+    const distance =
+      distance2D(
+        position,
+        station
+      );
+
+    if (
+      !nearest ||
+      distance < nearest.distance
+    ) {
+
+      nearest = {
+
+        name:
+          station.name,
+
+        distance,
+
+        x:
+          station.x,
+
+        y:
+          station.y,
+
+        layer:
+          station.layer || null
+
+      };
+
     }
 
-    const feeder = feederMap.get(name);
+  }
+
+  return nearest;
+}
+
+
+// ==================================================
+// RESOLVE STATION FOR FEEDER
+// ==================================================
+
+function resolveStation(positions) {
+
+  const matches = [];
+
+  for (
+    const position of positions || []
+  ) {
+
+    const station =
+      nearestStation(position);
+
+    if (station) {
+      matches.push(station);
+    }
+
+  }
+
+
+  if (!matches.length) {
+
+    return {
+
+      name: null,
+
+      confidence:
+        "unknown",
+
+      matchCount: 0,
+
+      averageDistance:
+        null,
+
+      candidates: []
+
+    };
+
+  }
+
+
+  // ----------------------------------------------
+  // GROUP MATCHES BY STATION
+  // ----------------------------------------------
+
+  const groups =
+    new Map();
+
+  for (
+    const match of matches
+  ) {
+
+    if (
+      !groups.has(match.name)
+    ) {
+
+      groups.set(
+        match.name,
+        []
+      );
+
+    }
+
+    groups
+      .get(match.name)
+      .push(match);
+
+  }
+
+
+  // ----------------------------------------------
+  // RANK STATIONS
+  // ----------------------------------------------
+
+  const candidates =
+    [...groups.entries()]
+      .map(
+        ([name, values]) => ({
+
+          name,
+
+          count:
+            values.length,
+
+          averageDistance:
+            values.reduce(
+              (sum, item) =>
+                sum + item.distance,
+              0
+            ) /
+            values.length,
+
+          minDistance:
+            Math.min(
+              ...values.map(
+                item =>
+                  item.distance
+              )
+            )
+
+        })
+      )
+      .sort(
+        (a, b) =>
+          b.count -
+          a.count ||
+          a.averageDistance -
+          b.averageDistance
+      );
+
+
+  const best =
+    candidates[0];
+
+
+  const ratio =
+    best.count /
+    matches.length;
+
+
+  let confidence =
+    "low";
+
+  if (ratio >= 0.75) {
+    confidence = "high";
+  }
+  else if (ratio >= 0.50) {
+    confidence = "medium";
+  }
+
+
+  return {
+
+    name:
+      best.name,
+
+    confidence,
+
+    matchCount:
+      best.count,
+
+    averageDistance:
+      Number(
+        best.averageDistance
+          .toFixed(3)
+      ),
+
+    candidates
+
+  };
+
+}
+
+
+// ==================================================
+// BUILD FEEDER OCCURRENCES
+// ==================================================
+
+const feederMap =
+  new Map();
+
+for (
+  const entity of textEntities
+) {
+
+  const names =
+    extractFeederNames(
+      entity.text
+    );
+
+
+  for (
+    const name of names
+  ) {
+
+    if (
+      !feederMap.has(name)
+    ) {
+
+      feederMap.set(
+        name,
+        {
+
+          name,
+
+          occurrences:
+            0,
+
+          layers:
+            new Set(),
+
+          positions:
+            []
+
+        }
+      );
+
+    }
+
+
+    const feeder =
+      feederMap.get(name);
+
 
     feeder.occurrences++;
 
+
     if (entity.layer) {
-      feeder.layers.add(entity.layer);
+
+      feeder.layers.add(
+        entity.layer
+      );
+
     }
+
 
     if (entity.position) {
+
       feeder.positions.push({
-        x: entity.position.x,
-        y: entity.position.y,
-        z: entity.position.z,
-        layer: entity.layer || null,
-        type: entity.type
+
+        x:
+          entity.position.x,
+
+        y:
+          entity.position.y,
+
+        z:
+          entity.position.z,
+
+        layer:
+          entity.layer || null,
+
+        type:
+          entity.type
+
       });
+
     }
+
   }
+
 }
 
-// --------------------------------------------------
-// Convert Sets to arrays
-// --------------------------------------------------
 
-const feeders = [...feederMap.values()]
-  .map(feeder => ({
-    name: feeder.name,
-    occurrences: feeder.occurrences,
-    layers: [...feeder.layers].sort(),
-    positions: feeder.positions
-  }))
-  .sort((a, b) =>
-    a.name.localeCompare(b.name, undefined, {
-      numeric: true,
-      sensitivity: "base"
-    })
+// ==================================================
+// BUILD FINAL FEEDER DATABASE
+// ==================================================
+
+const feeders =
+  [...feederMap.values()]
+    .map(
+      feeder => {
+
+        const station =
+          resolveStation(
+            feeder.positions
+          );
+
+
+        return {
+
+          name:
+            feeder.name,
+
+          station:
+            station.name,
+
+          stationConfidence:
+            station.confidence,
+
+          stationMatchCount:
+            station.matchCount,
+
+          stationAverageDistance:
+            station.averageDistance,
+
+          stationCandidates:
+            station.candidates,
+
+          occurrences:
+            feeder.occurrences,
+
+          layers:
+            [...feeder.layers]
+              .sort(),
+
+          positions:
+            feeder.positions
+
+        };
+
+      }
+    )
+    .sort(
+      (a, b) =>
+        a.name.localeCompare(
+          b.name,
+          undefined,
+          {
+            numeric: true,
+            sensitivity: "base"
+          }
+        )
+    );
+
+
+// ==================================================
+// SIMPLE FEEDER NAME LIST
+// ==================================================
+
+const feederNames =
+  feeders.map(
+    feeder =>
+      feeder.name
   );
 
-// --------------------------------------------------
-// Simple name list
-// --------------------------------------------------
 
-const feederNames = feeders.map(feeder => feeder.name);
-
-// --------------------------------------------------
-// Statistics
-// --------------------------------------------------
+// ==================================================
+// FEEDER CATEGORIES
+// ==================================================
 
 const prefixStats = {};
 
-for (const feeder of feeders) {
-  let category = "F";
+for (
+  const feeder of feeders
+) {
 
-  if (feeder.name.startsWith("FDR#")) {
-    category = "FDR";
-  } else if (feeder.name.includes(".F-")) {
-    category = "PREFIX.F";
+  let category =
+    "F";
+
+
+  if (
+    feeder.name
+      .startsWith("FDR#")
+  ) {
+
+    category =
+      "FDR";
+
+  }
+  else if (
+    feeder.name
+      .includes(".F-")
+  ) {
+
+    category =
+      "PREFIX.F";
+
   }
 
+
   prefixStats[category] =
-    (prefixStats[category] || 0) + 1;
+    (
+      prefixStats[category] ||
+      0
+    ) + 1;
+
 }
 
-// --------------------------------------------------
-// Manifest
-// --------------------------------------------------
+
+// ==================================================
+// STATION -> FEEDERS MAP
+// ==================================================
+
+const stationMap = {};
+
+for (
+  const feeder of feeders
+) {
+
+  if (!feeder.station) {
+    continue;
+  }
+
+
+  if (
+    !stationMap[
+      feeder.station
+    ]
+  ) {
+
+    stationMap[
+      feeder.station
+    ] = [];
+
+  }
+
+
+  stationMap[
+    feeder.station
+  ].push(
+    feeder.name
+  );
+
+}
+
+
+for (
+  const station of
+  Object.keys(stationMap)
+) {
+
+  stationMap[
+    station
+  ].sort(
+    (a, b) =>
+      a.localeCompare(
+        b,
+        undefined,
+        {
+          numeric: true,
+          sensitivity: "base"
+        }
+      )
+  );
+
+}
+
+
+// ==================================================
+// UNIQUE STATION LIST
+// ==================================================
+
+const stationNames =
+  [
+    ...new Set(
+      stationEntities.map(
+        item =>
+          item.name
+      )
+    )
+  ]
+  .sort(
+    (a, b) =>
+      a.localeCompare(
+        b,
+        undefined,
+        {
+          numeric: true,
+          sensitivity: "base"
+        }
+      )
+  );
+
+
+// ==================================================
+// MATCHING STATISTICS
+// ==================================================
+
+const matchedFeeders =
+  feeders.filter(
+    feeder =>
+      feeder.station
+  ).length;
+
+const unmatchedFeeders =
+  feeders.length -
+  matchedFeeders;
+
+const highConfidence =
+  feeders.filter(
+    feeder =>
+      feeder.stationConfidence ===
+      "high"
+  ).length;
+
+const mediumConfidence =
+  feeders.filter(
+    feeder =>
+      feeder.stationConfidence ===
+      "medium"
+  ).length;
+
+const lowConfidence =
+  feeders.filter(
+    feeder =>
+      feeder.stationConfidence ===
+      "low"
+  ).length;
+
+
+// ==================================================
+// MANIFEST
+// ==================================================
 
 const manifest = {
-  source: DWG,
-  generatedAt: new Date().toISOString(),
 
-  dwgBytes: fs.statSync(DWG).size,
-  dxfBytes: fs.statSync(DXF).size,
+  source:
+    DWG,
 
-  dxfEntities: entities.length,
-  textEntities: textEntities.length,
+  generatedAt:
+    new Date().toISOString(),
 
-  totalFeeders: feeders.length,
+  dwgBytes:
+    fs.statSync(DWG).size,
 
-  categories: prefixStats,
+  dxfBytes:
+    fs.statSync(DXF).size,
+
+  dxfEntities:
+    entities.length,
+
+  textEntities:
+    textEntities.length,
+
+  totalFeeders:
+    feeders.length,
+
+  stationLabels:
+    stationEntities.length,
+
+  totalStations:
+    stationNames.length,
+
+  matchedFeeders,
+
+  unmatchedFeeders,
+
+  confidence: {
+
+    high:
+      highConfidence,
+
+    medium:
+      mediumConfidence,
+
+    low:
+      lowConfidence
+
+  },
+
+  categories:
+    prefixStats,
+
+  stations:
+    stationNames,
 
   description:
-    "Feeder database extracted directly from the DWG. Names are taken from actual feeder labels found in the drawing."
+    "Feeder database extracted directly from the DWG with spatial station matching."
+
 };
 
-// --------------------------------------------------
-// Save files
-// --------------------------------------------------
+
+// ==================================================
+// SAVE FEEDER DATABASE
+// ==================================================
 
 console.log("");
 console.log("Writing feeder database...");
 
-fs.writeFileSync(
-  path.join(OUT, "feeders.json"),
-  JSON.stringify(feeders, null, 2),
-  "utf8"
-);
 
 fs.writeFileSync(
-  path.join(OUT, "feeder_names.json"),
-  JSON.stringify(feederNames, null, 2),
+
+  path.join(
+    OUT,
+    "feeders.json"
+  ),
+
+  JSON.stringify(
+    feeders,
+    null,
+    2
+  ),
+
   "utf8"
+
 );
+
+
+// ==================================================
+// SAVE FEEDER NAMES
+// ==================================================
 
 fs.writeFileSync(
-  path.join(OUT, "manifest.json"),
-  JSON.stringify(manifest, null, 2),
+
+  path.join(
+    OUT,
+    "feeder_names.json"
+  ),
+
+  JSON.stringify(
+    feederNames,
+    null,
+    2
+  ),
+
   "utf8"
+
 );
 
-// --------------------------------------------------
-// Save all text entities for later equipment matching
-// --------------------------------------------------
+
+// ==================================================
+// SAVE MANIFEST
+// ==================================================
 
 fs.writeFileSync(
-  path.join(OUT, "all_text_entities.json"),
-  JSON.stringify(textEntities, null, 2),
+
+  path.join(
+    OUT,
+    "manifest.json"
+  ),
+
+  JSON.stringify(
+    manifest,
+    null,
+    2
+  ),
+
   "utf8"
+
 );
 
-// --------------------------------------------------
-// Print results
-// --------------------------------------------------
+
+// ==================================================
+// SAVE ALL TEXT ENTITIES
+// ==================================================
+
+fs.writeFileSync(
+
+  path.join(
+    OUT,
+    "all_text_entities.json"
+  ),
+
+  JSON.stringify(
+    textEntities,
+    null,
+    2
+  ),
+
+  "utf8"
+
+);
+
+
+// ==================================================
+// SAVE STATIONS
+// ==================================================
+
+fs.writeFileSync(
+
+  path.join(
+    OUT,
+    "stations.json"
+  ),
+
+  JSON.stringify(
+    stationEntities,
+    null,
+    2
+  ),
+
+  "utf8"
+
+);
+
+
+// ==================================================
+// SAVE STATION -> FEEDERS
+// ==================================================
+
+fs.writeFileSync(
+
+  path.join(
+    OUT,
+    "station_feeders.json"
+  ),
+
+  JSON.stringify(
+    stationMap,
+    null,
+    2
+  ),
+
+  "utf8"
+
+);
+
+
+// ==================================================
+// CONSOLE RESULTS
+// ==================================================
 
 console.log("");
 console.log("========================================");
 console.log("FEEDER DATABASE RESULT");
 console.log("========================================");
 
-console.log(`Total feeders: ${feeders.length}`);
+console.log(
+  `Total feeders: ${feeders.length}`
+);
+
+console.log(
+  `Total stations: ${stationNames.length}`
+);
+
+console.log(
+  `Station labels: ${stationEntities.length}`
+);
+
+console.log(
+  `Matched feeders: ${matchedFeeders}`
+);
+
+console.log(
+  `Unmatched feeders: ${unmatchedFeeders}`
+);
 
 console.log("");
+
+console.log("Confidence:");
+
+console.log(
+  `High: ${highConfidence}`
+);
+
+console.log(
+  `Medium: ${mediumConfidence}`
+);
+
+console.log(
+  `Low: ${lowConfidence}`
+);
+
+console.log("");
+
 console.log("Categories:");
-console.log(JSON.stringify(prefixStats, null, 2));
+
+console.log(
+  JSON.stringify(
+    prefixStats,
+    null,
+    2
+  )
+);
 
 console.log("");
-console.log("FEEDER LIST:");
+
+console.log("FEEDER → STATION:");
+
 console.log("----------------------------------------");
 
-for (const feeder of feeders) {
+for (
+  const feeder of feeders
+) {
+
   console.log(
-    `${feeder.name} | occurrences: ${feeder.occurrences} | layers: ${feeder.layers.join(", ")}`
+
+    `${feeder.name} → ${
+      feeder.station ||
+      "UNMATCHED"
+    } | confidence: ${
+      feeder.stationConfidence
+    } | occurrences: ${
+      feeder.occurrences
+    }`
+
   );
+
 }
 
 console.log("");
+
 console.log("========================================");
 console.log("FEEDER DATABASE BUILD COMPLETED");
 console.log("========================================");
 
-// --------------------------------------------------
-// Cleanup
-// --------------------------------------------------
+
+// ==================================================
+// CLEANUP
+// ==================================================
 
 try {
-  fs.unlinkSync(DXF);
-} catch {
+
+  fs.unlinkSync(
+    DXF
+  );
+
+}
+catch {
+
   // Ignore cleanup errors.
+
 }
