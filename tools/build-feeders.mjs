@@ -1,491 +1,402 @@
-import fs from "node:fs/promises";
-import path from "node:path";
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
+import fs from "fs";
+import path from "path";
+import { execFileSync } from "child_process";
+import DxfParser from "dxf-parser";
 
-const execFileAsync = promisify(execFile);
+const DWG = "cad/FINAL DISPATCH - UPDATE.dwg";
+const OUT = "data/feeders";
+const DXF = "/tmp/final-dispatch.dxf";
 
-const ROOT = process.cwd();
+fs.mkdirSync(OUT, { recursive: true });
 
-const DWG_PATH = path.join(
-  ROOT,
-  "cad",
-  "FINAL DISPATCH - UPDATE.dwg"
-);
+console.log("========================================");
+console.log("FEEDER DWG DIAGNOSTIC");
+console.log("========================================");
 
-const OUT_DIR = path.join(
-  ROOT,
-  "data",
-  "feeders"
-);
-
-const DXF_PATH = path.join(
-  OUT_DIR,
-  "FINAL DISPATCH - UPDATE.dxf"
-);
-
-await fs.mkdir(OUT_DIR, { recursive: true });
-
-function writeJson(filename, data) {
-  return fs.writeFile(
-    path.join(OUT_DIR, filename),
-    JSON.stringify(data, null, 2),
-    "utf8"
-  );
+if (!fs.existsSync(DWG)) {
+  throw new Error(`DWG file not found: ${DWG}`);
 }
+
+console.log(`DWG: ${DWG}`);
+console.log(`DWG size: ${fs.statSync(DWG).size} bytes`);
+
+// --------------------------------------------------
+// 1. Convert DWG -> DXF
+// --------------------------------------------------
+
+console.log("");
+console.log("Converting DWG to DXF...");
+
+execFileSync("dwg2dxf", ["-o", DXF, DWG], {
+  stdio: "inherit"
+});
+
+if (!fs.existsSync(DXF)) {
+  throw new Error("DXF conversion failed.");
+}
+
+const dxfText = fs.readFileSync(DXF, "utf8");
+
+console.log(`DXF size: ${fs.statSync(DXF).size} bytes`);
+console.log(`DXF text size: ${dxfText.length} characters`);
+
+// --------------------------------------------------
+// 2. Parse DXF
+// --------------------------------------------------
+
+console.log("");
+console.log("Parsing DXF...");
+
+const parser = new DxfParser();
+const dxf = parser.parseSync(dxfText);
+
+const entities = dxf.entities || [];
+
+console.log(`Total DXF entities: ${entities.length}`);
+
+// --------------------------------------------------
+// Helpers
+// --------------------------------------------------
 
 function cleanText(value) {
-  return String(value ?? "")
+  if (value === undefined || value === null) {
+    return "";
+  }
+
+  let text = String(value);
+
+  // DXF MTEXT formatting
+  text = text
     .replace(/\\P/gi, " ")
-    .replace(/\{\\[^;{}]*;?/g, "")
-    .replace(/[{}]/g, "")
+    .replace(/\\A\d+;/gi, "")
+    .replace(/\\H[^;]+;/gi, "")
+    .replace(/\\C\d+;/gi, "")
+    .replace(/\\F[^;]+;/gi, "")
+    .replace(/\\S([^;]+);/gi, "$1")
+    .replace(/[{}]/g, " ");
+
+  return text
     .replace(/\s+/g, " ")
     .trim();
 }
 
-function normalize(value) {
-  return cleanText(value)
-    .toUpperCase()
-    .replace(/[‐-‒–—−]/g, "-")
-    .replace(/\s+/g, " ")
-    .trim();
-}
+function getEntityText(entity) {
+  const values = [];
 
-function isFeederName(text) {
-  const s = normalize(text);
-
-  return (
-    /^F\s*[-_]?\s*\d+(?:\s*[.-]\s*\d+)?(?:\s*[A-Z])?$/.test(s) ||
-    /^FEEDER\s*[-_]?\s*\d+(?:\s*[.-]\s*\d+)?(?:\s*[A-Z])?$/.test(s)
-  );
-}
-
-function isStationName(text) {
-  const s = normalize(text);
-
-  return (
-    /^(SUB|SS|STATION)\s*[-_]?\s*[A-Z0-9.-]+$/i.test(s) ||
-    /^SUB\s*[-_]?\s*\d+$/i.test(s)
-  );
-}
-
-function parseDxfText(dxf) {
-  const lines = dxf.split(/\r?\n/);
-
-  const entities = [];
-
-  let entity = null;
-
-  function finishEntity() {
-    if (!entity) return;
-
-    if (
-      entity.type === "TEXT" ||
-      entity.type === "MTEXT"
-    ) {
-      entities.push(entity);
-    }
-
-    entity = null;
+  if (typeof entity.text === "string") {
+    values.push(entity.text);
   }
 
-  for (let i = 0; i < lines.length - 1; i += 1) {
-    const codeLine = lines[i].trim();
-    const valueLine = lines[i + 1];
-
-    if (!codeLine) continue;
-
-    const code = Number(codeLine);
-
-    if (!Number.isFinite(code)) {
-      continue;
-    }
-
-    const value = valueLine ?? "";
-
-    if (code === 0) {
-      finishEntity();
-
-      const type = value.trim();
-
-      if (
-        type === "TEXT" ||
-        type === "MTEXT"
-      ) {
-        entity = {
-          type,
-          layer: null,
-          text: "",
-          x: null,
-          y: null
-        };
-      }
-
-      continue;
-    }
-
-    if (!entity) {
-      continue;
-    }
-
-    if (code === 8) {
-      entity.layer = value.trim();
-    }
-
-    if (code === 1) {
-      entity.text = cleanText(value);
-    }
-
-    if (code === 3 && entity.type === "MTEXT") {
-      entity.text += cleanText(value);
-    }
-
-    if (code === 10) {
-      const x = Number(value);
-
-      if (Number.isFinite(x)) {
-        entity.x = x;
-      }
-    }
-
-    if (code === 20) {
-      const y = Number(value);
-
-      if (Number.isFinite(y)) {
-        entity.y = y;
-      }
-    }
+  if (typeof entity.textValue === "string") {
+    values.push(entity.textValue);
   }
 
-  finishEntity();
+  if (typeof entity.string === "string") {
+    values.push(entity.string);
+  }
 
-  return entities;
+  if (typeof entity.value === "string") {
+    values.push(entity.value);
+  }
+
+  if (typeof entity.content === "string") {
+    values.push(entity.content);
+  }
+
+  if (Array.isArray(entity.text)) {
+    values.push(...entity.text);
+  }
+
+  return values
+    .map(cleanText)
+    .filter(Boolean)
+    .join(" ");
 }
 
-console.log("");
-console.log("========================================");
-console.log("FEEDER DATABASE BUILDER");
-console.log("========================================");
+// --------------------------------------------------
+// 3. Extract TEXT / MTEXT
+// --------------------------------------------------
 
-console.log("DWG:", DWG_PATH);
+const textEntities = [];
 
-const stat = await fs.stat(DWG_PATH);
+for (const entity of entities) {
+  const type = String(entity.type || "").toUpperCase();
 
-console.log(
-  `DWG size: ${stat.size.toLocaleString()} bytes`
-);
+  if (
+    type !== "TEXT" &&
+    type !== "MTEXT" &&
+    type !== "ATTRIB" &&
+    type !== "ATTDEF"
+  ) {
+    continue;
+  }
 
-console.log("");
-console.log("Converting DWG to DXF using LibreDWG...");
+  const text = getEntityText(entity);
 
-try {
-  await execFileAsync(
-    "dwg2dxf",
-    [
-      "-y",
-      "-o",
-      DXF_PATH,
-      DWG_PATH
-    ],
-    {
-      maxBuffer: 1024 * 1024 * 20
+  if (!text) {
+    continue;
+  }
+
+  const item = {
+    type,
+    text,
+    layer: entity.layer || null
+  };
+
+  if (entity.position) {
+    item.position = {
+      x: entity.position.x ?? null,
+      y: entity.position.y ?? null,
+      z: entity.position.z ?? null
+    };
+  }
+
+  textEntities.push(item);
+}
+
+console.log(`TEXT/MTEXT entities found: ${textEntities.length}`);
+
+// --------------------------------------------------
+// 4. Count text values
+// --------------------------------------------------
+
+const textCounts = new Map();
+
+for (const item of textEntities) {
+  const value = item.text;
+
+  textCounts.set(
+    value,
+    (textCounts.get(value) || 0) + 1
+  );
+}
+
+const textValueCounts = [...textCounts.entries()]
+  .map(([text, count]) => ({
+    text,
+    count
+  }))
+  .sort((a, b) => {
+    if (b.count !== a.count) {
+      return b.count - a.count;
     }
-  );
-} catch (error) {
-  console.error(
-    "dwg2dxf stdout:",
-    error.stdout ?? ""
-  );
 
-  console.error(
-    "dwg2dxf stderr:",
-    error.stderr ?? ""
-  );
+    return a.text.localeCompare(b.text);
+  });
 
-  throw new Error(
-    `DWG to DXF conversion failed: ${error.message}`
+console.log(`Unique text values: ${textValueCounts.length}`);
+
+// --------------------------------------------------
+// 5. Broad diagnostic candidates
+//
+// IMPORTANT:
+// This does NOT declare these to be feeders.
+// It only finds interesting text for inspection.
+// --------------------------------------------------
+
+const candidates = [];
+
+for (const item of textValueCounts) {
+  const text = item.text;
+
+  if (!text) {
+    continue;
+  }
+
+  // Ignore extremely long paragraphs.
+  if (text.length > 100) {
+    continue;
+  }
+
+  const upper = text.toUpperCase();
+
+  const hasNumber = /\d/.test(text);
+  const hasLetter = /[A-Z\u0600-\u06FF]/i.test(text);
+
+  if (!hasNumber || !hasLetter) {
+    continue;
+  }
+
+  const keyword =
+    /\bFEEDER\b/i.test(text) ||
+    /\bFDR\b/i.test(text) ||
+    /\bFD\b/i.test(text) ||
+    /\bOUTGOING\b/i.test(text) ||
+    /\bINCOMING\b/i.test(text) ||
+    /\bRMU\b/i.test(text) ||
+    /\bSUB\b/i.test(text) ||
+    /\bSUB-/i.test(text) ||
+    /\b11\s*KV\b/i.test(text) ||
+    /\b13\.8\s*KV\b/i.test(text) ||
+    /\b33\s*KV\b/i.test(text);
+
+  const compactElectrical =
+    /^[A-Z]{1,8}[-_/ ]?\d+[A-Z0-9._/-]*$/i.test(text);
+
+  const mixedNumber =
+    /[A-Z]+\s*[-_/]?\s*\d+/i.test(text);
+
+  if (keyword || compactElectrical || mixedNumber) {
+    candidates.push({
+      text,
+      count: item.count
+    });
+  }
+}
+
+// --------------------------------------------------
+// 6. Layer statistics
+// --------------------------------------------------
+
+const layerCounts = new Map();
+
+for (const item of textEntities) {
+  const layer = item.layer || "(NO LAYER)";
+
+  layerCounts.set(
+    layer,
+    (layerCounts.get(layer) || 0) + 1
   );
 }
 
-const dxfStat = await fs.stat(DXF_PATH);
+const layers = [...layerCounts.entries()]
+  .map(([layer, count]) => ({
+    layer,
+    count
+  }))
+  .sort((a, b) => b.count - a.count);
 
-console.log(
-  `DXF created: ${dxfStat.size.toLocaleString()} bytes`
+// --------------------------------------------------
+// 7. Candidate entities with positions/layers
+// --------------------------------------------------
+
+const candidateSet = new Set(
+  candidates.map(item => item.text)
 );
 
-if (dxfStat.size === 0) {
-  throw new Error(
-    "LibreDWG produced an empty DXF file."
-  );
-}
+const candidateEntities = textEntities
+  .filter(item => candidateSet.has(item.text))
+  .map(item => ({
+    text: item.text,
+    type: item.type,
+    layer: item.layer,
+    position: item.position || null
+  }));
+
+// --------------------------------------------------
+// 8. Save diagnostic files
+// --------------------------------------------------
 
 console.log("");
-console.log("Reading DXF...");
+console.log("Writing diagnostic database...");
 
-const dxf = await fs.readFile(
-  DXF_PATH,
+fs.writeFileSync(
+  path.join(OUT, "text_value_counts.json"),
+  JSON.stringify(textValueCounts, null, 2),
   "utf8"
 );
 
-console.log(
-  `DXF text size: ${dxf.length.toLocaleString()} characters`
+fs.writeFileSync(
+  path.join(OUT, "keyword_candidates.json"),
+  JSON.stringify(candidates, null, 2),
+  "utf8"
 );
 
-const textEntities = parseDxfText(dxf);
-
-console.log(
-  `TEXT/MTEXT entities found: ${textEntities.length}`
+fs.writeFileSync(
+  path.join(OUT, "candidate_entities.json"),
+  JSON.stringify(candidateEntities, null, 2),
+  "utf8"
 );
 
-const layers = [
-  ...new Set(
-    textEntities
-      .map((x) => x.layer)
-      .filter(Boolean)
-  )
-].sort();
-
-const allTextEntities = textEntities.map(
-  (item, index) => ({
-    id: index + 1,
-    type: item.type,
-    layer: item.layer,
-    text: item.text,
-    x: item.x,
-    y: item.y
-  })
+fs.writeFileSync(
+  path.join(OUT, "layers.json"),
+  JSON.stringify(layers, null, 2),
+  "utf8"
 );
 
-const feederCandidates = [];
-
-for (const item of textEntities) {
-  if (!item.text) continue;
-
-  if (!isFeederName(item.text)) {
-    continue;
-  }
-
-  feederCandidates.push({
-    name: item.text,
-    normalized: normalize(item.text),
-    layer: item.layer,
-    x: item.x,
-    y: item.y,
-    source: "DWG_TEXT"
-  });
-}
-
-const uniqueFeeders = [];
-
-const feederKeys = new Set();
-
-for (const feeder of feederCandidates) {
-  const key = [
-    feeder.normalized,
-    feeder.layer ?? "",
-    feeder.x ?? "",
-    feeder.y ?? ""
-  ].join("|");
-
-  if (feederKeys.has(key)) {
-    continue;
-  }
-
-  feederKeys.add(key);
-
-  uniqueFeeders.push(feeder);
-}
-
-const stationCandidates = [];
-
-for (const item of textEntities) {
-  if (!item.text) continue;
-
-  if (!isStationName(item.text)) {
-    continue;
-  }
-
-  stationCandidates.push({
-    name: item.text,
-    normalized: normalize(item.text),
-    layer: item.layer,
-    x: item.x,
-    y: item.y,
-    source: "DWG_TEXT"
-  });
-}
-
-uniqueFeeders.sort((a, b) =>
-  a.normalized.localeCompare(
-    b.normalized,
-    undefined,
-    {
-      numeric: true,
-      sensitivity: "base"
-    }
-  )
+fs.writeFileSync(
+  path.join(OUT, "all_text_entities.json"),
+  JSON.stringify(textEntities, null, 2),
+  "utf8"
 );
 
-stationCandidates.sort((a, b) =>
-  a.normalized.localeCompare(
-    b.normalized,
-    undefined,
-    {
-      numeric: true,
-      sensitivity: "base"
-    }
-  )
-);
+// --------------------------------------------------
+// 9. Manifest
+// --------------------------------------------------
 
 const manifest = {
-  ok: true,
-
-  sourceFile:
-    "FINAL DISPATCH - UPDATE.dwg",
-
-  convertedFile:
-    "FINAL DISPATCH - UPDATE.dxf",
-
-  reader:
-    "LibreDWG dwg2dxf 0.14",
-
-  counts: {
-    textEntities:
-      allTextEntities.length,
-
-    layers:
-      layers.length,
-
-    feederCandidates:
-      feederCandidates.length,
-
-    uniqueFeeders:
-      uniqueFeeders.length,
-
-    stationCandidates:
-      stationCandidates.length
-  },
-
-  rules: {
-    literalNamesOnly: true,
-
-    noSyntheticFeederNames: true,
-
-    noSyntheticStationNames: true,
-
-    unresolvedRelationshipsAreNotGuessed: true,
-
-    rawDatabaseFileDisabled: true
-  }
+  source: DWG,
+  generatedAt: new Date().toISOString(),
+  dwgBytes: fs.statSync(DWG).size,
+  dxfBytes: fs.statSync(DXF).size,
+  dxfCharacters: dxfText.length,
+  totalDxfEntities: entities.length,
+  textEntities: textEntities.length,
+  uniqueTextValues: textValueCounts.length,
+  diagnosticCandidates: candidates.length,
+  layers: layers.length,
+  note:
+    "Diagnostic extraction only. Candidate texts are NOT confirmed feeder names."
 };
 
-await writeJson(
-  "manifest.json",
-  manifest
+fs.writeFileSync(
+  path.join(OUT, "manifest.json"),
+  JSON.stringify(manifest, null, 2),
+  "utf8"
 );
 
-await writeJson(
-  "layers.json",
-  layers
-);
+// --------------------------------------------------
+// 10. Print useful results to GitHub Actions log
+// --------------------------------------------------
 
-await writeJson(
-  "all_text_entities.json",
-  allTextEntities
-);
+console.log("");
+console.log("========================================");
+console.log("DIAGNOSTIC RESULT");
+console.log("========================================");
 
-await writeJson(
-  "all_feeder_candidates.json",
-  feederCandidates
-);
+console.log(`TEXT entities       : ${textEntities.length}`);
+console.log(`Unique text values  : ${textValueCounts.length}`);
+console.log(`Candidate values    : ${candidates.length}`);
+console.log(`Layers              : ${layers.length}`);
 
-await writeJson(
-  "stations.json",
-  stationCandidates
-);
+console.log("");
+console.log("TOP POSSIBLE FEEDER / ELECTRICAL TEXT:");
+console.log("----------------------------------------");
 
-await writeJson(
-  "feeders.json",
-  uniqueFeeders
-);
+const preview = candidates.slice(0, 200);
 
-await fs.rm(
-  DXF_PATH,
-  {
-    force: true
+if (preview.length === 0) {
+  console.log("No diagnostic candidates found.");
+} else {
+  for (const item of preview) {
+    console.log(`[${item.count}] ${item.text}`);
   }
-);
-
-await fs.rm(
-  path.join(
-    OUT_DIR,
-    "raw_database.json"
-  ),
-  {
-    force: true
-  }
-);
-
-if (
-  textEntities.length === 0
-) {
-  throw new Error(
-    "No TEXT or MTEXT entities were extracted from the DXF."
-  );
 }
 
-if (
-  uniqueFeeders.length === 0
-) {
-  throw new Error(
-    "DXF was read successfully, but no literal feeder names were found."
-  );
+console.log("");
+console.log("TOP TEXT VALUES:");
+console.log("----------------------------------------");
+
+for (const item of textValueCounts.slice(0, 100)) {
+  console.log(`[${item.count}] ${item.text}`);
+}
+
+console.log("");
+console.log("TOP TEXT LAYERS:");
+console.log("----------------------------------------");
+
+for (const item of layers.slice(0, 100)) {
+  console.log(`[${item.count}] ${item.layer}`);
 }
 
 console.log("");
 console.log("========================================");
-console.log("FEEDER DATABASE BUILD COMPLETED");
+console.log("DIAGNOSTIC BUILD COMPLETED");
 console.log("========================================");
 
-console.log(
-  `Layers: ${layers.length}`
-);
-
-console.log(
-  `Text entities: ${allTextEntities.length}`
-);
-
-console.log(
-  `Feeder candidates: ${feederCandidates.length}`
-);
-
-console.log(
-  `Unique feeders: ${uniqueFeeders.length}`
-);
-
-console.log(
-  `Station candidates: ${stationCandidates.length}`
-);
-
-console.log("");
-console.log("First feeder names:");
-
-for (
-  const feeder
-  of uniqueFeeders.slice(0, 30)
-) {
-  console.log(
-    `- ${feeder.name}`
-  );
+// Remove temporary DXF
+try {
+  fs.unlinkSync(DXF);
+} catch {
+  // Ignore cleanup errors.
 }
-
-console.log("");
-console.log("========================================");
-
-console.log(
-  JSON.stringify(
-    manifest,
-    null,
-    2
-  )
-);
