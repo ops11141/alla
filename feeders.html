@@ -618,28 +618,18 @@ onclick="loadDatabase()"
 </div>
 <div class="drawing-help">يمكنك التكبير والتحريك والاطلاع على الرسم والطبقات مباشرة. قاعدة المغذيات والبيانات القديمة محفوظة أسفل الرسم.</div>
 
-<div class="equipment-lookup">
-  <h3>📍 البحث عن موقع المعدة</h3>
-  <div class="muted">اكتب رقم المعدة هنا مباشرة، وسأعرض لك موقعها وإحداثياتها من نفس قاعدة بيانات صفحة «مواقع المعدات» بدون مغادرة هذه الصفحة.</div>
-  <div class="equipment-row" style="margin-top:10px">
-    <input id="equipmentLocationSearch" type="search" placeholder="مثال: 871 أو 650-007 أو EOS-871" autocomplete="off">
-    <button class="btn btn-green" type="button" onclick="searchEquipmentLocation()">بحث عن موقع المعدة</button>
-  </div>
-  <div id="equipmentLocationStatus" class="find-empty"></div>
-  <div id="equipmentLocationResults" class="equipment-results"></div>
-</div>
-</section>
-
 <section class="card equipment-lookup" id="equipmentLookupSection">
   <h3>📍 البحث عن موقع المعدة</h3>
-  <div class="muted">اكتب رقم المعدة مباشرة وأنت داخل الرسم، وسأعرض لك موقعها وإحداثياتها من نفس قاعدة بيانات صفحة المعدات — بدون الانتقال لصفحة المعدات.</div>
-  <div class="lookup-row">
-    <input id="equipmentLookupInput" type="search" inputmode="search" placeholder="مثال: 871 أو RMU-871 أو 05108" autocomplete="off">
+  <div class="muted">اكتب رقم المعدة وأنت داخل الرسم، وسأعرض لك الموقع والإحداثيات من نفس قاعدة بيانات صفحة «مواقع المعدات» بدون الانتقال لصفحة المعدات.</div>
+  <div class="equipment-row" style="margin-top:10px">
+    <input id="equipmentLookupInput" type="search" inputmode="search" placeholder="مثال: 871 أو 650-007 أو EOS-871" autocomplete="off">
     <button class="btn btn-green" type="button" onclick="searchEquipmentLocation()">📍 عرض الموقع</button>
   </div>
-  <div id="equipmentLookupStatus" class="equipment-empty"></div>
+  <div id="equipmentLookupStatus" class="find-empty"></div>
   <div id="equipmentLookupResults" class="equipment-results"></div>
 </section>
+
+
 
 
 <!-- النتائج -->
@@ -1655,7 +1645,7 @@ async function loadEquipmentIndex(){
   const status = document.getElementById("equipmentLookupStatus");
   if(status) status.textContent = "جاري تحميل قاعدة مواقع المعدات...";
   try{
-    const response = await fetch("data/equipment-index.json?v=" + Date.now(), {cache:"force-cache"});
+    const response = await fetch("data/equipment-lookup.json?v=" + Date.now(), {cache:"force-cache"});
     if(!response.ok) throw new Error("قاعدة مواقع المعدات غير جاهزة بعد");
     equipmentIndex = await response.json();
     if(!equipmentIndex || !equipmentIndex.records) throw new Error("صيغة قاعدة المعدات غير صحيحة");
@@ -1686,171 +1676,58 @@ async function searchEquipmentLocation(){
     if(!index) return;
 
     const rows = [];
-    for(const [key, values] of Object.entries(index.records)){
-      if(!key.includes(q) && !values.some(r => normalizeEquipmentValue(r[0]).includes(q))) continue;
-      for(const row of values){
-        rows.push({
-          tf: String(row[0] || ""),
-          lat: Number(row[1]),
-          lon: Number(row[2]),
-          coord: String(row[3] || "")
-        });
-        if(rows.length >= 30) break;
-      }
-      if(rows.length >= 30) break;
-    }
-
-    const unique = [];
-    const seen = new Set();
-    for(const row of rows){
-      const key = row.tf + "|" + row.lat + "|" + row.lon;
-      if(!seen.has(key)){
-        seen.add(key);
-        unique.push(row);
-      }
-    }
-
-    if(!unique.length){
-      status.textContent = "لم يتم العثور على رقم المعدة في قاعدة مواقع المعدات.";
-      return;
-    }
-
-    status.textContent = "تم العثور على " + unique.length + " موقع. البيانات مأخوذة من قاعدة صفحة المعدات.";
-    box.innerHTML = unique.map(row => {
-      const maps = "https://www.google.com/maps?q=" + encodeURIComponent(row.lat + "," + row.lon);
-      const dms = row.coord || formatDMS(row.lat,row.lon);
-      return `
-        <article class="equipment-result">
-          <div class="equipment-result-title">⚡ ${escapeHTML(row.tf)}</div>
-          <div class="equipment-coords">${row.lat.toFixed(7)} , ${row.lon.toFixed(7)}</div>
-          <div class="equipment-coord-dms">${escapeHTML(dms)}</div>
-          <div class="equipment-actions">
-            <a class="btn btn-green" href="${maps}" target="_blank" rel="noopener">📍 فتح الموقع في الخريطة</a>
-            <button class="btn btn-light" type="button" onclick='copyEquipmentCoords(${row.lat},${row.lon})'>نسخ الإحداثيات</button>
-          </div>
-        </article>`;
-    }).join("");
-  }catch(error){
-    console.error(error);
-    if(status) status.textContent = "قاعدة مواقع المعدات لم تُجهز بعد. سيقوم البناء الآلي بإنشائها من نفس بيانات صفحة المعدات.";
-  }
-}
-
-function copyEquipmentCoords(lat, lon){
-  const text = lat + ", " + lon;
-  if(navigator.clipboard){
-    navigator.clipboard.writeText(text).then(() => {
-      const status = document.getElementById("equipmentLookupStatus");
-      if(status) status.textContent = "✅ تم نسخ الإحداثيات: " + text;
-    });
-  }
-}
-
-let equipmentLookup = null;
-let equipmentLookupBusy = false;
-
-function normalizeEquipmentKey(value){
-  return String(value ?? "")
-    .toUpperCase()
-    .replace(/[\s\-_\/.,:;()[\]{}]+/g,"")
-    .trim();
-}
-
-async function loadEquipmentLookup(){
-  if(equipmentLookup) return equipmentLookup;
-  if(equipmentLookupBusy) return null;
-  equipmentLookupBusy = true;
-  const status = document.getElementById("equipmentLocationStatus");
-  if(status) status.textContent = "جاري تحميل قاعدة مواقع المعدات...";
-  try{
-    const response = await fetch("data/equipment-lookup.json?v=" + Date.now(), {cache:"force-cache"});
-    if(!response.ok) throw new Error("تعذر تحميل قاعدة مواقع المعدات");
-    const payload = await response.json();
-    if(!payload || !payload.records) throw new Error("صيغة قاعدة المعدات غير صحيحة");
-    equipmentLookup = payload.records;
-    return equipmentLookup;
-  } finally {
-    equipmentLookupBusy = false;
-  }
-}
-
-function equipmentScore(key, query){
-  if(key === query) return 1000;
-  if(key.startsWith(query)) return 700;
-  if(key.includes(query)) return 500;
-  return 0;
-}
-
-async function searchEquipmentLocation(){
-  const input = document.getElementById("equipmentLocationSearch");
-  const status = document.getElementById("equipmentLocationStatus");
-  const box = document.getElementById("equipmentLocationResults");
-  const queryRaw = (input?.value || "").trim();
-  const query = normalizeEquipmentKey(queryRaw);
-
-  if(!query){
-    if(status) status.textContent = "اكتب رقم المعدة أولاً.";
-    if(box) box.innerHTML = "";
-    return;
-  }
-
-  if(status) status.textContent = "جاري البحث عن موقع المعدة...";
-  if(box) box.innerHTML = "";
-
-  try{
-    const records = await loadEquipmentLookup();
-    if(!records) return;
-
     const candidates = [];
-    for(const [key, rows] of Object.entries(records)){
-      const score = equipmentScore(key, query);
-      if(score <= 0) continue;
-      for(const row of rows){
+
+    for(const [key, values] of Object.entries(index.records)){
+      const score = key === q ? 1000 : (key.startsWith(q) ? 700 : (key.includes(q) ? 500 : 0));
+      if(!score) continue;
+
+      for(const row of values){
+        const tf = String(row[0] || "");
         candidates.push({
-          key,
           score,
-          tf: String(row[0] ?? ""),
-          lat: Number(row[1]),
-          lng: Number(row[2]),
-          coord: String(row[3] ?? "")
+          tf,
+          lat:Number(row[1]),
+          lon:Number(row[2]),
+          coord:String(row[3] || "")
         });
       }
     }
 
     candidates.sort((a,b)=>b.score-a.score || a.tf.localeCompare(b.tf));
-    const unique = [];
-    const seen = new Set();
 
-    for(const item of candidates){
-      const sig = item.tf + "|" + item.lat + "|" + item.lng;
-      if(seen.has(sig)) continue;
-      seen.add(sig);
-      unique.push(item);
-      if(unique.length >= 30) break;
+    const seen = new Set();
+    for(const row of candidates){
+      if(!Number.isFinite(row.lat)||!Number.isFinite(row.lon)) continue;
+      const key = row.tf+"|"+row.lat+"|"+row.lon;
+      if(seen.has(key)) continue;
+      seen.add(key);
+      rows.push(row);
+      if(rows.length>=30) break;
     }
 
-    if(!unique.length){
+    if(!rows.length){
       status.textContent = "لم يتم العثور على رقم المعدة في قاعدة مواقع المعدات.";
       return;
     }
 
-    status.textContent = "تم العثور على " + unique.length + " نتيجة. اختر المعدة المطلوبة.";
-    box.innerHTML = unique.map((item,i)=>{
-      const mapUrl = "https://www.google.com/maps?q=" + encodeURIComponent(item.lat + "," + item.lng);
-      const coordText = item.coord || (item.lat.toFixed(7) + " , " + item.lng.toFixed(7));
+    status.textContent = "تم العثور على " + rows.length + " موقع. البيانات مأخوذة من قاعدة صفحة المعدات.";
+
+    box.innerHTML = rows.map(row => {
+      const maps = "https://www.google.com/maps?q=" + encodeURIComponent(row.lat + "," + row.lon);
+      const dms = row.coord || formatDMS(row.lat,row.lon);
       return `
-        <div class="equipment-result">
-          <div class="equipment-result-title">⚡ ${escapeHTML(item.tf)}</div>
+        <article class="equipment-result">
+          <div class="equipment-result-title">⚡ ${escapeHTML(row.tf)}</div>
           <div class="equipment-result-meta">
-            📍 الإحداثيات: <b dir="ltr">${escapeHTML(coordText)}</b><br>
-            🌐 Latitude: <b dir="ltr">${item.lat.toFixed(7)}</b> &nbsp; | &nbsp; Longitude: <b dir="ltr">${item.lng.toFixed(7)}</b>
+            📍 الإحداثيات: <b dir="ltr">${row.lat.toFixed(7)} , ${row.lon.toFixed(7)}</b><br>
+            ${escapeHTML(dms)}
           </div>
           <div class="equipment-actions">
-            <a class="equipment-map" href="${mapUrl}" target="_blank" rel="noopener">📍 فتح الموقع في الخريطة</a>
-            <button class="equipment-focus" type="button" onclick='focusEquipmentOnDrawing(${JSON.stringify(item)})'>🔎 البحث عنه في الرسم</button>
+            <a class="equipment-map" href="${maps}" target="_blank" rel="noopener">📍 فتح الموقع في الخريطة</a>
+            <button class="equipment-focus" type="button" onclick='focusEquipmentOnDrawing(${JSON.stringify(row)})'>🔎 تحديده في الرسم</button>
           </div>
-        </div>
-      `;
+        </article>`;
     }).join("");
   }catch(error){
     console.error(error);
@@ -1860,11 +1737,10 @@ async function searchEquipmentLocation(){
 
 function focusEquipmentOnDrawing(item){
   const input = document.getElementById("drawingSearch");
-  if(input){
-    input.value = item.tf;
-    searchDrawing();
-    document.getElementById("drawingSearch")?.scrollIntoView({behavior:"smooth",block:"center"});
-  }
+  if(!input) return;
+  input.value = item.tf;
+  searchDrawing();
+  document.getElementById("drawingSearch")?.scrollIntoView({behavior:"smooth",block:"center"});
 }
 
 function openFullDrawing(){
