@@ -456,7 +456,7 @@ th{
 .mobile-drawing-image{display:none;width:100%;height:auto;min-width:100%;background:#05080b;touch-action:pan-x pan-y pinch-zoom;image-rendering:auto;-webkit-user-drag:none}
 
 
-.vector-search-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.vector-search-bar input{flex:1;min-width:220px;border:1px solid var(--border);border-radius:12px;padding:13px;font:inherit}.vector-drawing-viewport{position:relative;height:75vh;min-height:480px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#050505;touch-action:none}.vector-drawing-viewport object{width:100%;height:100%;display:block;background:#050505}.vector-fallback{position:absolute;inset:0;display:grid;place-items:center;color:#ddd;background:#050505}.vector-search-bar .btn{width:auto}.vector-search-bar .muted{min-width:180px}@media(max-width:700px){.vector-drawing-viewport{height:70vh;min-height:420px}.vector-search-bar .btn{width:auto}.vector-search-bar{align-items:stretch}.vector-search-bar input{min-width:160px}}
+.vector-search-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.vector-search-bar input{flex:1;min-width:220px;border:1px solid var(--border);border-radius:12px;padding:13px;font:inherit}.vector-drawing-viewport{position:relative;height:75vh;min-height:480px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#050505;touch-action:none}.vector-drawing-viewport iframe{width:100%;height:100%;display:block;border:0;background:#050505}.vector-fallback{position:absolute;inset:0;display:grid;place-items:center;color:#ddd;background:#050505}.vector-search-bar .btn{width:auto}.vector-search-bar .muted{min-width:180px}@media(max-width:700px){.vector-drawing-viewport{height:70vh;min-height:420px}.vector-search-bar .btn{width:auto}.vector-search-bar{align-items:stretch}.vector-search-bar input{min-width:160px}}
 </style>
 </head>
 
@@ -600,9 +600,9 @@ onclick="loadDatabase()"
 
 <div id="fullDrawingStatus" class="status loading">جاري تجهيز الرسم المتجهي...</div>
 <div id="vectorDrawingViewport" class="vector-drawing-viewport">
-  <object id="vectorDrawingObject" type="image/svg+xml" data="data/feeders/full-drawing.svg" aria-label="الرسم الكهربائي الكامل"></object>
+  <iframe id="vectorDrawingFrame" src="data/feeders/full-drawing.svg" title="الرسم الكهربائي الكامل" loading="eager" allowfullscreen></iframe>
   <div id="vectorDrawingFallback" class="vector-fallback" hidden>
-    لم يكتمل بناء الرسم المتجهي بعد. سيتم تفعيله تلقائيًا بعد إنشاء الملف.
+    جاري تحميل الرسم المتجهي...
   </div>
 </div>
 <div class="drawing-help">الرسم هنا Vector ويحافظ على وضوح الخطوط عند التكبير. استخدم عجلة الماوس أو أزرار التكبير، واسحب داخل الرسم للتحريك. البحث يحدد النص داخل الرسم مباشرة.</div>
@@ -1794,11 +1794,13 @@ function setVectorStatus(text, cls="status"){
 }
 
 function initVectorDrawing(){
-  const obj=document.getElementById("vectorDrawingObject");
-  if(!obj) return;
-  obj.addEventListener("load", ()=>{
+  const frame=document.getElementById("vectorDrawingFrame");
+  const fallback=document.getElementById("vectorDrawingFallback");
+  if(!frame) return;
+
+  const ready=()=>{
     try{
-      vectorSvgDoc=obj.contentDocument;
+      vectorSvgDoc=frame.contentDocument;
       vectorSvgRoot=vectorSvgDoc?.documentElement;
       if(!vectorSvgRoot) throw new Error("SVG unavailable");
       const vb=vectorSvgRoot.viewBox?.baseVal;
@@ -1807,19 +1809,25 @@ function initVectorDrawing(){
       }else{
         const box=vectorSvgRoot.getBBox();
         vectorBaseViewBox={x:box.x,y:box.y,width:box.width,height:box.height};
-        vectorSvgRoot.setAttribute("viewBox", box.x+" "+box.y+" "+box.width+" "+box.height);
+        vectorSvgRoot.setAttribute("viewBox",box.x+" "+box.y+" "+box.width+" "+box.height);
       }
-      setVectorStatus("✅ تم فتح الرسم المتجهي. جاهز للبحث والتكبير.");
+      if(fallback) fallback.hidden=true;
+      setVectorStatus("✅ تم فتح الرسم المتجهي. جاهز للبحث والتكبير.","status");
       const s=document.getElementById("vectorSearchStatus");
       if(s) s.textContent="اكتب النص أو رقم المعدة ثم اضغط بحث.";
+      enableVectorPan();
     }catch(e){
       console.error(e);
-      setVectorStatus("تعذر قراءة الرسم المتجهي. سيتم استخدام ملف DWG الأصلي.","status error");
+      setVectorStatus("⏳ الرسم كبير ويجري تحميله...","status");
     }
-  });
-  obj.addEventListener("error",()=>{
-    setVectorStatus("⏳ الرسم المتجهي لم يُبنَ بعد. أعد المحاولة بعد اكتمال بناء الملف.","status");
-  });
+  };
+
+  frame.addEventListener("load",ready);
+  setTimeout(()=>{
+    if(!vectorSvgRoot){
+      setVectorStatus("⏳ ما زال الرسم المتجهي قيد التحميل — انتظر حتى يكتمل تحميل الملف.","status");
+    }
+  },15000);
 }
 function resetVectorView(){
   if(vectorSvgRoot && vectorBaseViewBox){
@@ -1870,27 +1878,29 @@ function focusVectorText(node){
   }catch(e){ console.error(e); }
 }
 function enableVectorPan(){
-  const obj=document.getElementById("vectorDrawingObject");
-  if(!obj) return;
+  const frame=document.getElementById("vectorDrawingFrame");
+  const root=vectorSvgRoot;
+  if(!frame || !root || root.__panEnabled) return;
+  root.__panEnabled=true;
+
   let dragging=false,sx=0,sy=0,start=null;
-  obj.addEventListener("pointerdown",e=>{
-    if(!vectorSvgRoot) return;
+  root.addEventListener("pointerdown",e=>{
+    if(e.button!==undefined && e.button!==0) return;
     dragging=true; sx=e.clientX; sy=e.clientY;
-    const vb=vectorSvgRoot.viewBox.baseVal;
+    const vb=root.viewBox.baseVal;
     start={x:vb.x,y:vb.y,width:vb.width,height:vb.height};
-    obj.setPointerCapture?.(e.pointerId);
+    root.setPointerCapture?.(e.pointerId);
   });
-  obj.addEventListener("pointermove",e=>{
-    if(!dragging||!start||!vectorSvgRoot) return;
-    const r=obj.getBoundingClientRect();
+  root.addEventListener("pointermove",e=>{
+    if(!dragging||!start) return;
+    const r=root.getBoundingClientRect();
     const dx=(e.clientX-sx)/r.width*start.width;
     const dy=(e.clientY-sy)/r.height*start.height;
-    vectorSvgRoot.setAttribute("viewBox",(start.x-dx)+" "+(start.y-dy)+" "+start.width+" "+start.height);
+    root.setAttribute("viewBox",(start.x-dx)+" "+(start.y-dy)+" "+start.width+" "+start.height);
   });
-  obj.addEventListener("pointerup",()=>{dragging=false;});
+  root.addEventListener("pointerup",()=>{dragging=false;start=null;});
+  root.addEventListener("pointercancel",()=>{dragging=false;start=null;});
 }
-initVectorDrawing();
-enableVectorPan();
 
 
 
