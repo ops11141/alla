@@ -403,6 +403,22 @@ th{
 #fullDrawingSection{
   margin-top:20px;
 }
+
+.find-box{
+  margin-bottom:14px;
+  padding:14px;
+  border:1px solid var(--border);
+  border-radius:16px;
+  background:#f7fbf9;
+}
+.find-row{display:flex;gap:8px;flex-wrap:wrap}
+.find-row input{flex:1;min-width:220px;border:1px solid var(--border);border-radius:12px;padding:13px;font:inherit;direction:ltr;text-align:left}
+.find-results{margin-top:10px;display:grid;gap:8px}
+.find-result{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#fff}
+.find-result strong{direction:ltr}
+.find-result small{color:var(--muted)}
+.find-empty{color:var(--muted);padding:8px}
+@media(max-width:600px){.find-result{align-items:flex-start;flex-direction:column}.find-row .btn{width:auto}}
 </style>
 </head>
 
@@ -526,6 +542,17 @@ onclick="loadDatabase()"
 
 <!-- الرسم الكامل الأصلي -->
 <section class="card" id="fullDrawingSection">
+<div class="find-box">
+  <div style="font-weight:bold;margin-bottom:8px">🔎 ابحث داخل الرسم</div>
+  <div class="muted" style="margin-bottom:10px">اكتب رقم معدة مثل 05108 أو اسم مغذي مثل F-1.8، وسنبحث في البيانات المستخرجة من نفس الرسم.</div>
+  <div class="find-row">
+    <input id="drawingSearch" type="search" placeholder="مثال: 05108 أو F-1.8" autocomplete="off">
+    <button class="btn btn-green" type="button" onclick="searchDrawing()">بحث في الرسم</button>
+  </div>
+  <div id="drawingSearchStatus" class="find-empty"></div>
+  <div id="drawingSearchResults" class="find-results"></div>
+</div>
+
 <div class="results-header">
 <div>
 <h2 style="margin-bottom:6px">📐 الرسم الكهربائي الكامل</h2>
@@ -1326,6 +1353,125 @@ function formatNumber(value){
 /* ------------------------------------------
    البحث أثناء الكتابة
 ------------------------------------------ */
+
+
+let drawingTextIndex = null;
+let drawingSearchBusy = false;
+
+function normalizeDrawingText(value){
+  return String(value ?? "")
+    .toUpperCase()
+    .replace(/[\s\-_#./]+/g,"")
+    .trim();
+}
+
+async function loadDrawingTextIndex(){
+  if(drawingTextIndex) return drawingTextIndex;
+  if(drawingSearchBusy) return null;
+  drawingSearchBusy = true;
+  const status = document.getElementById("drawingSearchStatus");
+  if(status) status.textContent = "جاري تحميل فهرس النصوص من الرسم لأول مرة...";
+  try{
+    const response = await fetch("data/feeders/all_text_entities.json?v=" + Date.now(), {cache:"force-cache"});
+    if(!response.ok) throw new Error("تعذر تحميل فهرس الرسم");
+    drawingTextIndex = await response.json();
+    if(!Array.isArray(drawingTextIndex)) throw new Error("صيغة فهرس النصوص غير صحيحة");
+    if(status) status.textContent = "تم تجهيز الفهرس. اكتب رقم المعدة أو المغذي.";
+    return drawingTextIndex;
+  } finally {
+    drawingSearchBusy = false;
+  }
+}
+
+function drawingSearchScore(text, query){
+  const t = normalizeDrawingText(text);
+  const q = normalizeDrawingText(query);
+  if(!q || !t) return 0;
+  if(t === q) return 1000;
+  if(t.startsWith(q)) return 700;
+  if(t.includes(q)) return 500;
+  return 0;
+}
+
+async function searchDrawing(){
+  const input = document.getElementById("drawingSearch");
+  const status = document.getElementById("drawingSearchStatus");
+  const resultsBox = document.getElementById("drawingSearchResults");
+  const query = (input?.value || "").trim();
+  if(!query){
+    if(status) status.textContent = "اكتب رقم المعدة أو اسم المغذي.";
+    if(resultsBox) resultsBox.innerHTML = "";
+    return;
+  }
+
+  if(status) status.textContent = "جاري البحث داخل الرسم...";
+  if(resultsBox) resultsBox.innerHTML = "";
+
+  try{
+    const index = await loadDrawingTextIndex();
+    if(!index) return;
+
+    const results = [];
+    for(const item of index){
+      const text = String(item.text ?? item.value ?? item.name ?? "").trim();
+      const score = drawingSearchScore(text, query);
+      if(score > 0){
+        const pos = item.position || item.point || {};
+        results.push({
+          text,
+          score,
+          x: Number(pos.x ?? item.x),
+          y: Number(pos.y ?? item.y),
+          z: Number(pos.z ?? item.z),
+          layer: item.layer || ""
+        });
+      }
+    }
+
+    results.sort((a,b)=>b.score-a.score);
+    const unique = [];
+    const seen = new Set();
+    for(const r of results){
+      const key = r.text + "|" + r.x + "|" + r.y;
+      if(!seen.has(key)){
+        seen.add(key);
+        unique.push(r);
+      }
+      if(unique.length >= 20) break;
+    }
+
+    if(!unique.length){
+      status.textContent = "لم يتم العثور على هذه المعلومة في نصوص الرسم.";
+      return;
+    }
+
+    status.textContent = "تم العثور على " + unique.length + " نتيجة. اختر النتيجة المطلوبة.";
+    resultsBox.innerHTML = unique.map((r,i)=>`
+      <div class="find-result">
+        <div>
+          <strong>${escapeHTML(r.text)}</strong>
+          <small> • Layer: ${escapeHTML(r.layer || "غير محدد")} • X: ${formatNumber(r.x)} • Y: ${formatNumber(r.y)}</small>
+        </div>
+        <button class="btn btn-light" type="button" onclick='showDrawingLocation(${JSON.stringify(r)})'>تحديد</button>
+      </div>
+    `).join("");
+  }catch(error){
+    console.error(error);
+    if(status) status.textContent = "تعذر البحث في فهرس الرسم.";
+  }
+}
+
+function showDrawingLocation(result){
+  const status = document.getElementById("drawingSearchStatus");
+  if(status){
+    status.innerHTML =
+      "📍 <b>" + escapeHTML(result.text) + "</b> — " +
+      "X: " + formatNumber(result.x) + " ، Y: " + formatNumber(result.y) +
+      (result.layer ? " ، Layer: " + escapeHTML(result.layer) : "") +
+      "<br><span class='muted'>الموقع مستخرج من نفس ملف DWG. الخطوة التالية ستكون ربط هذه الإحداثيات مباشرة بأداة تكبير الرسم.</span>";
+  }
+  document.getElementById("fullDrawingSection")?.scrollIntoView({behavior:"smooth",block:"start"});
+}
 
 function openFullDrawing(){
     const frame = document.getElementById("fullCadViewerFrame");
