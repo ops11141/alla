@@ -413,6 +413,63 @@ const rawAttributeEntities =
   extractRawAttributeEntities(
     dxfText
   );
+function extractRawTextEntities(dxfText) {
+  const lines = dxfText.split(/\r?\n/);
+  const results = [];
+  let current = null;
+
+  function finish() {
+    if (!current) return;
+    const text = cleanText(current.text);
+    if (!text) { current = null; return; }
+    results.push({
+      type: current.type,
+      text,
+      layer: current.layer || null,
+      position: { x: current.x ?? null, y: current.y ?? null, z: current.z ?? null }
+    });
+    current = null;
+  }
+
+  for (let i = 0; i < lines.length - 1; i += 2) {
+    const code = Number(String(lines[i]).trim());
+    const value = String(lines[i + 1]).trim();
+    if (code === 0) {
+      finish();
+      if (value === "TEXT" || value === "MTEXT" || value === "ATTRIB" || value === "ATTDEF") {
+        current = { type: value, text: "", layer: null, x: null, y: null, z: null };
+      }
+      continue;
+    }
+    if (!current) continue;
+    switch (code) {
+      case 1: current.text += (current.text ? " " : "") + value; break;
+      case 3: if (current.type === "MTEXT") current.text += value; else if (!current.text) current.text = value; break;
+      case 8: current.layer = value; break;
+      case 10: current.x = Number(value); break;
+      case 20: current.y = Number(value); break;
+      case 30: current.z = Number(value); break;
+    }
+  }
+  finish();
+  return results;
+}
+
+const rawTextEntities = extractRawTextEntities(dxfText);
+console.log("Raw TEXT/MTEXT/ATTRIB/ATTDEF entities: " + rawTextEntities.length);
+
+const existingTextKeys = new Set(
+  textEntities.map(e => [e.type,e.text,e.position?.x,e.position?.y,e.layer].join("|"))
+);
+
+for (const entity of rawTextEntities) {
+  const key = [entity.type,entity.text,entity.position?.x,entity.position?.y,entity.layer].join("|");
+  if (!existingTextKeys.has(key)) {
+    textEntities.push(entity);
+    existingTextKeys.add(key);
+  }
+}
+
 
 
 console.log(
@@ -546,13 +603,12 @@ function extractStationNames(text) {
   // ----------------------------------------------
 
   const patterns = [
-
     /\bSUB\s*[-#]?\s*\d+\b/gi,
-
     /\bSUBSTATION\s*[-#]?\s*\d+\b/gi,
-
-    /\bSUB\s*[-#]?\s*[A-Z]+\d+\b/gi
-
+    /\bSUB\s*[-#]?\s*[A-Z]+\d+\b/gi,
+    /\bS\s*\/\s*S\s*[-#]?\s*\d+\b/gi,
+    /\bSS\s*[-#]?\s*\d+\b/gi,
+    /\bGRID\s+STATION\s*#?\s*\d+\b/gi
   ];
 
 
