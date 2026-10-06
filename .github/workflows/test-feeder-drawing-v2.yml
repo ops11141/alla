@@ -2,6 +2,11 @@ name: Test feeder drawing v2
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - "cad/FINAL DISPATCH - UPDATE.dwg"
+      - "tools/test-feeder-drawing-v2.py"
+      - ".github/workflows/test-feeder-drawing-v2.yml"
 
 permissions:
   contents: write
