@@ -4,38 +4,40 @@ import json
 import re
 
 ROOT = Path("data")
-OUT = ROOT / "equipment-index.json"
+SOURCE = Path("equipment.html")
+OUT = ROOT / "equipment-lookup.json"
 
-def norm(v):
-    s = str(v or "").strip().upper()
-    return re.sub(r"[\s\-_/.,:;()[\]{}]+", "", s)
+text = SOURCE.read_text(encoding="utf-8")
+match = re.search(r"const DATA=(\[[\s\S]*?\]);\s*[\r\n]+", text)
+if not match:
+    raise RuntimeError("Could not find embedded equipment DATA in equipment.html")
 
+data = json.loads(match.group(1))
 records = {}
-files = sorted(ROOT.glob("part-*.json"), key=lambda p: int(re.search(r"(\d+)", p.stem).group(1)))
-for path in files:
-    data = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(data, list):
-        continue
-    for row in data:
-        if not isinstance(row, dict):
-            continue
-        tf = str(row.get("TF", "")).strip()
-        lat = row.get("Y")
-        lon = row.get("X")
-        try:
-            lat = float(lat)
-            lon = float(lon)
-        except (TypeError, ValueError):
-            continue
-        if not (-90 <= lat <= 90 and -180 <= lon <= 180):
-            continue
-        key = norm(tf)
-        if not key:
-            continue
-        records.setdefault(key, []).append([tf, lat, lon, str(row.get("COORDIATE", "")).strip()])
 
-# Deduplicate exact equipment/location records.
-out = {}
+def norm(value):
+    return re.sub(r"[\s\-_/.,:;()\[\]{}#\\]+", "", str(value or "").strip().upper())
+
+for row in data:
+    if not isinstance(row, dict):
+        continue
+    tf = str(row.get("TF", "")).strip()
+    try:
+        lon = float(row.get("X"))
+        lat = float(row.get("Y"))
+    except (TypeError, ValueError):
+        continue
+    if not tf or not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        continue
+
+    key = norm(tf)
+    records.setdefault(key, []).append([
+        tf,
+        lat,
+        lon,
+        str(row.get("COORDIATE", "")).strip()
+    ])
+
 for key, rows in records.items():
     seen = set()
     clean = []
@@ -45,15 +47,15 @@ for key, rows in records.items():
             continue
         seen.add(sig)
         clean.append(row)
-    out[key] = clean
+    records[key] = clean
 
 payload = {
-    "version": 1,
-    "source": "data/part-*.json",
-    "equipmentCount": sum(len(v) for v in out.values()),
-    "keys": len(out),
-    "records": out,
+    "version": 2,
+    "source": "equipment.html embedded DATA",
+    "recordCount": len(data),
+    "keys": len(records),
+    "records": records,
 }
 
 OUT.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-print(f"Created {OUT}: {OUT.stat().st_size} bytes, {sum(len(v) for v in out.values())} records, {len(out)} keys")
+print(f"Created {OUT}: {OUT.stat().st_size} bytes, {len(data)} source records, {len(records)} keys")
