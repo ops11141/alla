@@ -1,0 +1,129 @@
+name: Build self-hosted DWG reader
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-dwg-reader.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download CADViewer runtime
+        run: |
+          rm -rf cad-viewer cad-data/open
+          git clone --depth 1 https://github.com/Orua/CADViewer.git /tmp/CADViewer
+          cp -a /tmp/CADViewer/cad-viewer ./cad-viewer
+          mkdir -p cad-data
+          cp -a /tmp/CADViewer/cad-data/open ./cad-data/open
+
+      - name: Add feeder search API
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          p = Path('cad-viewer/viewer.js')
+          s = p.read_text(encoding='utf-8-sig')
+          marker = "applyLanguage();\nresetViewer();\nresize();"
+          patch = r'''
+          window.cadViewerSearch = function(query, occurrence = 0) {
+            const q = String(query || '').trim().toLowerCase();
+            if (!q) return { found: false, count: 0 };
+            const pool = [];
+            const add = (item) => {
+              if (item && item.text) pool.push(item);
+            };
+            for (const item of textItems) add(item);
+            for (const block of blocks.values()) {
+              for (const item of (block.directTexts || [])) add(item);
+            }
+            const matches = pool.filter(item => String(item.text).toLowerCase().includes(q));
+            if (!matches.length) return { found: false, count: 0 };
+            const index = Math.max(0, Math.min(Number(occurrence) || 0, matches.length - 1));
+            const item = matches[index];
+            const width = Math.max(item.extentWidth || item.height * Math.max(String(item.text).length, 4), item.height * 8);
+            const height = Math.max(item.extentHeight || item.height * 4, item.height * 4);
+            const targetScale = Math.min(canvas.clientWidth / width, canvas.clientHeight / height) * 0.35;
+            camera.scale = Math.max(1e-8, Math.min(1e8, targetScale));
+            camera.x = canvas.clientWidth / 2 - item.x * camera.scale;
+            camera.y = canvas.clientHeight / 2 + item.y * camera.scale;
+            scheduleRender();
+            return { found: true, count: matches.length, index, text: item.text, x: item.x, y: item.y };
+          };
+          window.cadViewerGetTextCount = function() {
+            return textItems.length;
+          };
+
+          const initialFile = new URLSearchParams(window.location.search).get('file');
+          if (initialFile) {
+            setTimeout(() => openUrl(initialFile), 0);
+          }
+
+          applyLanguage();
+          resetViewer();
+          resize();
+          '''
+          if marker not in s:
+              raise SystemExit('viewer marker not found')
+          s = s.replace(marker, patch.strip())
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Add Arabic search overlay
+        run: |
+          cat > cad-viewer/cad-search.js <<'EOF'
+          (() => {
+            const style = document.createElement('style');
+            style.textContent = `
+              #feederCadSearch{position:absolute;z-index:80;top:8px;left:50%;transform:translateX(-50%);display:flex;gap:6px;align-items:center;width:min(560px,calc(100% - 20px));padding:7px;background:rgba(17,24,39,.94);border:1px solid #475569;border-radius:10px;box-shadow:0 5px 18px rgba(0,0,0,.35)}
+              #feederCadSearch input{flex:1;min-width:0;padding:9px 11px;border-radius:7px;border:1px solid #64748b;background:#fff;color:#111827;font-size:14px;direction:ltr}
+              #feederCadSearch button{border:0;border-radius:7px;padding:9px 12px;background:#087f5b;color:#fff;font-weight:700;cursor:pointer}
+              #feederCadSearch span{color:#e5e7eb;font-size:12px;white-space:nowrap}
+              @media(max-width:600px){#feederCadSearch{top:5px}#feederCadSearch span{display:none}}
+            `;
+            document.head.appendChild(style);
+            const box = document.createElement('div');
+            box.id = 'feederCadSearch';
+            box.innerHTML = '<input id="feederCadSearchInput" placeholder="🔎 ابحث داخل الرسم مثل F-8.13" autocomplete="off"><button id="feederCadSearchBtn">بحث</button><span id="feederCadSearchStatus">جاهز</span>';
+            const host = document.querySelector('.viewer-canvas-area') || document.body;
+            host.appendChild(box);
+            let occurrence = 0;
+            function runSearch(reset=true){
+              const input=document.getElementById('feederCadSearchInput');
+              const status=document.getElementById('feederCadSearchStatus');
+              if(reset) occurrence=0;
+              const result=window.cadViewerSearch?.(input.value, occurrence);
+              if(!result?.found){status.textContent='لم يتم العثور';return;}
+              occurrence=result.index;
+              status.textContent=(result.index+1)+'/'+result.count+'  '+result.text;
+            }
+            document.getElementById('feederCadSearchBtn').onclick=()=>runSearch(true);
+            document.getElementById('feederCadSearchInput').addEventListener('keydown',e=>{if(e.key==='Enter')runSearch(true)});
+            document.getElementById('feederCadSearchInput').addEventListener('input',()=>{occurrence=0});
+          })();
+          EOF
+          python3 <<'PY'
+          from pathlib import Path
+          p=Path('cad-viewer/index.html')
+          s=p.read_text(encoding='utf-8-sig')
+          marker='<script type="module" src="./viewer.js?v=20260910-fast-only-1"></script>'
+          if marker not in s:
+              marker='<script type="module" src="./viewer.js"></script>'
+          s=s.replace(marker, marker+'\n    <script src="./cad-search.js"></script>')
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Commit reader
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cad-viewer cad-data/open
+          git diff --cached --quiet && exit 0
+          git commit -m "Add self-hosted DWG reader"
+          git pull --rebase origin main
+          git push
