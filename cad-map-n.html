@@ -74,6 +74,7 @@ streetBtn.addEventListener('click',()=>setMapType('street'));
 satBtn.addEventListener('click',()=>setMapType('satellite'));
 
 let equipment=[];
+let allRows=[];
 const markers=L.layerGroup().addTo(map);
 const labels=L.layerGroup().addTo(map);
 let labelRefreshTimer=null;
@@ -117,11 +118,11 @@ fetch('data/equipment-lookup.json')
 .then(r=>r.json())
 .then(data=>{
   const records=data.records||{};
-  let allRows=[]; Object.keys(records).forEach(key=>{
+  allRows=[]; Object.keys(records).forEach(key=>{
     (records[key]||[]).forEach(row=>{
       const name=row[0],lat=+row[1],lon=+row[2];
       if(!Number.isFinite(lat)||!Number.isFinite(lon)) return;
-      if(lat<16.0||lat>32.3||lon<34.0||lon>55.8)return; allRows.push({key,name,lat,lon}); return; const m=L.circleMarker([lat,lon],{radius:4,weight:1,fillOpacity:.85,bubblingMouseEvents:true});
+      if(lat<16.0||lat>32.3||lon<34.0||lon>55.8)return; allRows.push({key,name,lat,lon});
       m.bindPopup(equipmentPopup(name,lat,lon),{maxWidth:280});
       m.options._equipmentKey=key; m.options._equipmentName=name; m.options._equipmentLat=lat; m.options._equipmentLon=lon;
       markers.addLayer(m); equipment.push(m);
@@ -157,7 +158,7 @@ document.getElementById('fit').onclick=()=>{if(equipment.length){map.fitBounds(m
 function findEquipment(){
   const q=normalize(document.getElementById('search').value);
   if(!q)return;
-  const hitRow=allRows.find(r=>normalize(r.name)===q||normalize(r.key)===q); const hit=hitRow?L.circleMarker([hitRow.lat,hitRow.lon],{radius:7,weight:2,fillOpacity:1}).bindPopup(equipmentPopup(hitRow.name,hitRow.lat,hitRow.lon)):null;
+  const hitRow=allRows.find(r=>normalize(r.name)===q||normalize(r.key)===q); const hit=hitRow?L.circleMarker([hitRow.lat,hitRow.lon],{radius:7,weight:2,fillOpacity:1}):null; if(hit&&hitRow){hit.options._equipmentName=hitRow.name;hit.options._equipmentKey=hitRow.key;hit.bindPopup(equipmentPopup(hitRow.name,hitRow.lat,hitRow.lon),{maxWidth:280});}
   if(hit){
     map.setView(hit.getLatLng(),19); hit.addTo(map); hit.openPopup();
     if(highlightedLabel) map.removeLayer(highlightedLabel);
