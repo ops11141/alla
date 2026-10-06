@@ -253,7 +253,7 @@ button{
 .drawing-viewer.dragging{cursor:grabbing}
 .drawing-image{display:block;max-width:none;width:auto;height:auto;transform-origin:top left;user-select:none;-webkit-user-drag:none}
 .drawing-help{padding:8px 12px;color:var(--muted);font-size:12px;background:#f7fbf9;border-top:1px solid var(--border)}
-@media(max-width:700px){.drawing-viewer{height:65vh;min-height:320px}}
+@media(max-width:700px){.drawing-viewer{height:70vh;min-height:420px}.full-drawing-viewer{height:70vh!important;min-height:420px!important}}
 .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
 .info-item{padding:12px;border:1px solid var(--border);border-radius:14px;background:#fbfdfc}
 .info-item span{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
@@ -582,37 +582,6 @@ onclick="loadDatabase()"
 
 <!-- الرسم الكامل الأصلي -->
 <section class="card" id="fullDrawingSection">
-<div class="find-box">
-  <div style="font-weight:bold;margin-bottom:8px">🔎 ابحث داخل الرسم</div>
-  <div class="muted" style="margin-bottom:10px">اكتب رقم معدة مثل 05108 أو اسم مغذي مثل F-1.8، وسنبحث في البيانات المستخرجة من نفس الرسم.</div>
-  <div class="find-row">
-    <input id="drawingSearch" type="search" placeholder="اكتب رقم المعدة مثل 17716 أو 871" autocomplete="off">
-    <button class="btn btn-green" type="button" onclick="searchDrawing()">🔎 بحث</button>
-  </div>
-  <div class="cad-search-controls">
-    <button class="btn btn-light" type="button" onclick="drawingSearchPrev()">◀ السابق</button>
-    <span id="drawingSearchCounter" class="cad-search-counter">0 / 0</span>
-    <button class="btn btn-light" type="button" onclick="drawingSearchNext()">التالي ▶</button>
-    <label class="cad-tag-toggle"><input id="drawingTagResults" type="checkbox" checked> تحديد كل النتائج</label>
-  </div>
-  <div id="drawingSearchStatus" class="find-empty"></div>
-  <div id="drawingSearchResults" class="find-results"></div>
-
-  <div id="drawingFocus" class="drawing-focus" hidden>
-    <div class="focus-head">
-      <strong id="focusTitle">📍 تم تحديد موقع العنصر في الرسم</strong>
-      <button class="btn btn-light" type="button" onclick="closeDrawingFocus()">إغلاق التحديد</button>
-    </div>
-    <div id="focusViewport" class="focus-viewport">
-      <div id="focusCanvas" class="focus-canvas">
-        <img id="focusImage" alt="الرسم مع تحديد نتيجة البحث" draggable="false">
-        <div id="focusMarkers" class="focus-markers"></div>
-      </div>
-    </div>
-    <div id="focusHint" class="focus-hint">الدائرة الحمراء تحدد مكان الرقم داخل الرسم. يمكنك التحريك والتكبير.</div>
-  </div>
-</div>
-
 <div class="results-header">
 <div>
 <h2 style="margin-bottom:6px">📐 الرسم الكهربائي الكامل</h2>
@@ -1802,37 +1771,24 @@ function focusEquipmentOnDrawing(item){
 
 function openFullDrawing(){
     const frame = document.getElementById("fullCadViewerFrame");
-    const mobileImage = document.getElementById("mobileDrawingImage");
     const status = document.getElementById("fullDrawingStatus");
-    if(!status) return;
-
-    const isMobile = window.matchMedia("(max-width: 700px)").matches;
-
-    if(isMobile){
-        if(frame) frame.src = "";
-        if(mobileImage) mobileImage.src = "data/feeders/drawing-search.jpg?v=" + Date.now();
-        status.className = "status";
-        status.textContent = "✅ تم فتح نسخة خفيفة من الرسم للجوال — بدون تحميل محرك DWG الثقيل.";
-        return;
-    }
-
-    if(!frame) return;
+    if(!frame || !status) return;
 
     const dwgUrl =
         "https://raw.githubusercontent.com/ops11141/alla/main/cad/FINAL%20DISPATCH%20-%20UPDATE.dwg";
 
     const viewerUrl =
-        "https://mlightcad.com/embed.html?url=" +
-        encodeURIComponent(dwgUrl) +
-        "&mode=review&toolbar=1";
+        "https://iframe.sharecad.org/cadframe/load?url=" +
+        encodeURIComponent(dwgUrl);
 
     status.className = "status loading";
-    status.textContent = "جاري فتح الرسم الأصلي من ملف DWG...";
+    status.textContent = "جاري فتح الرسم الأصلي عبر قارئ CAD...";
+
     frame.src = viewerUrl;
 
     frame.onload = () => {
         status.className = "status";
-        status.textContent = "✅ تم فتح الرسم الأصلي. يمكنك التكبير والتحريك والاطلاع على الطبقات.";
+        status.textContent = "✅ تم فتح الرسم الأصلي. يمكنك التكبير والتحريك واستعراض الرسم.";
     };
 }
 
