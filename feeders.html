@@ -455,6 +455,8 @@ th{
 
 .mobile-drawing-image{display:none;width:100%;height:auto;min-width:100%;background:#05080b;touch-action:pan-x pan-y pinch-zoom;image-rendering:auto;-webkit-user-drag:none}
 
+
+.vector-search-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.vector-search-bar input{flex:1;min-width:220px;border:1px solid var(--border);border-radius:12px;padding:13px;font:inherit}.vector-drawing-viewport{position:relative;height:75vh;min-height:480px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#050505;touch-action:none}.vector-drawing-viewport object{width:100%;height:100%;display:block;background:#050505}.vector-fallback{position:absolute;inset:0;display:grid;place-items:center;color:#ddd;background:#050505}.vector-search-bar .btn{width:auto}.vector-search-bar .muted{min-width:180px}@media(max-width:700px){.vector-drawing-viewport{height:70vh;min-height:420px}.vector-search-bar .btn{width:auto}.vector-search-bar{align-items:stretch}.vector-search-bar input{min-width:160px}}
 </style>
 </head>
 
@@ -581,18 +583,29 @@ onclick="loadDatabase()"
 <div class="results-header">
 <div>
 <h2 style="margin-bottom:6px">📐 الرسم الكهربائي الكامل</h2>
-<div class="muted">الرسم الأصلي FINAL DISPATCH - UPDATE.dwg كما هو محفوظ في المشروع.</div>
+<div class="muted">قارئ متجهي خفيف للرسم الأصلي — بدون إعادة تحميل DWG على الجوال.</div>
 </div>
 <div class="drawing-actions">
-<button class="btn btn-light" type="button" onclick="openFullDrawing()">↻ إعادة فتح الرسم</button>
+<button class="btn btn-light" type="button" onclick="resetVectorView()">↻ إعادة ضبط الرسم</button>
 <a class="btn btn-green" href="cad/FINAL%20DISPATCH%20-%20UPDATE.dwg" target="_blank" rel="noopener">فتح ملف DWG</a>
 </div>
 </div>
-<div id="fullDrawingStatus" class="status">جاري فتح الرسم الأصلي...</div>
-<div class="drawing-viewer full-drawing-viewer" style="height:75vh;min-height:480px">
-<iframe id="fullCadViewerFrame" title="الرسم الكهربائي الكامل" style="width:100%;height:100%;min-height:480px;border:0;background:#000"></iframe>
+
+<div class="vector-search-bar">
+<input id="vectorSearchInput" type="search" placeholder="🔎 ابحث داخل الرسم: F-8.13 أو رقم المعدة..." autocomplete="off" dir="ltr">
+<button class="btn btn-green" type="button" onclick="searchVectorDrawing()">بحث</button>
+<button class="btn btn-light" type="button" onclick="vectorSearchNext()">التالي</button>
+<span id="vectorSearchStatus" class="muted">جاري تجهيز القارئ...</span>
 </div>
-<div class="drawing-help">يمكنك التكبير والتحريك والاطلاع على الرسم والطبقات مباشرة. 🔎 للبحث داخل الرسم استخدم Ctrl+F على الكمبيوتر، أو أداة البحث الموجودة داخل القارئ.</div>
+
+<div id="fullDrawingStatus" class="status loading">جاري تجهيز الرسم المتجهي...</div>
+<div id="vectorDrawingViewport" class="vector-drawing-viewport">
+  <object id="vectorDrawingObject" type="image/svg+xml" data="data/feeders/full-drawing.svg" aria-label="الرسم الكهربائي الكامل"></object>
+  <div id="vectorDrawingFallback" class="vector-fallback" hidden>
+    لم يكتمل بناء الرسم المتجهي بعد. سيتم تفعيله تلقائيًا بعد إنشاء الملف.
+  </div>
+</div>
+<div class="drawing-help">الرسم هنا Vector ويحافظ على وضوح الخطوط عند التكبير. استخدم عجلة الماوس أو أزرار التكبير، واسحب داخل الرسم للتحريك. البحث يحدد النص داخل الرسم مباشرة.</div>
 
 <section class="card equipment-lookup" id="equipmentLookupSection">
   <h3>📍 البحث عن موقع المعدة</h3>
@@ -605,8 +618,7 @@ onclick="loadDatabase()"
   <div id="equipmentLookupResults" class="equipment-results"></div>
 </section>
 
-
-
+</section>
 
 <!-- النتائج -->
 
@@ -1770,29 +1782,116 @@ function focusEquipmentOnDrawing(item){
   }
 }
 
-function openFullDrawing(){
-    const frame = document.getElementById("fullCadViewerFrame");
-    const status = document.getElementById("fullDrawingStatus");
-    if(!frame || !status) return;
+let vectorSvgDoc = null;
+let vectorSvgRoot = null;
+let vectorBaseViewBox = null;
+let vectorSearchResults = [];
+let vectorSearchCursor = 0;
 
-    const dwgUrl =
-        "https://raw.githubusercontent.com/ops11141/alla/main/cad/FINAL%20DISPATCH%20-%20UPDATE.dwg";
-
-    const viewerUrl =
-        "https://iframe.sharecad.org/cadframe/load?url=" +
-        encodeURIComponent(dwgUrl);
-status.className = "status loading";
-    status.textContent = "جاري فتح الرسم الأصلي عبر قارئ ShareCAD الخفيف...";
-
-    frame.src = viewerUrl;
-
-    frame.onload = () => {
-        status.className = "status";
-        status.textContent = "✅ تم فتح الرسم الأصلي. يمكنك التكبير والتحريك واستعراض الرسم والطبقات.";
-    };
+function setVectorStatus(text, cls="status"){
+  const el=document.getElementById("fullDrawingStatus");
+  if(el){ el.className=cls; el.textContent=text; }
 }
 
-openFullDrawing();
+function initVectorDrawing(){
+  const obj=document.getElementById("vectorDrawingObject");
+  if(!obj) return;
+  obj.addEventListener("load", ()=>{
+    try{
+      vectorSvgDoc=obj.contentDocument;
+      vectorSvgRoot=vectorSvgDoc?.documentElement;
+      if(!vectorSvgRoot) throw new Error("SVG unavailable");
+      const vb=vectorSvgRoot.viewBox?.baseVal;
+      if(vb && vb.width && vb.height){
+        vectorBaseViewBox={x:vb.x,y:vb.y,width:vb.width,height:vb.height};
+      }else{
+        const box=vectorSvgRoot.getBBox();
+        vectorBaseViewBox={x:box.x,y:box.y,width:box.width,height:box.height};
+        vectorSvgRoot.setAttribute("viewBox", box.x+" "+box.y+" "+box.width+" "+box.height);
+      }
+      setVectorStatus("✅ تم فتح الرسم المتجهي. جاهز للبحث والتكبير.");
+      const s=document.getElementById("vectorSearchStatus");
+      if(s) s.textContent="اكتب النص أو رقم المعدة ثم اضغط بحث.";
+    }catch(e){
+      console.error(e);
+      setVectorStatus("تعذر قراءة الرسم المتجهي. سيتم استخدام ملف DWG الأصلي.","status error");
+    }
+  });
+  obj.addEventListener("error",()=>{
+    setVectorStatus("⏳ الرسم المتجهي لم يُبنَ بعد. أعد المحاولة بعد اكتمال بناء الملف.","status");
+  });
+}
+function resetVectorView(){
+  if(vectorSvgRoot && vectorBaseViewBox){
+    const v=vectorBaseViewBox;
+    vectorSvgRoot.setAttribute("viewBox",v.x+" "+v.y+" "+v.width+" "+v.height);
+  }
+}
+function zoomVector(factor){
+  if(!vectorSvgRoot) return;
+  const vb=vectorSvgRoot.viewBox.baseVal;
+  const nx=vb.width*factor, ny=vb.height*factor;
+  const cx=vb.x+vb.width/2, cy=vb.y+vb.height/2;
+  vectorSvgRoot.setAttribute("viewBox",(cx-nx/2)+" "+(cy-ny/2)+" "+nx+" "+ny);
+}
+function searchVectorDrawing(){
+  const q=normalizeDrawingText(document.getElementById("vectorSearchInput")?.value||"");
+  const status=document.getElementById("vectorSearchStatus");
+  if(!q || !vectorSvgRoot){
+    if(status) status.textContent=!vectorSvgRoot?"القارئ لم يجهز بعد.":"اكتب النص المطلوب.";
+    return;
+  }
+  const nodes=Array.from(vectorSvgRoot.querySelectorAll("text,tspan"));
+  vectorSearchResults=nodes.filter(n=>normalizeDrawingText(n.textContent).includes(q));
+  vectorSearchCursor=0;
+  if(!vectorSearchResults.length){
+    if(status) status.textContent="❌ لا توجد نتيجة داخل الرسم.";
+    return;
+  }
+  if(status) status.textContent="✅ "+vectorSearchResults.length+" نتيجة — 1 من "+vectorSearchResults.length;
+  focusVectorText(vectorSearchResults[0]);
+}
+function vectorSearchNext(){
+  if(!vectorSearchResults.length){ searchVectorDrawing(); return; }
+  vectorSearchCursor=(vectorSearchCursor+1)%vectorSearchResults.length;
+  const status=document.getElementById("vectorSearchStatus");
+  if(status) status.textContent="✅ "+vectorSearchResults.length+" نتيجة — "+(vectorSearchCursor+1)+" من "+vectorSearchResults.length;
+  focusVectorText(vectorSearchResults[vectorSearchCursor]);
+}
+function focusVectorText(node){
+  if(!vectorSvgRoot || !vectorBaseViewBox || !node) return;
+  try{
+    const b=node.getBBox();
+    const vb=vectorSvgRoot.viewBox.baseVal;
+    const w=Math.max(vb.width*0.18,b.width*20);
+    const h=Math.max(vb.height*0.18,b.height*20);
+    const cx=b.x+b.width/2, cy=b.y+b.height/2;
+    vectorSvgRoot.setAttribute("viewBox",(cx-w/2)+" "+(cy-h/2)+" "+w+" "+h);
+  }catch(e){ console.error(e); }
+}
+function enableVectorPan(){
+  const obj=document.getElementById("vectorDrawingObject");
+  if(!obj) return;
+  let dragging=false,sx=0,sy=0,start=null;
+  obj.addEventListener("pointerdown",e=>{
+    if(!vectorSvgRoot) return;
+    dragging=true; sx=e.clientX; sy=e.clientY;
+    const vb=vectorSvgRoot.viewBox.baseVal;
+    start={x:vb.x,y:vb.y,width:vb.width,height:vb.height};
+    obj.setPointerCapture?.(e.pointerId);
+  });
+  obj.addEventListener("pointermove",e=>{
+    if(!dragging||!start||!vectorSvgRoot) return;
+    const r=obj.getBoundingClientRect();
+    const dx=(e.clientX-sx)/r.width*start.width;
+    const dy=(e.clientY-sy)/r.height*start.height;
+    vectorSvgRoot.setAttribute("viewBox",(start.x-dx)+" "+(start.y-dy)+" "+start.width+" "+start.height);
+  });
+  obj.addEventListener("pointerup",()=>{dragging=false;});
+}
+initVectorDrawing();
+enableVectorPan();
+
 
 
 document
