@@ -40,17 +40,19 @@ input[type=range]{margin:0}.badge{font-size:11px;color:#9fe6a0;margin-top:8px}
 <script src="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.js"></script>
 <script>
 const statusEl=document.getElementById('status');
-const baseSources={
-osm:{type:'raster',tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256,attribution:'© OpenStreetMap contributors'},
-sat:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,attribution:'Tiles © Esri'}
-};
-const mapStyle={
+const streetStyle={
 version:8,
-sources:baseSources,
-layers:[
-{id:'osm-base',type:'raster',source:'osm',layout:{visibility:'visible'}},
-{id:'sat-base',type:'raster',source:'sat',layout:{visibility:'none'}}
-]
+sources:{
+osm:{type:'raster',tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256,attribution:'© OpenStreetMap contributors'}
+},
+layers:[{id:'osm',type:'raster',source:'osm'}]
+};
+const satelliteStyle={
+version:8,
+sources:{
+sat:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,attribution:'Tiles © Esri'}
+},
+layers:[{id:'sat',type:'raster',source:'sat'}]
 };
 
 const map=new maplibregl.Map({
@@ -82,41 +84,21 @@ features.push({type:'Feature',geometry:{type:'Point',coordinates:[lon,lat]},prop
 });
 });
 equipment=features;
+addEquipmentLayers();
 function addEquipmentLayers(){
 if(!equipment.length)return;
-if(!map.getSource('equipment')){
-map.addSource('equipment',{type:'geojson',data:{type:'FeatureCollection',features:equipment},cluster:true,clusterMaxZoom:15,clusterRadius:45});
-}
-if(!map.getLayer('clusters'))map.addLayer({id:'clusters',type:'circle',source:'equipment',filter:['has','point_count'],paint:{
-'circle-radius':['step',['get','point_count'],18,20,22,100,27,500,32],
-'circle-color':['step',['get','point_count'],'#2f7d32',20,'#1976d2',100,'#d98b00',500,'#c62828'],
-'circle-stroke-color':'#fff','circle-stroke-width':1.5
-}});
-if(!map.getLayer('cluster-count'))map.addLayer({id:'cluster-count',type:'symbol',source:'equipment',filter:['has','point_count'],layout:{
-'text-field':['get','point_count_abbreviated'],'text-size':12,'text-font':['Open Sans Bold']
-},paint:{'text-color':'#fff'}});
-if(!map.getLayer('equipment-points'))map.addLayer({id:'equipment-points',type:'circle',source:'equipment',filter:['!',['has','point_count']],minzoom:12,paint:{
-'circle-radius':['interpolate',['linear'],['zoom'],12,3,16,5,19,7],
-'circle-color':'#1976d2','circle-stroke-color':'#fff','circle-stroke-width':1,'circle-opacity':.9
-}});
-if(!map.getLayer('equipment-labels'))map.addLayer({id:'equipment-labels',type:'symbol',source:'equipment',minzoom:16,layout:{
-'text-field':['get','name'],'text-size':11,'text-offset':[0,1.15],'text-anchor':'top','text-allow-overlap':false,'text-ignore-placement':false
-},paint:{'text-color':'#111','text-halo-color':'#fff','text-halo-width':1.5}});
-}
-addEquipmentLayers();
+if(!map.getSource('equipment'))map.addSource('equipment',{type:'geojson',data:{type:'FeatureCollection',features:equipment},cluster:true,clusterMaxZoom:15,clusterRadius:45});
+if(!map.getLayer('clusters'))map.addLayer({id:'clusters',type:'circle',source:'equipment',filter:['has','point_count'],paint:{'circle-radius':['step',['get','point_count'],18,20,22,100,27,500,32],'circle-color':['step',['get','point_count'],'#2f7d32',20,'#1976d2',100,'#d98b00',500,'#c62828'],'circle-stroke-color':'#fff','circle-stroke-width':1.5}});
+if(!map.getLayer('cluster-count'))map.addLayer({id:'cluster-count',type:'symbol',source:'equipment',filter:['has','point_count'],layout:{'text-field':['get','point_count_abbreviated'],'text-size':12,'text-font':['Open Sans Bold']},paint:{'text-color':'#fff'}});
+if(!map.getLayer('equipment-points'))map.addLayer({id:'equipment-points',type:'circle',source:'equipment',filter:['!',['has','point_count']],minzoom:12,paint:{'circle-radius':['interpolate',['linear'],['zoom'],12,3,16,5,19,7],'circle-color':'#1976d2','circle-stroke-color':'#fff','circle-stroke-width':1,'circle-opacity':.9}});
+if(!map.getLayer('equipment-labels'))map.addLayer({id:'equipment-labels',type:'symbol',source:'equipment',minzoom:16,layout:{'text-field':['get','name'],'text-size':11,'text-offset':[0,1.15],'text-anchor':'top','text-allow-overlap':false,'text-ignore-placement':false},paint:{'text-color':'#111','text-halo-color':'#fff','text-halo-width':1.5}});
 if(!map._equipmentEventsBound){
 map._equipmentEventsBound=true;
-map.on('click','clusters',e=>{
-const f=map.queryRenderedFeatures(e.point,{layers:['clusters']})[0];
-map.getSource('equipment').getClusterExpansionZoom(f.properties.cluster_id,(err,zoom)=>{
-if(!err)map.easeTo({center:f.geometry.coordinates,zoom});
-});
-});
-map.on('click','equipment-points',e=>{
-const f=e.features[0];showPopup(f.properties.name,f.geometry.coordinates[1],f.geometry.coordinates[0]);
-});
+map.on('click','clusters',e=>{const f=map.queryRenderedFeatures(e.point,{layers:['clusters']})[0];map.getSource('equipment').getClusterExpansionZoom(f.properties.cluster_id,(err,zoom)=>{if(!err)map.easeTo({center:f.geometry.coordinates,zoom});});});
+map.on('click','equipment-points',e=>{const f=e.features[0];showPopup(f.properties.name,f.geometry.coordinates[1],f.geometry.coordinates[0]);});
 ['clusters','equipment-points'].forEach(layer=>map.on('mouseenter',layer,()=>map.getCanvas().style.cursor='pointer'));
 ['clusters','equipment-points'].forEach(layer=>map.on('mouseleave',layer,()=>map.getCanvas().style.cursor=''));
+}
 }
 statusEl.textContent='تم تحميل '+features.length.toLocaleString('en-US')+' نقطة — جرب التحريك والتكبير الآن.';
 const bounds=features.reduce((b,f)=>b.extend(f.geometry.coordinates),new maplibregl.LngLatBounds());
@@ -139,16 +121,18 @@ navigator.clipboard?.writeText(v).then(()=>statusEl.textContent='تم نسخ ا�
 }
 function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 
-function setMapType(type){
-const isSat=type==='satellite';
-map.setLayoutProperty('osm-base','visibility',isSat?'none':'visible');
-map.setLayoutProperty('sat-base','visibility',isSat?'visible':'none');
-streetBtn.classList.toggle('active',!isSat);
-satBtn.classList.toggle('active',isSat);
-statusEl.textContent=isSat?'تم تشغيل الخريطة الفضائية — المعدات وCAD مستمران بالظهور.':'تم تشغيل الخريطة العادية — المعدات وCAD مستمران بالظهور.';
+function setStyle(style){
+const center=map.getCenter(),zoom=map.getZoom();
+map.setStyle(style);
+map.once('style.load',()=>{
+map.setCenter(center);map.setZoom(zoom);
+addCad();
+addEquipmentLayers();
+statusEl.textContent='تم تغيير نوع الخريطة — المعدات مستمرة.';
+});
 }
-document.getElementById('streetBtn').onclick=()=>setMapType('street');
-document.getElementById('satBtn').onclick=()=>setMapType('satellite');
+document.getElementById('streetBtn').onclick=()=>{setStyle(streetStyle);streetBtn.classList.add('active');satBtn.classList.remove('active')};
+document.getElementById('satBtn').onclick=()=>{setStyle(satelliteStyle);satBtn.classList.add('active');streetBtn.classList.remove('active')};
 
 document.getElementById('find').onclick=findEquipment;
 document.getElementById('search').addEventListener('keydown',e=>{if(e.key==='Enter')findEquipment()});
