@@ -813,38 +813,73 @@ function consumeBatch(batch) {
   metrics.textContent = t('entityCount', { count: entityCount.toLocaleString() });
 }
 
-function blockGeometryBasePoint(block) {
-  const bp = block?.basePoint;
-  if (!bp || !Number.isFinite(bp.x) || !Number.isFinite(bp.y)) return { x: 0, y: 0 };
-  const boxes = Object.values(block.directBounds || {}).filter((box) =>
-    box && Number.isFinite(box.minX) && Number.isFinite(box.minY)
-    && Number.isFinite(box.maxX) && Number.isFinite(box.maxY)
-  );
-  if (!boxes.length) return { x: 0, y: 0 };
-  const minX = Math.min(...boxes.map((box) => box.minX));
-  const minY = Math.min(...boxes.map((box) => box.minY));
-  const maxX = Math.max(...boxes.map((box) => box.maxX));
-  const maxY = Math.max(...boxes.map((box) => box.maxY));
-  const span = Math.max(maxX - minX, maxY - minY, 1);
-  const margin = span * 0.5;
-  const nearX = bp.x >= minX - margin && bp.x <= maxX + margin;
-  const nearY = bp.y >= minY - margin && bp.y <= maxY + margin;
-  return nearX && nearY ? { x: bp.x, y: bp.y } : { x: 0, y: 0 };
+function ocsBasis2d(extrusionDirection) {
+  const nx = Number(extrusionDirection?.x);
+  const ny = Number(extrusionDirection?.y);
+  const nz = Number(extrusionDirection?.z);
+  const length = Math.hypot(nx, ny, nz);
+  const normal = length > 1e-12
+    ? { x: nx / length, y: ny / length, z: nz / length }
+    : { x: 0, y: 0, z: 1 };
+
+  // AutoCAD defines INSERT position, rotation and array spacing in OCS.
+  // Apply the OCS basis only after the block-local transform.
+  let ax;
+  if (Math.abs(normal.x) < 1 / 64 && Math.abs(normal.y) < 1 / 64) {
+    ax = { x: 0, y: normal.z >= 0 ? 1 : -1, z: 0 };
+  } else {
+    const xy = Math.hypot(normal.x, normal.y);
+    ax = { x: -normal.y / xy, y: normal.x / xy, z: 0 };
+  }
+  const ay = {
+    x: normal.y * ax.z - normal.z * ax.y,
+    y: normal.z * ax.x - normal.x * ax.z,
+    z: normal.x * ax.y - normal.y * ax.x,
+  };
+  return { ax, ay };
 }
 
 function referenceMatrices(entity, block) {
-  const base = blockGeometryBasePoint(block);
-  if (entity.type === 'DIMENSION') return [new DOMMatrix().translate(-base.x, -base.y)];
+  const base = {
+    x: Number(block?.basePoint?.x) || 0,
+    y: Number(block?.basePoint?.y) || 0,
+  };
+  const basis = ocsBasis2d(entity.extrusionDirection);
+  const insertion = {
+    x: Number(entity.insertionPoint?.x) || 0,
+    y: Number(entity.insertionPoint?.y) || 0,
+  };
   const matrices = [];
   const rows = Math.max(1, Math.min(entity.rowCount || 1, 100));
   const columns = Math.max(1, Math.min(entity.columnCount || 1, 100));
+  const rotation = (entity.rotation || 0) * 180 / Math.PI;
+  const scaleX = entity.xScale || 1;
+  const scaleY = entity.yScale || 1;
+
+  // OCS -> WCS affine basis. For the normal DWG case (0,0,1) this
+  // is the identity matrix, so ordinary 2D plan drawings are unchanged.
+  const basisMatrix = new DOMMatrix([
+    basis.ax.x, basis.ax.y,
+    basis.ay.x, basis.ay.y,
+    0, 0,
+  ]);
+
+  if (entity.type === 'DIMENSION') {
+    return [basisMatrix
+      .translate(-base.x, -base.y)];
+  }
+
   for (let row = 0; row < rows; row += 1) {
     for (let column = 0; column < columns; column += 1) {
-      matrices.push(new DOMMatrix()
-        .translate(entity.insertionPoint.x + column * (entity.columnSpacing || 0), entity.insertionPoint.y + row * (entity.rowSpacing || 0))
-        .rotate((entity.rotation || 0) * 180 / Math.PI)
-        .scale(entity.xScale || 1, entity.yScale || 1)
-        .translate(-base.x, -base.y));
+      const offsetX = column * (Number(entity.columnSpacing) || 0);
+      const offsetY = row * (Number(entity.rowSpacing) || 0);
+      matrices.push(
+        basisMatrix
+          .translate(insertion.x + offsetX, insertion.y + offsetY)
+          .rotate(rotation)
+          .scale(scaleX, scaleY)
+          .translate(-base.x, -base.y),
+      );
     }
   }
   return matrices;
