@@ -9,9 +9,9 @@
 html,body,#map{height:100%;margin:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#111}
 #map{direction:ltr}
-.panel{position:absolute;z-index:10;top:12px;right:12px;width:min(360px,calc(100vw - 24px));background:rgba(20,20,20,.94);color:#fff;border-radius:14px;padding:14px;box-shadow:0 8px 30px #0008}
+.panel{position:absolute;z-index:10;bottom:12px;left:50%;transform:translateX(-50%);width:min(420px,calc(100vw - 24px));background:rgba(20,20,20,.94);color:#fff;border-radius:14px;padding:10px;box-shadow:0 8px 30px #0008}
 .panel h2{font-size:17px;margin:0 0 8px}.panel p{font-size:12px;color:#bbb;margin:5px 0 12px;line-height:1.5}
-input{width:100%;box-sizing:border-box;border:1px solid #555;background:#292929;color:#fff;border-radius:9px;padding:10px;margin-bottom:8px}
+input{width:100%;box-sizing:border-box;border:1px solid #555;background:#292929;color:#fff;border-radius:9px;padding:10px;margin-bottom:6px}
 button{border:0;border-radius:9px;padding:9px 11px;background:#2f7d32;color:#fff;font-weight:700;margin:2px;cursor:pointer}
 button.alt{background:#444}.row{display:flex;align-items:center;gap:8px;margin-top:8px}.row label{font-size:12px;white-space:nowrap}
 input[type=range]{margin:0}.badge{font-size:11px;color:#9fe6a0;margin-top:8px}
@@ -55,7 +55,7 @@ let cadVisible=true;
 
 function addEquipmentLayers(){
 if(!equipment.length)return;
-if(!map.getSource('equipment'))map.addSource('equipment',{type:'geojson',data:{type:'FeatureCollection',features:equipment},cluster:true,clusterMaxZoom:15,clusterRadius:45});
+if(!map.getSource('equipment'))map.addSource('equipment',{type:'geojson',data:{type:'FeatureCollection',features:equipment},cluster:true,clusterMaxZoom:9,clusterRadius:45});
 if(!map.getLayer('clusters'))map.addLayer({id:'clusters',type:'circle',source:'equipment',filter:['has','point_count'],paint:{'circle-radius':['step',['get','point_count'],18,20,22,100,27,500,32],'circle-color':['step',['get','point_count'],'#2f7d32',20,'#1976d2',100,'#d98b00',500,'#c62828'],'circle-stroke-color':'#fff','circle-stroke-width':1.5}});
 if(!map.getLayer('cluster-count'))map.addLayer({id:'cluster-count',type:'symbol',source:'equipment',filter:['has','point_count'],layout:{'text-field':['get','point_count_abbreviated'],'text-size':12,'text-font':['Open Sans Bold']},paint:{'text-color':'#fff'}});
 if(!map.getLayer('equipment-points'))map.addLayer({id:'equipment-points',type:'circle',source:'equipment',filter:['!',['has','point_count']],minzoom:12,paint:{'circle-radius':['interpolate',['linear'],['zoom'],12,3,16,5,19,7],'circle-color':'#1976d2','circle-stroke-color':'#fff','circle-stroke-width':1,'circle-opacity':.9}});
