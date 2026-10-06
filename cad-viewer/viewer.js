@@ -135,6 +135,9 @@ let stagePaths;
 let visibleStages;
 let blocks;
 let pendingReferences;
+// Coordinate correction for the displaced left-hand drawing. This is deliberately
+// a world-coordinate translation only: no crop, rotation, scale, or symbol edits.
+let topLevelPlacementCorrections;
 let textItems;
 let textLayoutMode;
 let bounds;
@@ -364,6 +367,7 @@ function resetViewer() {
   visibleStages = new Set(['outline']);
   blocks = new Map();
   pendingReferences = [];
+  topLevelPlacementCorrections = new Map();
   textItems = [];
   textLayoutMode = 'fast';
   bounds = emptyBounds();
@@ -941,7 +945,13 @@ function appendReference(reference, chunkPaths, chunkBounds, chunkTexts) {
     unresolvedCount += 1;
     return;
   }
-  for (const matrix of referenceMatrices(reference, sourceBlock)) {
+  const correction = topLevelPlacementCorrections?.get(reference) || { x: 0, y: 0 };
+  for (const baseMatrix of referenceMatrices(reference, sourceBlock)) {
+    // The correction is appended after the normal INSERT coordinates, so the
+    // whole reference (including every equipment symbol and text) moves together.
+    const matrix = (correction.x || correction.y)
+      ? baseMatrix.translate(correction.x, correction.y)
+      : baseMatrix;
     if (reference.type === 'DIMENSION') {
       for (const sourceStage of ['outline', 'curves', 'annotation']) {
         for (const [style, path] of block.paths[sourceStage]) appendStyledPath(chunkPaths.annotation, path, matrix, inheritColorStyle(style, reference));
@@ -960,11 +970,98 @@ function appendReference(reference, chunkPaths, chunkBounds, chunkTexts) {
   }
 }
 
+function transformedReferenceBounds(reference) {
+  const sourceBlock = blocks.get(reference?.name);
+  const block = sourceBlock ? materializeBlock(reference.name) : null;
+  if (!block || !sourceBlock) return null;
+
+  const result = emptyBounds();
+  for (const matrix of referenceMatrices(reference, sourceBlock)) {
+    for (const stage of STAGES) {
+      if (stage.key === 'text') continue;
+      includeBounds(result, block.bounds[stage.key], matrix);
+    }
+  }
+  return Number.isFinite(result.minX) ? result : null;
+}
+
+function prepareTopLevelPlacementCorrections() {
+  topLevelPlacementCorrections = new Map();
+
+  const candidates = [];
+  for (const reference of pendingReferences) {
+    const box = transformedReferenceBounds(reference);
+    if (!box) continue;
+    const width = Math.max(0, box.maxX - box.minX);
+    const height = Math.max(0, box.maxY - box.minY);
+    const area = width * height;
+    if (!(area > 0)) continue;
+    candidates.push({
+      reference,
+      box,
+      area,
+      centerX: (box.minX + box.maxX) / 2,
+      centerY: (box.minY + box.maxY) / 2,
+      span: Math.max(width, height),
+    });
+  }
+
+  if (candidates.length < 2) return;
+
+  // Ignore ordinary small symbols. We are looking for the two large drawing
+  // bodies that became separated after the coordinate change.
+  const largestArea = Math.max(...candidates.map((item) => item.area));
+  const large = candidates.filter((item) => item.area >= largestArea * 0.01);
+  if (large.length < 2) return;
+
+  let bestPair = null;
+  let bestScore = -Infinity;
+  for (let i = 0; i < large.length; i += 1) {
+    for (let j = i + 1; j < large.length; j += 1) {
+      const a = large[i];
+      const b = large[j];
+      const dx = b.centerX - a.centerX;
+      const dy = b.centerY - a.centerY;
+      const distance = Math.hypot(dx, dy);
+      const minArea = Math.min(a.area, b.area);
+      const areaRatio = minArea / Math.max(a.area, b.area);
+      const span = Math.max(a.span, b.span, 1);
+
+      // The faulty placement in this drawing puts one large body to the
+      // upper-left of the other. Prefer exactly that diagonal relationship.
+      const diagonal = dx > 0 && dy < 0 ? 2 : 1;
+      const separation = distance / span;
+      if (separation < 1.5) continue;
+
+      const score = minArea * areaRatio * separation * diagonal;
+      if (score > bestScore) {
+        bestScore = score;
+        bestPair = [a, b];
+      }
+    }
+  }
+
+  if (!bestPair) return;
+
+  const [a, b] = bestPair;
+  const source = a.centerX <= b.centerX ? a : b;
+  const target = source === a ? b : a;
+
+  // This is the requested coordinate operation: translate the entire left
+  // drawing so its world-space center lands on the right drawing's center.
+  // Rotation, scale, base point and all child symbols remain untouched.
+  topLevelPlacementCorrections.set(source.reference, {
+    x: target.centerX - source.centerX,
+    y: target.centerY - source.centerY,
+  });
+}
+
 function nextFrame() {
   return new Promise((resolve) => requestAnimationFrame(resolve));
 }
 
 async function resolveReferences(generation) {
+  prepareTopLevelPlacementCorrections();
   const chunkSize = 250;
   for (let offset = 0; offset < pendingReferences.length; offset += chunkSize) {
     if (generation !== loadGeneration) return false;
