@@ -53,7 +53,7 @@ input[type=range]{margin:0}
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const map=L.map('map',{zoomControl:true,preferCanvas:true,renderer:L.canvas({padding:0.5})}).setView([28.43,45.97],12);
+const saudiBounds=L.latLngBounds([16.0,34.0],[32.3,55.8]); const map=L.map('map',{zoomControl:true,preferCanvas:true,renderer:L.canvas({padding:0.5}),maxBounds:saudiBounds,maxBoundsViscosity:1.0,minZoom:5}).setView([28.43,45.97],12);
 const street=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'© OpenStreetMap contributors'}).addTo(map);
 const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri'});
 const streetBtn=document.getElementById('streetBtn');
@@ -121,14 +121,14 @@ fetch('data/equipment-lookup.json')
     (records[key]||[]).forEach(row=>{
       const name=row[0],lat=+row[1],lon=+row[2];
       if(!Number.isFinite(lat)||!Number.isFinite(lon)) return;
-      allRows.push({key,name,lat,lon}); return; const m=L.circleMarker([lat,lon],{radius:4,weight:1,fillOpacity:.85,bubblingMouseEvents:true});
+      if(lat<16.0||lat>32.3||lon<34.0||lon>55.8)return; allRows.push({key,name,lat,lon}); return; const m=L.circleMarker([lat,lon],{radius:4,weight:1,fillOpacity:.85,bubblingMouseEvents:true});
       m.bindPopup(equipmentPopup(name,lat,lon),{maxWidth:280});
       m.options._equipmentKey=key; m.options._equipmentName=name; m.options._equipmentLat=lat; m.options._equipmentLon=lon;
       markers.addLayer(m); equipment.push(m);
     });
   });
   equipment=[]; markers.clearLayers(); document.getElementById('status').textContent='تم تحميل '+allRows.length.toLocaleString('en-US')+' نقطة. نسخة الهاتف تستخدم عرضًا انتقائيًا.'; renderVisible();
-  if(allRows.length) map.fitBounds(L.latLngBounds(allRows.map(r=>[r.lat,r.lon])).pad(.08));
+  map.setView([28.43,45.97],12);
 })
 .catch(e=>document.getElementById('status').textContent='تعذر تحميل قاعدة بيانات المعدات.');
 
