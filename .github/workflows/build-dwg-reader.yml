@@ -31,7 +31,7 @@ jobs:
           s = p.read_text(encoding='utf-8-sig')
           # Correct INSERT placement for DWG blocks: block definitions are local to their
           # block base point, so subtract that base point before applying insertion/scale.
-          const oldRef = """function referenceMatrices(entity, block) {
+          old_ref = """function referenceMatrices(entity, block) {
   const matrices = [];
   const rows = Math.max(1, Math.min(entity.rowCount || 1, 100));
   const columns = Math.max(1, Math.min(entity.columnCount || 1, 100));
@@ -45,7 +45,7 @@ jobs:
   }
   return matrices;
 }"""
-          const newRef = """function referenceMatrices(entity, block) {
+          new_ref = """function referenceMatrices(entity, block) {
   const baseX = Number(block?.basePoint?.x) || 0;
   const baseY = Number(block?.basePoint?.y) || 0;
   const matrices = [];
@@ -62,9 +62,9 @@ jobs:
   }
   return matrices;
 }"""
-          if oldRef not in s:
+          if old_ref not in s:
               raise SystemExit('referenceMatrices marker not found in generated viewer')
-          s = s.replace(oldRef, newRef)
+          s = s.replace(old_ref, new_ref)
 
           marker = "applyLanguage();\nresetViewer();\nresize();"
           patch = r'''
