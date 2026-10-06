@@ -395,6 +395,14 @@ th{
     width:100%;
   }
 }
+
+/* الواجهة الرئيسية للفني: الرسم فقط. قاعدة البيانات والمنطق القديم محفوظان للاستخدام لاحقًا. */
+.container > section:not(#fullDrawingSection):not(#detail){
+  display:none !important;
+}
+#fullDrawingSection{
+  margin-top:20px;
+}
 </style>
 </head>
 
