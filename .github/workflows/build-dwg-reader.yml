@@ -29,6 +29,43 @@ jobs:
           from pathlib import Path
           p = Path('cad-viewer/viewer.js')
           s = p.read_text(encoding='utf-8-sig')
+          # Correct INSERT placement for DWG blocks: block definitions are local to their
+          # block base point, so subtract that base point before applying insertion/scale.
+          const oldRef = """function referenceMatrices(entity, block) {
+  const matrices = [];
+  const rows = Math.max(1, Math.min(entity.rowCount || 1, 100));
+  const columns = Math.max(1, Math.min(entity.columnCount || 1, 100));
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      matrices.push(new DOMMatrix()
+        .translate(entity.insertionPoint.x + column * (entity.columnSpacing || 0), entity.insertionPoint.y + row * (entity.rowSpacing || 0))
+        .rotate((entity.rotation || 0) * 180 / Math.PI)
+        .scale(entity.xScale || 1, entity.yScale || 1));
+    }
+  }
+  return matrices;
+}"""
+          const newRef = """function referenceMatrices(entity, block) {
+  const baseX = Number(block?.basePoint?.x) || 0;
+  const baseY = Number(block?.basePoint?.y) || 0;
+  const matrices = [];
+  const rows = Math.max(1, Math.min(entity.rowCount || 1, 100));
+  const columns = Math.max(1, Math.min(entity.columnCount || 1, 100));
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      matrices.push(new DOMMatrix()
+        .translate(entity.insertionPoint.x + column * (entity.columnSpacing || 0), entity.insertionPoint.y + row * (entity.rowSpacing || 0))
+        .rotate((entity.rotation || 0) * 180 / Math.PI)
+        .scale(entity.xScale || 1, entity.yScale || 1)
+        .translate(-baseX, -baseY));
+    }
+  }
+  return matrices;
+}"""
+          if oldRef not in s:
+              raise SystemExit('referenceMatrices marker not found in generated viewer')
+          s = s.replace(oldRef, newRef)
+
           marker = "applyLanguage();\nresetViewer();\nresize();"
           patch = r'''
           window.cadViewerSearch = function(query, occurrence = 0) {
