@@ -33,22 +33,6 @@ jobs:
           # The feeder DWG renders its INSERT coordinates in the same 2D space
           # consumed by the canvas. Only correct block base-point handling here,
           # and do not apply an extra OCS->WCS transform.
-          old_ref = """function referenceMatrices(entity, block) {
-  const matrices = [];
-  const rows = Math.max(1, Math.min(entity.rowCount || 1, 100));
-  const columns = Math.max(1, Math.min(entity.columnCount || 1, 100));
-  for (let row = 0; row < rows; row += 1) {
-    for (let column = 0; column < columns; column += 1) {
-      matrices.push(new DOMMatrix()
-        .translate(entity.insertionPoint.x + column * (entity.columnSpacing || 0), entity.insertionPoint.y + row * (entity.rowSpacing || 0))
-        .rotate((entity.rotation || 0) * 180 / Math.PI)
-        .scale(entity.xScale || 1, entity.yScale || 1));
-    }
-  }
-  return matrices;
-}"""
-          if old_ref not in s:
-              raise SystemExit('referenceMatrices marker not found in generated viewer')
           ref_start = s.index("function referenceMatrices(entity, block) {")
           ref_end = s.index("\n}\n\nfunction materializeBlock", ref_start) + 2
           new_ref = """function blockGeometryBasePoint(block) {
