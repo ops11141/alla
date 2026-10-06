@@ -457,6 +457,15 @@ th{
 
 
 .vector-search-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.vector-search-bar input{flex:1;min-width:220px;border:1px solid var(--border);border-radius:12px;padding:13px;font:inherit}.vector-drawing-viewport{position:relative;height:75vh;min-height:480px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#050505;touch-action:none}.vector-drawing-viewport iframe{width:100%;height:100%;display:block;border:0;background:#050505}.vector-fallback{position:absolute;inset:0;display:grid;place-items:center;color:#ddd;background:#050505}.vector-search-bar .btn{width:auto}.vector-search-bar .muted{min-width:180px}@media(max-width:700px){.vector-drawing-viewport{height:70vh;min-height:420px}.vector-search-bar .btn{width:auto}.vector-search-bar{align-items:stretch}.vector-search-bar input{min-width:160px}}
+.drawing-export{position:absolute;top:12px;right:12px;z-index:20;direction:rtl}
+.drawing-export>button{min-width:132px;padding:10px 14px;border:1px solid rgba(255,255,255,.22);border-radius:12px;background:rgba(7,95,73,.94);color:#fff;font-weight:800;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.28);backdrop-filter:blur(5px)}
+.drawing-export-menu{display:none;margin-top:7px;min-width:190px;padding:7px;border-radius:13px;background:rgba(18,22,21,.97);border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.drawing-export.open .drawing-export-menu{display:grid;gap:5px}
+.drawing-export-menu button{border:0;border-radius:9px;padding:10px 11px;background:#26312e;color:#fff;text-align:right;font:inherit;font-weight:700;cursor:pointer}
+.drawing-export-menu button:hover{background:#33433e}
+.drawing-export-status{display:none;margin-top:6px;padding:7px 9px;border-radius:9px;background:rgba(0,0,0,.82);color:#fff;font-size:11px;line-height:1.5;max-width:230px}
+@media(max-width:700px){.drawing-export{top:8px;right:8px}.drawing-export>button{min-width:118px;padding:9px 11px;font-size:13px}.drawing-export-menu{min-width:175px}}
+
 </style>
 </head>
 
@@ -593,6 +602,15 @@ onclick="loadDatabase()"
 
 <div id="fullDrawingStatus" class="status">جاري تحميل قارئ DWG...</div>
 <div class="vector-drawing-viewport" style="height:75vh;min-height:520px">
+  <div class="drawing-export" id="drawingExport">
+    <button type="button" onclick="toggleDrawingExportMenu()" aria-haspopup="menu" aria-expanded="false">📸 تصدير الرسم</button>
+    <div class="drawing-export-menu" role="menu" aria-label="خيارات تصدير الرسم">
+      <button type="button" onclick="exportCurrentDrawingPNG()">🖼️ PNG عالي الجودة</button>
+      <button type="button" onclick="exportCurrentDrawingSVG()">📐 SVG متجهي</button>
+      <button type="button" onclick="shareCurrentDrawing()">📤 مشاركة الرسم</button>
+    </div>
+    <div class="drawing-export-status" id="drawingExportStatus" aria-live="polite"></div>
+  </div>
   <iframe id="vectorDrawingFrame" src="cad-viewer/index.html?file=../cad/FINAL%20DISPATCH%20-%20UPDATE.dwg&open=cad" title="قارئ DWG الداخلي" loading="eager" allow="fullscreen"></iframe>
 </div>
 <div class="drawing-help">استخدم مربع البحث داخل القارئ للعثور على F-8.13 أو أي نص موجود في الرسم. يدعم التكبير والتحريك على الكمبيوتر والجوال.</div>
@@ -1819,6 +1837,184 @@ function initVectorDrawing(){
     }
   },15000);
 }
+function toggleDrawingExportMenu(){
+  const box=document.getElementById("drawingExport");
+  const button=box?.querySelector(":scope > button");
+  if(!box) return;
+  const open=box.classList.toggle("open");
+  if(button) button.setAttribute("aria-expanded",open?"true":"false");
+}
+
+document.addEventListener("click",e=>{
+  const box=document.getElementById("drawingExport");
+  if(box && !box.contains(e.target)){
+    box.classList.remove("open");
+    const button=box.querySelector(":scope > button");
+    if(button) button.setAttribute("aria-expanded","false");
+  }
+});
+
+function setDrawingExportStatus(message){
+  const el=document.getElementById("drawingExportStatus");
+  if(!el) return;
+  el.textContent=message;
+  el.style.display=message?"block":"none";
+  if(message){
+    clearTimeout(window.__drawingExportStatusTimer);
+    window.__drawingExportStatusTimer=setTimeout(()=>{el.style.display="none";},5000);
+  }
+}
+
+function getCurrentVectorExport(){
+  if(!vectorSvgRoot || !vectorSvgRoot.viewBox) throw new Error("الرسم لم يجهز بعد.");
+  const vb=vectorSvgRoot.viewBox.baseVal;
+  if(!vb || !(vb.width>0) || !(vb.height>0)) throw new Error("تعذر تحديد حدود الرسم.");
+  const clone=vectorSvgRoot.cloneNode(true);
+  clone.setAttribute("xmlns","http://www.w3.org/2000/svg");
+  clone.setAttribute("xmlns:xlink","http://www.w3.org/1999/xlink");
+  clone.setAttribute("viewBox",vb.x+" "+vb.y+" "+vb.width+" "+vb.height);
+
+  const ratio=vb.width/vb.height;
+  const maxSide=6000;
+  let width,height;
+  if(ratio>=1){
+    width=maxSide;
+    height=Math.max(1,Math.round(maxSide/ratio));
+  }else{
+    height=maxSide;
+    width=Math.max(1,Math.round(maxSide*ratio));
+  }
+  clone.setAttribute("width",String(width));
+  clone.setAttribute("height",String(height));
+
+  const bg=document.createElementNS("http://www.w3.org/2000/svg","rect");
+  bg.setAttribute("x",String(vb.x));
+  bg.setAttribute("y",String(vb.y));
+  bg.setAttribute("width",String(vb.width));
+  bg.setAttribute("height",String(vb.height));
+  bg.setAttribute("fill","#050505");
+  clone.insertBefore(bg,clone.firstChild);
+
+  const serializer=new XMLSerializer();
+  const svgText=serializer.serializeToString(clone);
+  return {svgText,width,height};
+}
+
+function getDrawingFileBase(){
+  const stamp=new Date().toISOString().replace(/[:.]/g,"-").slice(0,19);
+  return "feeder-drawing-"+stamp;
+}
+
+function downloadBlob(blob,name){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+
+async function exportCurrentDrawingSVG(){
+  try{
+    setDrawingExportStatus("جاري تجهيز SVG المتجهي...");
+    const data=getCurrentVectorExport();
+    const blob=new Blob([data.svgText],{type:"image/svg+xml;charset=utf-8"});
+    downloadBlob(blob,getDrawingFileBase()+".svg");
+    setDrawingExportStatus("✅ تم تصدير SVG بجودة متجهية عالية.");
+  }catch(error){
+    console.error(error);
+    setDrawingExportStatus("❌ "+error.message);
+  }
+}
+
+async function exportCurrentDrawingPNG(){
+  try{
+    setDrawingExportStatus("جاري إنشاء صورة PNG عالية الجودة...");
+    const data=getCurrentVectorExport();
+    const blob=new Blob([data.svgText],{type:"image/svg+xml;charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const image=new Image();
+    image.decoding="async";
+    image.onload=()=>{
+      try{
+        const canvas=document.createElement("canvas");
+        canvas.width=data.width;
+        canvas.height=data.height;
+        const ctx=canvas.getContext("2d");
+        ctx.fillStyle="#050505";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(image,0,0,data.width,data.height);
+        canvas.toBlob(png=>{
+          URL.revokeObjectURL(url);
+          if(!png) throw new Error("تعذر إنشاء ملف PNG.");
+          downloadBlob(png,getDrawingFileBase()+".png");
+          setDrawingExportStatus("✅ تم تصدير PNG — "+data.width+"×"+data.height+" بكسل.");
+        },"image/png");
+      }catch(error){
+        URL.revokeObjectURL(url);
+        console.error(error);
+        setDrawingExportStatus("❌ "+error.message);
+      }
+    };
+    image.onerror=()=>{
+      URL.revokeObjectURL(url);
+      setDrawingExportStatus("❌ تعذر تحويل الرسم إلى صورة PNG. استخدم SVG المتجهي.");
+    };
+    image.src=url;
+  }catch(error){
+    console.error(error);
+    setDrawingExportStatus("❌ "+error.message);
+  }
+}
+
+async function shareCurrentDrawing(){
+  try{
+    setDrawingExportStatus("جاري تجهيز الرسم للمشاركة...");
+    const data=getCurrentVectorExport();
+    const svgBlob=new Blob([data.svgText],{type:"image/svg+xml;charset=utf-8"});
+    const base=getDrawingFileBase();
+    const pngBlob=await new Promise((resolve,reject)=>{
+      const url=URL.createObjectURL(svgBlob);
+      const image=new Image();
+      image.onload=()=>{
+        try{
+          const canvas=document.createElement("canvas");
+          canvas.width=data.width;
+          canvas.height=data.height;
+          const ctx=canvas.getContext("2d");
+          ctx.fillStyle="#050505";
+          ctx.fillRect(0,0,canvas.width,canvas.height);
+          ctx.drawImage(image,0,0,data.width,data.height);
+          canvas.toBlob(blob=>{
+            URL.revokeObjectURL(url);
+            blob?resolve(blob):reject(new Error("تعذر إنشاء صورة المشاركة."));
+          },"image/png");
+        }catch(error){URL.revokeObjectURL(url);reject(error);}
+      };
+      image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error("تعذر تجهيز الرسم."));};
+      image.src=url;
+    });
+
+    const file=new File([pngBlob],base+".png",{type:"image/png"});
+    if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){
+      await navigator.share({title:"رسم المغذي",text:"رسم كهربائي عالي الجودة",files:[file]});
+      setDrawingExportStatus("✅ تم فتح خيارات المشاركة.");
+    }else{
+      downloadBlob(pngBlob,base+".png");
+      setDrawingExportStatus("ℹ️ المشاركة المباشرة غير متاحة على هذا الجهاز، فتم تنزيل PNG عالي الجودة.");
+    }
+  }catch(error){
+    if(error?.name==="AbortError"){
+      setDrawingExportStatus("تم إلغاء المشاركة.");
+      return;
+    }
+    console.error(error);
+    setDrawingExportStatus("❌ "+error.message);
+  }
+}
+
 function resetVectorView(){
   if(vectorSvgRoot && vectorBaseViewBox){
     const v=vectorBaseViewBox;
