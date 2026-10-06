@@ -40,7 +40,7 @@ jobs:
             --disable-docs \
             --disable-json
 
-          timeout 12m make -j"$(nproc)" dwg2dxf
+          timeout 12m make -j"$(nproc)" -C programs dwg2dxf
 
           sudo install -m 0755 programs/dwg2dxf /usr/local/bin/dwg2dxf
           command -v dwg2dxf
