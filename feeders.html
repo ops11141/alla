@@ -245,6 +245,15 @@ button{
   margin-top:7px;
   line-height:1.7;
 }
+.station-chip{display:inline-block;margin-top:8px;padding:5px 9px;border-radius:999px;background:#eef7f4;color:var(--green);font-size:12px;font-weight:bold}
+.drawing-box{margin-top:18px;border:1px solid var(--border);border-radius:18px;overflow:hidden;background:#fafcfb}
+.drawing-toolbar{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px;background:#f2f8f6}
+.drawing-frame{width:100%;min-height:420px;border:0;background:#fff}
+.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.info-item{padding:12px;border:1px solid var(--border);border-radius:14px;background:#fbfdfc}
+.info-item span{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
+.info-item strong{color:var(--green)}
+@media(max-width:700px){.info-grid{grid-template-columns:1fr}.drawing-frame{min-height:320px}}
 
 .detail{
   display:none;
@@ -427,8 +436,9 @@ th{
 <h2>🔎 البحث عن مغذي</h2>
 
 <p class="muted">
-ابحث بالاسم كما ورد في ملف الرسم، مثل:
-F-8.13 أو FDR#2.20 أو BSP.F-15
+ابحث عن رقم المغذي كما هو في الرسم، مثل:
+F-8.13 أو FDR#2.20 أو BSP.F-15.
+هذه الصفحة مخصصة لتعريف المغذي والمحطة والرسم؛ أما الموقع والإحداثيات الجغرافية فتظهر في صفحة المعدات.
 </p>
 
 <div class="search-area">
@@ -683,6 +693,10 @@ async function loadDatabase(){
 
                     name:name,
 
+                    station: item.station || null,
+                    stationConfidence: item.stationConfidence || "unknown",
+                    stationCandidates: Array.isArray(item.stationCandidates) ? item.stationCandidates : [],
+
                     category:category,
 
                     occurrences:
@@ -899,6 +913,8 @@ ${escapeHTML(item.name)}
 Layer:
 ${escapeHTML(layer)}
 
+${item.station ? `<div class="station-chip">🏭 ${escapeHTML(item.station)}</div>` : ""}
+
 </div>
 
 </div>
@@ -942,7 +958,7 @@ function showDetail(name){
 <div class="badges">
 
 <span class="badge">
-الاسم: ${escapeHTML(item.name)}
+اسم المغذي: ${escapeHTML(item.name)}
 </span>
 
 <span class="badge">
@@ -950,13 +966,21 @@ function showDetail(name){
 </span>
 
 <span class="badge">
-Layer:
-${escapeHTML(
-    item.layers.join(", ") ||
-    "غير محدد"
-)}
+المحطة: ${escapeHTML(item.station || "غير مرتبطة بعد")}
 </span>
 
+</div>
+
+<div class="info-grid">
+<div class="info-item"><span>المغذي</span><strong dir="ltr">${escapeHTML(item.name)}</strong></div>
+<div class="info-item"><span>المحطة</span><strong>${escapeHTML(item.station || "غير محددة")}</strong></div>
+<div class="info-item"><span>الثقة في الربط</span><strong>${escapeHTML(item.stationConfidence || "غير محددة")}</strong></div>
+</div>
+
+<div class="drawing-box">
+<div class="drawing-toolbar"><strong>📐 الرسم الكهربائي للمغذي</strong><a id="drawingLink" class="btn btn-light" href="#" target="_blank" rel="noopener">فتح الرسم</a></div>
+<div id="drawingStatus" class="empty">جاري التحقق من توفر الرسم...</div>
+<iframe id="drawingFrame" class="drawing-frame" title="رسم المغذي" style="display:none"></iframe>
 </div>
 
 `;
@@ -1046,18 +1070,14 @@ ${escapeHTML(
     html += `
 
 <p class="muted" style="margin-top:15px">
-
-المصدر:
-FINAL DISPATCH - UPDATE.dwg
-
+المصدر: FINAL DISPATCH - UPDATE.dwg
 <br>
-
-الإحداثيات أعلاه هي إحداثيات الرسم الأصلية
-وليست إحداثيات GPS.
-
+الموقع الجغرافي للمعدات لا يُعرض هنا؛ استخدم صفحة <a href="equipment.html">مواقع المعدات</a> للوصول إلى الإحداثيات والخريطة.
 </p>
 
 `;
+
+    setTimeout(() => loadDrawing(item.name), 0);
 
 
     document.getElementById(
@@ -1082,6 +1102,29 @@ FINAL DISPATCH - UPDATE.dwg
 /* ------------------------------------------
    إغلاق التفاصيل
 ------------------------------------------ */
+
+async function loadDrawing(name){
+    const safe = name.replace(/[^A-Za-z0-9_.-]+/g, "_");
+    const url = "data/feeders/drawings/" + safe + ".svg";
+    const status = document.getElementById("drawingStatus");
+    const frame = document.getElementById("drawingFrame");
+    const link = document.getElementById("drawingLink");
+    if(!status || !frame || !link) return;
+    link.href = url;
+    status.textContent = "جاري التحقق من الرسم...";
+    try{
+        const response = await fetch(url + "?v=" + Date.now(), {method:"HEAD", cache:"no-store"});
+        if(!response.ok) throw new Error("not found");
+        frame.src = url;
+        frame.style.display = "block";
+        status.style.display = "none";
+    }catch(error){
+        frame.style.display = "none";
+        status.style.display = "block";
+        status.innerHTML = "ℹ️ الرسم لم يُنشر بعد لهذا المغذي. سيتم ربطه تلقائيًا عند اكتمال حزمة الرسومات.";
+    }
+}
+
 
 function closeDetail(){
 
