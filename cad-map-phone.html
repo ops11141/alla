@@ -76,6 +76,8 @@ satBtn.addEventListener('click',()=>setMapType('satellite'));
 let equipment=[];
 let equipmentRows=[];
 let renderTimer=null;
+let moveTimer=null;
+let isMoving=false;
 const markers=L.layerGroup().addTo(map);
 const labels=L.layerGroup().addTo(map);
 let highlightedLabel=null;
@@ -133,78 +135,70 @@ fetch('data/equipment-lookup.json')
 function renderVisible(){
   clearTimeout(renderTimer);
   renderTimer=setTimeout(()=>{
+    if(isMoving || !equipmentRows.length) return;
     markers.clearLayers();
     labels.clearLayers();
     equipment=[];
-    if(!equipmentRows.length) return;
 
     const z=map.getZoom();
-    const bounds=map.getBounds().pad(.12);
+    const bounds=map.getBounds().pad(.08);
     const rows=equipmentRows.filter(r=>bounds.contains([r.lat,r.lon]));
-    let max;
-    if(z<14) max=180;
-    else if(z<16) max=600;
-    else if(z<18) max=1600;
-    else max=3000;
+    const max=z<14?120:z<16?350:z<18?800:1400;
 
     let chosen=rows;
     if(rows.length>max){
-      // Spatial sampling: distribute blue markers across the visible map
-      // instead of taking the first records from the database.
       const cols=Math.max(8,Math.ceil(Math.sqrt(max)));
       const buckets=new Map();
-      const south=bounds.getSouth(), west=bounds.getWest();
-      const height=bounds.getNorth()-south, width=bounds.getEast()-west;
+      const south=bounds.getSouth(),west=bounds.getWest();
+      const height=Math.max(0.000001,bounds.getNorth()-south);
+      const width=Math.max(0.000001,bounds.getEast()-west);
       rows.forEach(r=>{
-        const cx=Math.min(cols-1,Math.floor((r.lon-west)/width*cols));
-        const cy=Math.min(cols-1,Math.floor((r.lat-south)/height*cols));
+        const cx=Math.min(cols-1,Math.max(0,Math.floor((r.lon-west)/width*cols)));
+        const cy=Math.min(cols-1,Math.max(0,Math.floor((r.lat-south)/height*cols)));
         const k=cx+'_'+cy;
         if(!buckets.has(k)) buckets.set(k,r);
       });
-      chosen=Array.from(buckets.values());
+      chosen=Array.from(buckets.values()).slice(0,max);
     }
 
+    const fragment=document.createDocumentFragment();
     chosen.forEach(r=>{
       const m=L.circleMarker([r.lat,r.lon],{
         radius:z<16?3.5:4.5,
-        color:'#1976d2',
-        weight:1,
-        fillColor:'#1976d2',
-        fillOpacity:.9,
+        color:'#1976d2',weight:1,fillColor:'#1976d2',fillOpacity:.9,
         bubblingMouseEvents:true
       });
-      m.options._equipmentKey=r.key;
-      m.options._equipmentName=r.name;
-      m.options._equipmentLat=r.lat;
-      m.options._equipmentLon=r.lon;
+      m.options._equipmentKey=r.key;m.options._equipmentName=r.name;
+      m.options._equipmentLat=r.lat;m.options._equipmentLon=r.lon;
       m.bindPopup(equipmentPopup(r.name,r.lat,r.lon),{maxWidth:280});
       markers.addLayer(m);
       equipment.push(m);
     });
 
     if(z>=16){
-      chosen.slice(0,500).forEach(r=>{
+      chosen.slice(0,250).forEach(r=>{
         L.marker([r.lat,r.lon],{
-          interactive:true,
-          keyboard:false,
-          zIndexOffset:1000,
-          icon:L.divIcon({
-            className:'',
-            html:'<span class="equipment-label">'+escapeHtml(r.name)+'</span>',
-            iconSize:null,
-            iconAnchor:[-7,9]
-          })
+          interactive:true,keyboard:false,zIndexOffset:1000,
+          icon:L.divIcon({className:'',html:'<span class="equipment-label">'+escapeHtml(r.name)+'</span>',iconSize:null,iconAnchor:[-7,9]})
         }).addTo(labels);
       });
     }
-
-    document.getElementById('status').textContent=
-      'الزوم '+z+' — ظاهر '+chosen.length.toLocaleString('en-US')+
-      ' من '+rows.length.toLocaleString('en-US')+' نقطة ضمن الشاشة.';
-  },80);
+    document.getElementById('status').textContent='الزوم '+z+' — ظاهر '+chosen.length.toLocaleString('en-US')+' من '+rows.length.toLocaleString('en-US')+' نقطة ضمن الشاشة.';
+  },350);
 }
 
-map.on('zoomend moveend',renderVisible);
+map.on('movestart',()=>{
+  isMoving=true;
+  clearTimeout(moveTimer);
+  document.getElementById('status').textContent='تحريك الخريطة…';
+});
+map.on('moveend',()=>{
+  clearTimeout(moveTimer);
+  moveTimer=setTimeout(()=>{isMoving=false;renderVisible();},500);
+});
+map.on('zoomend',()=>{
+  if(!isMoving) renderVisible();
+});
 
 document.getElementById('find').onclick=findEquipment;
 document.getElementById('search').addEventListener('keydown',e=>{if(e.key==='Enter')findEquipment()});
