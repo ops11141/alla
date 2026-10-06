@@ -813,8 +813,28 @@ function consumeBatch(batch) {
   metrics.textContent = t('entityCount', { count: entityCount.toLocaleString() });
 }
 
+function blockGeometryBasePoint(block) {
+  const bp = block?.basePoint;
+  if (!bp || !Number.isFinite(bp.x) || !Number.isFinite(bp.y)) return { x: 0, y: 0 };
+  const boxes = Object.values(block.directBounds || {}).filter((box) =>
+    box && Number.isFinite(box.minX) && Number.isFinite(box.minY)
+    && Number.isFinite(box.maxX) && Number.isFinite(box.maxY)
+  );
+  if (!boxes.length) return { x: 0, y: 0 };
+  const minX = Math.min(...boxes.map((box) => box.minX));
+  const minY = Math.min(...boxes.map((box) => box.minY));
+  const maxX = Math.max(...boxes.map((box) => box.maxX));
+  const maxY = Math.max(...boxes.map((box) => box.maxY));
+  const span = Math.max(maxX - minX, maxY - minY, 1);
+  const margin = span * 0.5;
+  const nearX = bp.x >= minX - margin && bp.x <= maxX + margin;
+  const nearY = bp.y >= minY - margin && bp.y <= maxY + margin;
+  return nearX && nearY ? { x: bp.x, y: bp.y } : { x: 0, y: 0 };
+}
+
 function referenceMatrices(entity, block) {
-  if (entity.type === 'DIMENSION') return [new DOMMatrix().translate(-(block.basePoint?.x || 0), -(block.basePoint?.y || 0))];
+  const base = blockGeometryBasePoint(block);
+  if (entity.type === 'DIMENSION') return [new DOMMatrix().translate(-base.x, -base.y)];
   const matrices = [];
   const rows = Math.max(1, Math.min(entity.rowCount || 1, 100));
   const columns = Math.max(1, Math.min(entity.columnCount || 1, 100));
@@ -824,7 +844,7 @@ function referenceMatrices(entity, block) {
         .translate(entity.insertionPoint.x + column * (entity.columnSpacing || 0), entity.insertionPoint.y + row * (entity.rowSpacing || 0))
         .rotate((entity.rotation || 0) * 180 / Math.PI)
         .scale(entity.xScale || 1, entity.yScale || 1)
-        .translate(-(block.basePoint?.x || 0), -(block.basePoint?.y || 0)));
+        .translate(-base.x, -base.y));
     }
   }
   return matrices;
