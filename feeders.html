@@ -419,6 +419,13 @@ th{
 .find-result small{color:var(--muted)}
 .find-empty{color:var(--muted);padding:8px}
 @media(max-width:600px){.find-result{align-items:flex-start;flex-direction:column}.find-row .btn{width:auto}}
+
+.mobile-drawing-image{display:none;width:100%;height:auto;min-width:100%;background:#05080b;touch-action:pinch-zoom}
+@media(max-width:700px){
+  .full-drawing-viewer{height:70vh!important;min-height:420px!important;overflow:auto!important;touch-action:pinch-zoom}
+  .full-drawing-viewer #fullCadViewerFrame{display:none!important}
+  .mobile-drawing-image{display:block}
+}
 </style>
 </head>
 
@@ -564,8 +571,9 @@ onclick="loadDatabase()"
 </div>
 </div>
 <div id="fullDrawingStatus" class="status">جاري فتح الرسم الأصلي...</div>
-<div class="drawing-viewer" style="height:75vh;min-height:480px">
-<iframe id="fullCadViewerFrame" title="الرسم الكهربائي الكامل" style="width:100%;height:100%;min-height:480px;border:0;background:#000" allowfullscreen></iframe>
+<div class="drawing-viewer full-drawing-viewer" style="height:75vh;min-height:480px">
+<iframe id="fullCadViewerFrame" title="الرسم الكهربائي الكامل" style="width:100%;height:100%;min-height:480px;border:0;background:#000"></iframe>
+<img id="mobileDrawingImage" class="mobile-drawing-image" alt="الرسم الكهربائي الكامل - نسخة خفيفة للجوال" src="data/feeders/mobile-overview.jpg">
 </div>
 <div class="drawing-help">يمكنك التكبير والتحريك والاطلاع على الرسم والطبقات مباشرة. قاعدة المغذيات والبيانات القديمة محفوظة أسفل الرسم.</div>
 </section>
@@ -1475,8 +1483,21 @@ function showDrawingLocation(result){
 
 function openFullDrawing(){
     const frame = document.getElementById("fullCadViewerFrame");
+    const mobileImage = document.getElementById("mobileDrawingImage");
     const status = document.getElementById("fullDrawingStatus");
-    if(!frame || !status) return;
+    if(!status) return;
+
+    const isMobile = window.matchMedia("(max-width: 700px)").matches;
+
+    if(isMobile){
+        if(frame) frame.src = "";
+        if(mobileImage) mobileImage.src = "data/feeders/mobile-overview.jpg?v=" + Date.now();
+        status.className = "status";
+        status.textContent = "✅ تم فتح نسخة خفيفة من الرسم للجوال — بدون تحميل محرك DWG الثقيل.";
+        return;
+    }
+
+    if(!frame) return;
 
     const dwgUrl =
         "https://raw.githubusercontent.com/ops11141/alla/main/cad/FINAL%20DISPATCH%20-%20UPDATE.dwg";
