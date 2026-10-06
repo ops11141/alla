@@ -814,6 +814,8 @@ function consumeBatch(batch) {
 }
 
 function referenceMatrices(entity, block) {
+  const baseX = Number(block?.basePoint?.x) || 0;
+  const baseY = Number(block?.basePoint?.y) || 0;
   const matrices = [];
   const rows = Math.max(1, Math.min(entity.rowCount || 1, 100));
   const columns = Math.max(1, Math.min(entity.columnCount || 1, 100));
@@ -822,7 +824,8 @@ function referenceMatrices(entity, block) {
       matrices.push(new DOMMatrix()
         .translate(entity.insertionPoint.x + column * (entity.columnSpacing || 0), entity.insertionPoint.y + row * (entity.rowSpacing || 0))
         .rotate((entity.rotation || 0) * 180 / Math.PI)
-        .scale(entity.xScale || 1, entity.yScale || 1));
+        .scale(entity.xScale || 1, entity.yScale || 1)
+        .translate(-baseX, -baseY));
     }
   }
   return matrices;
