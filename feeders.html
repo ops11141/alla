@@ -1444,16 +1444,53 @@ async function loadDrawingTextIndex(){
   if(drawingSearchBusy) return null;
   drawingSearchBusy = true;
   const status = document.getElementById("drawingSearchStatus");
-  if(status) status.textContent = "جاري تحميل فهرس الرسم الذكي...";
+  if(status) status.textContent = "جاري تحميل فهرس الرسم...";
   try{
-    const response = await fetch("data/feeders/drawing-search-index.json?v=" + Date.now(), {cache:"force-cache"});
-    if(!response.ok) throw new Error("تعذر تحميل فهرس الرسم");
-    const payload = await response.json();
-    if(!payload || !Array.isArray(payload.entries) || !payload.extents) {
-      throw new Error("صيغة فهرس الرسم غير صحيحة");
+    let payload = null;
+
+    // الفهرس السريع يُستخدم أولاً.
+    try{
+      const response = await fetch("data/feeders/drawing-search-index.json?v=" + Date.now(), {cache:"force-cache"});
+      if(response.ok){
+        const candidate = await response.json();
+        if(candidate && Array.isArray(candidate.entries) && candidate.extents) payload = candidate;
+      }
+    }catch(_){}
+
+    // احتياط مهم: استخدم قاعدة النصوص الموجودة أصلًا في المشروع.
+    // هذا يجعل البحث يعمل حتى لو لم تكتمل عملية GitHub Actions لبناء الفهرس السريع.
+    if(!payload){
+      const response = await fetch("data/feeders/all_text_entities.json?v=" + Date.now(), {cache:"force-cache"});
+      if(!response.ok) throw new Error("تعذر تحميل قاعدة نصوص الرسم");
+      const raw = await response.json();
+      const source = Array.isArray(raw) ? raw : (Array.isArray(raw?.entries) ? raw.entries : []);
+      const entries = source.map(item => {
+        const p = item.position || item.pos || item;
+        return {
+          t: String(item.text ?? item.value ?? item.t ?? ""),
+          n: normalizeDrawingText(item.text ?? item.value ?? item.t ?? ""),
+          x: Number(p?.x),
+          y: Number(p?.y)
+        };
+      }).filter(item => item.t && Number.isFinite(item.x) && Number.isFinite(item.y));
+
+      if(!entries.length) throw new Error("قاعدة نصوص الرسم فارغة");
+      let xmin=Infinity,ymin=Infinity,xmax=-Infinity,ymax=-Infinity;
+      for(const e of entries){
+        xmin=Math.min(xmin,e.x); ymin=Math.min(ymin,e.y);
+        xmax=Math.max(xmax,e.x); ymax=Math.max(ymax,e.y);
+      }
+      payload = {
+        version: 1,
+        format: "fallback-from-all-text-entities",
+        image: "data/feeders/drawing-search.jpg",
+        extents: {xmin,ymin,xmax,ymax},
+        entries
+      };
     }
+
     drawingSearchIndex = payload;
-    if(status) status.textContent = "تم تجهيز البحث الذكي داخل الرسم.";
+    if(status) status.textContent = "✅ تم تجهيز البحث في كامل الرسم.";
     return drawingSearchIndex;
   } finally {
     drawingSearchBusy = false;
@@ -1609,7 +1646,7 @@ async function showDrawingLocation(result){
   }
 
   if(focus) focus.hidden=false;
-  const imageUrl="data/feeders/drawing-search.jpg?v="+Date.now();
+  const imageUrl=(drawingSearchIndex?.image || "data/feeders/drawing-search.jpg")+"?v="+Date.now();
   if(image && image.src!==imageUrl) image.src=imageUrl;
 
   const zoom=window.matchMedia("(max-width:700px)").matches?3.8:2.6;
