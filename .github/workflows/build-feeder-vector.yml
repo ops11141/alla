@@ -38,5 +38,6 @@ jobs:
             echo 'No SVG changes.'
           else
             git commit -m 'Generate vector feeder drawing'
+            git pull --rebase origin main
             git push
           fi
