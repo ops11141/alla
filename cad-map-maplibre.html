@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>خريطة المعدات | MapLibre - قسم الصيانة</title>
+<link href="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+html,body,#map{height:100%;margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#111}
+#map{direction:ltr}
+.panel{position:absolute;z-index:10;top:12px;right:12px;width:min(360px,calc(100vw - 24px));background:rgba(20,20,20,.94);color:#fff;border-radius:14px;padding:14px;box-shadow:0 8px 30px #0008}
+.panel h2{font-size:17px;margin:0 0 8px}.panel p{font-size:12px;color:#bbb;margin:5px 0 12px;line-height:1.5}
+input{width:100%;box-sizing:border-box;border:1px solid #555;background:#292929;color:#fff;border-radius:9px;padding:10px;margin-bottom:8px}
+button{border:0;border-radius:9px;padding:9px 11px;background:#2f7d32;color:#fff;font-weight:700;margin:2px;cursor:pointer}
+button.alt{background:#444}.row{display:flex;align-items:center;gap:8px;margin-top:8px}.row label{font-size:12px;white-space:nowrap}
+input[type=range]{margin:0}.badge{font-size:11px;color:#9fe6a0;margin-top:8px}
+.map-type{display:flex;gap:6px;margin:0 0 10px}.map-type button{flex:1;margin:0;background:#3b3b3b;border:1px solid #666;min-height:40px}
+.map-type button.active{background:#1976d2;border-color:#64b5f6}
+.actions{display:flex;flex-wrap:wrap;gap:3px}
+.popup-title{font-size:16px;font-weight:800;margin-bottom:6px;direction:rtl}.popup-coords{font-size:12px;line-height:1.6;direction:ltr;text-align:left;margin-bottom:8px}
+.map-actions{display:flex;gap:6px;flex-wrap:wrap;direction:rtl}.map-btn{display:inline-block;text-decoration:none;border-radius:8px;padding:8px 10px;color:#fff;font-weight:800;font-size:12px;cursor:pointer}.google{background:#1976d2}.copy{background:#555;border:0}
+.maplibregl-popup-content{border-radius:10px}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="panel">
+<h2>🗺️ خريطة المعدات — نسخة اختبار خفيفة</h2>
+<p>هذه نسخة تجريبية باستخدام MapLibre بدل Leaflet لاختبار أداء الجوال. الصفحة الأساسية لا تتأثر.</p>
+<div class="map-type">
+<button id="streetBtn" class="active">🗺️ عادية</button>
+<button id="satBtn">🛰️ أقمار</button>
+</div>
+<input id="search" placeholder="ابحث عن رقم المعدة مثل 17716 أو 871">
+<div class="actions"><button id="find">بحث</button><button class="alt" id="fit">المعدات</button><button class="alt" id="cadBtn">إظهار CAD</button></div>
+<div class="row"><label>شفافية CAD</label><input id="opacity" type="range" min="0" max="100" value="55"></div>
+<div class="badge" id="status">جاري تجهيز الخريطة…</div>
+</div>
+
+<script src="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.js"></script>
+<script>
+const statusEl=document.getElementById('status');
+const streetStyle={
+version:8,
+sources:{
+osm:{type:'raster',tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256,attribution:'© OpenStreetMap contributors'}
+},
+layers:[{id:'osm',type:'raster',source:'osm'}]
+};
+const satelliteStyle={
+version:8,
+sources:{
+sat:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,attribution:'Tiles © Esri'}
+},
+layers:[{id:'sat',type:'raster',source:'sat'}]
+};
+
+const map=new maplibregl.Map({
+container:'map',
+style:streetStyle,
+center:[45.97,28.43],
+zoom:12,
+maxZoom:20,
+attributionControl:true
+});
+map.addControl(new maplibregl.NavigationControl({showCompass:false}),'top-left');
+
+let equipment=[];
+let selected=null;
+let cadVisible=false;
+
+map.on('load',async()=>{
+try{
+const r=await fetch('data/equipment-lookup.json',{cache:'force-cache'});
+const data=await r.json();
+const records=data.records||{};
+const features=[];
+Object.keys(records).forEach(key=>{
+(records[key]||[]).forEach(row=>{
+const name=row[0],lat=+row[1],lon=+row[2];
+if(!Number.isFinite(lat)||!Number.isFinite(lon))return;
+features.push({type:'Feature',geometry:{type:'Point',coordinates:[lon,lat]},properties:{name:String(name),key:String(key)}});
+});
+});
+equipment=features;
+map.addSource('equipment',{type:'geojson',data:{type:'FeatureCollection',features},cluster:true,clusterMaxZoom:15,clusterRadius:45});
+map.addLayer({id:'clusters',type:'circle',source:'equipment',filter:['has','point_count'],paint:{
+'circle-radius':['step',['get','point_count'],18,20,22,100,27,500,32],
+'circle-color':['step',['get','point_count'],'#2f7d32',20,'#1976d2',100,'#d98b00',500,'#c62828'],
+'circle-stroke-color':'#fff','circle-stroke-width':1.5
+}});
+map.addLayer({id:'cluster-count',type:'symbol',source:'equipment',filter:['has','point_count'],layout:{
+'text-field':['get','point_count_abbreviated'],'text-size':12,'text-font':['Open Sans Bold']
+},paint:{'text-color':'#fff'}});
+map.addLayer({id:'equipment-points',type:'circle',source:'equipment',filter:['!',['has','point_count']],minzoom:12,paint:{
+'circle-radius':['interpolate',['linear'],['zoom'],12,3,16,5,19,7],
+'circle-color':'#1976d2','circle-stroke-color':'#fff','circle-stroke-width':1,'circle-opacity':.9
+}});
+map.addLayer({id:'equipment-labels',type:'symbol',source:'equipment',minzoom:16,layout:{
+'text-field':['get','name'],'text-size':11,'text-offset':[0,1.15],'text-anchor':'top','text-allow-overlap':false,'text-ignore-placement':false
+},paint:{'text-color':'#111','text-halo-color':'#fff','text-halo-width':1.5}});
+map.on('click','clusters',e=>{
+const f=map.queryRenderedFeatures(e.point,{layers:['clusters']})[0];
+map.getSource('equipment').getClusterExpansionZoom(f.properties.cluster_id,(err,zoom)=>{
+if(!err)map.easeTo({center:f.geometry.coordinates,zoom});
+});
+});
+map.on('click','equipment-points',e=>{
+const f=e.features[0];showPopup(f.properties.name,f.geometry.coordinates[1],f.geometry.coordinates[0]);
+});
+['clusters','equipment-points'].forEach(layer=>map.on('mouseenter',layer,()=>map.getCanvas().style.cursor='pointer'));
+['clusters','equipment-points'].forEach(layer=>map.on('mouseleave',layer,()=>map.getCanvas().style.cursor=''));
+statusEl.textContent='تم تحميل '+features.length.toLocaleString('en-US')+' نقطة — جرب التحريك والتكبير الآن.';
+const bounds=features.reduce((b,f)=>b.extend(f.geometry.coordinates),new maplibregl.LngLatBounds());
+if(!bounds.isEmpty())map.fitBounds(bounds,{padding:50,maxZoom:14,duration:0});
+}catch(e){console.error(e);statusEl.textContent='تعذر تحميل قاعدة بيانات المعدات.'}
+});
+
+function showPopup(name,lat,lon){
+const mapsUrl='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(lat+','+lon);
+new maplibregl.Popup({maxWidth:'300px'}).setLngLat([lon,lat]).setHTML(
+'<div class="popup-title">'+escapeHtml(name)+'</div>'+
+'<div class="popup-coords">Lat: '+lat.toFixed(6)+'<br>Lon: '+lon.toFixed(6)+'</div>'+
+'<div class="map-actions"><a class="map-btn google" href="'+mapsUrl+'" target="_blank" rel="noopener noreferrer">📍 Google Maps</a>'+
+'<button class="map-btn copy" onclick="copyCoords('+lat+','+lon+')">📋 نسخ</button></div>'
+).addTo(map);
+}
+function copyCoords(lat,lon){
+const v=lat.toFixed(6)+', '+lon.toFixed(6);
+navigator.clipboard?.writeText(v).then(()=>statusEl.textContent='تم نسخ الإحداثيات: '+v).catch(()=>statusEl.textContent='الإحداثيات: '+v);
+}
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+
+function setStyle(style){
+const center=map.getCenter(),zoom=map.getZoom();
+map.setStyle(style);
+map.once('style.load',()=>{
+map.setCenter(center);map.setZoom(zoom);
+statusEl.textContent='تم تغيير نوع الخريطة.';
+});
+}
+document.getElementById('streetBtn').onclick=()=>{setStyle(streetStyle);streetBtn.classList.add('active');satBtn.classList.remove('active')};
+document.getElementById('satBtn').onclick=()=>{setStyle(satelliteStyle);satBtn.classList.add('active');streetBtn.classList.remove('active')};
+
+document.getElementById('find').onclick=findEquipment;
+document.getElementById('search').addEventListener('keydown',e=>{if(e.key==='Enter')findEquipment()});
+function normalize(v){return String(v||'').toUpperCase().replace(/[\s\-_/.,:;()\[\]{}#\\]+/g,'')}
+function findEquipment(){
+const q=normalize(document.getElementById('search').value);if(!q)return;
+const hit=equipment.find(f=>normalize(f.properties.name)===q||normalize(f.properties.key)===q);
+if(!hit){statusEl.textContent='لم يتم العثور على المعدة المطلوبة.';return}
+const [lon,lat]=hit.geometry.coordinates;
+map.easeTo({center:[lon,lat],zoom:19,duration:600});showPopup(hit.properties.name,lat,lon);
+}
+
+document.getElementById('fit').onclick=()=>{
+if(!equipment.length)return;
+const b=equipment.reduce((x,f)=>x.extend(f.geometry.coordinates),new maplibregl.LngLatBounds());
+map.fitBounds(b,{padding:50,maxZoom:14});
+};
+
+function addCad(){
+if(map.getSource('cad'))return;
+map.addSource('cad',{type:'image',url:'data/feeders/full-drawing.svg',coordinates:[[45.935,28.465],[45.995,28.465],[45.995,28.365],[45.935,28.365]]});
+map.addLayer({id:'cad-layer',type:'raster',source:'cad',paint:{'raster-opacity':+document.getElementById('opacity').value/100}});
+}
+document.getElementById('cadBtn').onclick=()=>{
+if(!cadVisible){addCad();cadVisible=true;document.getElementById('cadBtn').textContent='إخفاء CAD';statusEl.textContent='تم تشغيل CAD — إذا ظهر تعليق فهذا يعني أن ملف CAD هو الحمل الرئيسي.'}
+else{map.setLayoutProperty('cad-layer','visibility','none');cadVisible=false;document.getElementById('cadBtn').textContent='إظهار CAD';statusEl.textContent='تم إخفاء CAD.'}
+};
+document.getElementById('opacity').oninput=e=>{if(map.getLayer('cad-layer'))map.setPaintProperty('cad-layer','raster-opacity',+e.target.value/100)};
+</script>
+</body>
+</html>
