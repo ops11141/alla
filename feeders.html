@@ -578,38 +578,28 @@ onclick="loadDatabase()"
 </section>
 
 
-<!-- الرسم الكامل الأصلي -->
+<!-- قارئ DWG الداخلي -->
 <section class="card" id="fullDrawingSection">
 <div class="results-header">
 <div>
 <h2 style="margin-bottom:6px">📐 الرسم الكهربائي الكامل</h2>
-<div class="muted">قارئ متجهي خفيف للرسم الأصلي — بدون إعادة تحميل DWG على الجوال.</div>
+<div class="muted">قارئ DWG داخلي يعمل داخل الموقع نفسه، مع البحث داخل النصوص والتكبير والتحريك.</div>
 </div>
 <div class="drawing-actions">
-<button class="btn btn-light" type="button" onclick="resetVectorView()">↻ إعادة ضبط الرسم</button>
+<a class="btn btn-light" href="cad-viewer/index.html?file=../cad/FINAL%20DISPATCH%20-%20UPDATE.dwg&open=cad" target="_blank" rel="noopener">فتح القارئ كاملًا</a>
 <a class="btn btn-green" href="cad/FINAL%20DISPATCH%20-%20UPDATE.dwg" target="_blank" rel="noopener">فتح ملف DWG</a>
 </div>
 </div>
 
-<div class="vector-search-bar">
-<input id="vectorSearchInput" type="search" placeholder="🔎 ابحث داخل الرسم: F-8.13 أو رقم المعدة..." autocomplete="off" dir="ltr">
-<button class="btn btn-green" type="button" onclick="searchVectorDrawing()">بحث</button>
-<button class="btn btn-light" type="button" onclick="vectorSearchNext()">التالي</button>
-<span id="vectorSearchStatus" class="muted">جاري تجهيز القارئ...</span>
+<div id="fullDrawingStatus" class="status">جاري تحميل قارئ DWG...</div>
+<div class="vector-drawing-viewport" style="height:75vh;min-height:520px">
+  <iframe id="vectorDrawingFrame" src="cad-viewer/index.html?file=../cad/FINAL%20DISPATCH%20-%20UPDATE.dwg&open=cad" title="قارئ DWG الداخلي" loading="eager" allow="fullscreen"></iframe>
 </div>
-
-<div id="fullDrawingStatus" class="status loading">جاري تجهيز الرسم المتجهي...</div>
-<div id="vectorDrawingViewport" class="vector-drawing-viewport">
-  <iframe id="vectorDrawingFrame" src="data/feeders/full-drawing.svg" title="الرسم الكهربائي الكامل" loading="eager" allowfullscreen></iframe>
-  <div id="vectorDrawingFallback" class="vector-fallback" hidden>
-    جاري تحميل الرسم المتجهي...
-  </div>
-</div>
-<div class="drawing-help">الرسم هنا Vector ويحافظ على وضوح الخطوط عند التكبير. استخدم عجلة الماوس أو أزرار التكبير، واسحب داخل الرسم للتحريك. البحث يحدد النص داخل الرسم مباشرة.</div>
+<div class="drawing-help">استخدم مربع البحث داخل القارئ للعثور على F-8.13 أو أي نص موجود في الرسم. يدعم التكبير والتحريك على الكمبيوتر والجوال.</div>
 
 <section class="card equipment-lookup" id="equipmentLookupSection">
   <h3>📍 البحث عن موقع المعدة</h3>
-  <div class="muted">اكتب رقم المعدة وأنت داخل الرسم، وسأعرض لك الموقع والإحداثيات من نفس قاعدة بيانات صفحة «مواقع المعدات» بدون الانتقال لصفحة المعدات.</div>
+  <div class="muted">اكتب رقم المعدة وأنت داخل الرسم، وسأعرض لك الموقع والإحداثيات من نفس قاعدة بيانات صفحة «مواقع المعدات».</div>
   <div class="equipment-row" style="margin-top:10px">
     <input id="equipmentLookupInput" type="search" inputmode="search" placeholder="مثال: 871 أو 650-007 أو EOS-871" autocomplete="off">
     <button class="btn btn-green" type="button" onclick="searchEquipmentLocation()">📍 عرض الموقع</button>
