@@ -53,7 +53,7 @@ input[type=range]{margin:0}
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const map=L.map('map',{zoomControl:true}).setView([28.43,45.97],12);
+const map=L.map('map',{zoomControl:true,preferCanvas:true}).setView([28.43,45.97],12);
 const street=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'© OpenStreetMap contributors'}).addTo(map);
 const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri'});
 const streetBtn=document.getElementById('streetBtn');
