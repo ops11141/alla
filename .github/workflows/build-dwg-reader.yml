@@ -29,8 +29,7 @@ jobs:
           from pathlib import Path
           p = Path('cad-viewer/viewer.js')
           s = p.read_text(encoding='utf-8-sig')
-          # Correct INSERT placement for DWG blocks: block definitions are local to their
-          # block base point, so subtract that base point before applying insertion/scale.
+          # Correct INSERT placement: libredwg exposes INSERT insertion points in OCS.
           old_ref = """function referenceMatrices(entity, block) {
   const matrices = [];
   const rows = Math.max(1, Math.min(entity.rowCount || 1, 100));
@@ -45,16 +44,59 @@ jobs:
   }
   return matrices;
 }"""
-          new_ref = """function referenceMatrices(entity, block) {
+          new_ref = """function ocsBasis(extrusionDirection) {
+  const nx = Number(extrusionDirection?.x);
+  const ny = Number(extrusionDirection?.y);
+  const nz = Number(extrusionDirection?.z);
+  const length = Math.hypot(nx, ny, nz);
+  const normal = length > 1e-12 ? { x: nx / length, y: ny / length, z: nz / length } : { x: 0, y: 0, z: 1 };
+  let ax;
+  if (Math.abs(normal.x) < 1 / 64 && Math.abs(normal.y) < 1 / 64) {
+    ax = { x: 0, y: 1, z: 0 };
+  } else {
+    const xy = Math.hypot(normal.x, normal.y);
+    ax = { x: -normal.y / xy, y: normal.x / xy, z: 0 };
+  }
+  const ay = {
+    x: normal.y * ax.z - normal.z * ax.y,
+    y: normal.z * ax.x - normal.x * ax.z,
+    z: normal.x * ax.y - normal.y * ax.x,
+  };
+  return { normal, ax, ay };
+}
+
+function ocsToWcsPoint(point, extrusionDirection) {
+  const { normal, ax, ay } = ocsBasis(extrusionDirection);
+  const x = Number(point?.x) || 0;
+  const y = Number(point?.y) || 0;
+  const z = Number(point?.z) || 0;
+  return {
+    x: x * ax.x + y * ay.x + z * normal.x,
+    y: x * ax.y + y * ay.y + z * normal.y,
+    z: x * ax.z + y * ay.z + z * normal.z,
+  };
+}
+
+function ocsToWcsVector(x, y, z, extrusionDirection) {
+  return ocsToWcsPoint({ x, y, z }, extrusionDirection);
+}
+
+function referenceMatrices(entity, block) {
   const baseX = Number(block?.basePoint?.x) || 0;
   const baseY = Number(block?.basePoint?.y) || 0;
+  const insertion = ocsToWcsPoint(entity.insertionPoint, entity.extrusionDirection);
+  const columnStep = ocsToWcsVector(Number(entity.columnSpacing) || 0, 0, 0, entity.extrusionDirection);
+  const rowStep = ocsToWcsVector(0, Number(entity.rowSpacing) || 0, 0, entity.extrusionDirection);
   const matrices = [];
   const rows = Math.max(1, Math.min(entity.rowCount || 1, 100));
   const columns = Math.max(1, Math.min(entity.columnCount || 1, 100));
   for (let row = 0; row < rows; row += 1) {
     for (let column = 0; column < columns; column += 1) {
       matrices.push(new DOMMatrix()
-        .translate(entity.insertionPoint.x + column * (entity.columnSpacing || 0), entity.insertionPoint.y + row * (entity.rowSpacing || 0))
+        .translate(
+          insertion.x + column * columnStep.x + row * rowStep.x,
+          insertion.y + column * columnStep.y + row * rowStep.y,
+        )
         .rotate((entity.rotation || 0) * 180 / Math.PI)
         .scale(entity.xScale || 1, entity.yScale || 1)
         .translate(-baseX, -baseY));
