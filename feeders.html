@@ -1779,16 +1779,16 @@ function openFullDrawing(){
         "https://raw.githubusercontent.com/ops11141/alla/main/cad/FINAL%20DISPATCH%20-%20UPDATE.dwg";
 
     const viewerUrl =
-        "https://dwgvieweronline.com/embed?url=" +
+        "https://iframe.sharecad.org/cadframe/load?url=" +
         encodeURIComponent(dwgUrl);
 status.className = "status loading";
-    status.textContent = "جاري فتح الرسم الأصلي عبر قارئ CAD...";
+    status.textContent = "جاري فتح الرسم الأصلي عبر قارئ ShareCAD الخفيف...";
 
     frame.src = viewerUrl;
 
     frame.onload = () => {
         status.className = "status";
-        status.textContent = "✅ تم فتح الرسم الأصلي. يمكنك التكبير والتحريك واستعراض الرسم.";
+        status.textContent = "✅ تم فتح الرسم الأصلي. يمكنك التكبير والتحريك واستعراض الرسم والطبقات.";
     };
 }
 
