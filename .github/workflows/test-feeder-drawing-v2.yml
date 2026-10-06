@@ -6,6 +6,7 @@ on:
     paths:
       - "cad/FINAL DISPATCH - UPDATE.dwg"
       - "tools/test-feeder-drawing-v2.py"
+      - "tools/build-drawing-search-assets.py"
       - ".github/workflows/test-feeder-drawing-v2.yml"
 
 permissions:
@@ -64,11 +65,15 @@ jobs:
         run: |
           python3 tools/render-mobile-overview.py
 
+      - name: Build searchable drawing focus assets
+        run: |
+          python3 tools/build-drawing-search-assets.py
+
       - name: Commit test drawing
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/feeders/drawings data/feeders/mobile-overview.jpg
+          git add data/feeders/drawings data/feeders/mobile-overview.jpg data/feeders/drawing-search.jpg data/feeders/drawing-search-index.json
           if git diff --cached --quiet; then
             echo "No drawing changes."
           else
