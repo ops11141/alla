@@ -32,19 +32,17 @@ jobs:
           tar -xf libredwg-0.14.tar.xz
           cd libredwg-0.14
 
-          # Build only the DWG -> DXF reader needed by this workflow.
-          # This avoids compiling the full LibreDWG tool suite.
-          cmake -S . -B build \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DBUILD_SHARED_LIBS=OFF \
-            -DLIBREDWG_DISABLE_WRITE=ON \
-            -DLIBREDWG_DISABLE_JSON=ON \
-            -DDISABLE_WERROR=ON \
-            -DENABLE_LTO=OFF
+          # LibreDWG 0.14 is an Autotools release (not CMake).
+          # Configure a minimal static build and compile with all runner CPUs.
+          ./configure \
+            --disable-shared \
+            --disable-bindings \
+            --disable-docs \
+            --disable-json
 
-          timeout 12m cmake --build build --target dwg2dxf --parallel 2
+          timeout 12m make -j"$(nproc)" dwg2dxf
 
-          sudo install -m 0755 build/dwg2dxf /usr/local/bin/dwg2dxf
+          sudo install -m 0755 programs/dwg2dxf /usr/local/bin/dwg2dxf
           command -v dwg2dxf
           dwg2dxf --version
 
