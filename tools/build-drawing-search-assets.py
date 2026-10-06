@@ -5,6 +5,12 @@ import math
 import ezdxf
 from ezdxf import bbox
 from ezdxf.addons.drawing import matplotlib
+from ezdxf.addons.drawing.properties import RenderContext
+from ezdxf.addons.drawing.frontend import Frontend
+from ezdxf.addons.drawing.matplotlib import MatplotlibBackend
+from ezdxf.addons.drawing.config import Configuration
+from ezdxf.addons.drawing.layout import LayoutProperties
+import matplotlib.pyplot as plt
 from PIL import Image
 
 DXF = Path("/tmp/final-dispatch.dxf")
@@ -90,35 +96,69 @@ for item in entries:
     seen.add(key)
     unique.append(item)
 
+# Render the drawing and, critically, capture the exact coordinate limits
+# that the renderer actually used. Using raw bbox.extents here can be wrong
+# for DXF drawings with paperspace/block/display extents, which would shift
+# search markers away from the real text.
+dpi = 120
+target_width_px = 6000
+ratio = (ymax - ymin) / max(xmax - xmin, 1e-9)
+fig_w = target_width_px / dpi
+fig_h = max(1.0, fig_w * ratio)
+
+fig = plt.figure(dpi=dpi, figsize=(fig_w, fig_h))
+ax = fig.add_axes((0, 0, 1, 1))
+ctx = RenderContext(doc)
+layout_properties = LayoutProperties.from_layout(msp)
+layout_properties.set_colors("#05080b", "#ffffff")
+backend = MatplotlibBackend(ax)
+Frontend(ctx, backend, Configuration()).draw_layout(
+    msp,
+    finalize=True,
+    layout_properties=layout_properties,
+)
+
+# MatplotlibBackend/Frontend has now established the exact visible world
+# coordinate window. Store it so browser markers use precisely the same
+# transform as the rendered pixels.
+render_xmin, render_xmax = ax.get_xlim()
+render_ymin, render_ymax = ax.get_ylim()
+
+fig.savefig(
+    SEARCH_IMAGE,
+    dpi=dpi,
+    facecolor=ax.get_facecolor(),
+    transparent=False,
+    pil_kwargs={"quality": 95, "optimize": True},
+)
+plt.close(fig)
+
+img = Image.open(SEARCH_IMAGE).convert("RGB")
+if img.width > target_width_px:
+    h = round(img.height * target_width_px / img.width)
+    img = img.resize((target_width_px, h), Image.Resampling.LANCZOS)
+img.save(SEARCH_IMAGE, "JPEG", quality=92, optimize=True, progressive=True)
+
 meta = {
-    "version": 1,
-    "format": "JPEG + coordinate overlay",
+    "version": 2,
+    "format": "JPEG + renderer coordinate overlay",
     "source": "cad/FINAL DISPATCH - UPDATE.dwg",
     "image": "data/feeders/drawing-search.jpg",
-    "width": 6000,
-    "extents": {"xmin": xmin, "ymin": ymin, "xmax": xmax, "ymax": ymax},
+    "width": img.width,
+    "height": img.height,
+    "extents": {
+        "xmin": float(render_xmin),
+        "ymin": float(render_ymin),
+        "xmax": float(render_xmax),
+        "ymax": float(render_ymax),
+    },
     "entries": unique,
 }
 
-SEARCH_INDEX.write_text(json.dumps(meta, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-
-# Render a higher-resolution full drawing for search/focus mode.
-# 6000 px wide is detailed enough for local zoom while remaining web-friendly.
-matplotlib.qsave(
-    msp,
-    str(SEARCH_IMAGE),
-    dpi=120,
-    size_inches=(50, 0),
-    bg="#05080b",
-    fg="#ffffff",
+SEARCH_INDEX.write_text(
+    json.dumps(meta, ensure_ascii=False, separators=(",", ":")),
+    encoding="utf-8",
 )
-
-img = Image.open(SEARCH_IMAGE).convert("RGB")
-max_w = 6000
-if img.width > max_w:
-    h = round(img.height * max_w / img.width)
-    img = img.resize((max_w, h), Image.Resampling.LANCZOS)
-img.save(SEARCH_IMAGE, "JPEG", quality=88, optimize=True, progressive=True)
 
 print(f"Search image: {img.width}x{img.height}, {SEARCH_IMAGE.stat().st_size} bytes")
 print(f"Search entries: {len(unique)}")
