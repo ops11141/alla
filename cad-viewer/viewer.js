@@ -813,67 +813,49 @@ function consumeBatch(batch) {
   metrics.textContent = t('entityCount', { count: entityCount.toLocaleString() });
 }
 
-function ocsBasis(extrusionDirection) {
-  const nx = Number(extrusionDirection?.x);
-  const ny = Number(extrusionDirection?.y);
-  const nz = Number(extrusionDirection?.z);
-  const length = Math.hypot(nx, ny, nz);
-  const normal = length > 1e-12 ? { x: nx / length, y: ny / length, z: nz / length } : { x: 0, y: 0, z: 1 };
-  let ax;
-  if (Math.abs(normal.x) < 1 / 64 && Math.abs(normal.y) < 1 / 64) {
-    ax = { x: 0, y: 1, z: 0 };
-  } else {
-    const xy = Math.hypot(normal.x, normal.y);
-    ax = { x: -normal.y / xy, y: normal.x / xy, z: 0 };
-  }
-  const ay = {
-    x: normal.y * ax.z - normal.z * ax.y,
-    y: normal.z * ax.x - normal.x * ax.z,
-    z: normal.x * ax.y - normal.y * ax.x,
-  };
-  return { normal, ax, ay };
-}
+function blockGeometryBasePoint(block) {
+  const bp = block?.basePoint;
+  if (!bp || !Number.isFinite(bp.x) || !Number.isFinite(bp.y)) return { x: 0, y: 0 };
 
-function ocsToWcsPoint(point, extrusionDirection) {
-  const { normal, ax, ay } = ocsBasis(extrusionDirection);
-  const x = Number(point?.x) || 0;
-  const y = Number(point?.y) || 0;
-  const z = Number(point?.z) || 0;
-  return {
-    x: x * ax.x + y * ay.x + z * normal.x,
-    y: x * ax.y + y * ay.y + z * normal.y,
-    z: x * ax.z + y * ay.z + z * normal.z,
-  };
-}
+  const boxes = Object.values(block.directBounds || {}).filter((box) =>
+    box && Number.isFinite(box.minX) && Number.isFinite(box.minY)
+    && Number.isFinite(box.maxX) && Number.isFinite(box.maxY)
+  );
+  if (!boxes.length) return { x: 0, y: 0 };
 
-function ocsToWcsVector(x, y, z, extrusionDirection) {
-  return ocsToWcsPoint({ x, y, z }, extrusionDirection);
+  const minX = Math.min(...boxes.map((box) => box.minX));
+  const minY = Math.min(...boxes.map((box) => box.minY));
+  const maxX = Math.max(...boxes.map((box) => box.maxX));
+  const maxY = Math.max(...boxes.map((box) => box.maxY));
+  const span = Math.max(maxX - minX, maxY - minY, 1);
+
+  // Only subtract the block base point when it belongs to the block's
+  // local geometry. This avoids double-translating blocks whose geometry
+  // is already expressed in local coordinates by the DWG converter.
+  const margin = span * 2;
+  const nearX = bp.x >= minX - margin && bp.x <= maxX + margin;
+  const nearY = bp.y >= minY - margin && bp.y <= maxY + margin;
+  return nearX && nearY ? { x: bp.x, y: bp.y } : { x: 0, y: 0 };
 }
 
 function referenceMatrices(entity, block) {
-  const baseX = Number(block?.basePoint?.x) || 0;
-  const baseY = Number(block?.basePoint?.y) || 0;
-  const extrusion = entity.extrusionDirection;
-  const insertion = ocsToWcsPoint(entity.insertionPoint, extrusion);
-  const columnStep = ocsToWcsVector(Number(entity.columnSpacing) || 0, 0, 0, extrusion);
-  const rowStep = ocsToWcsVector(0, Number(entity.rowSpacing) || 0, 0, extrusion);
+  const base = blockGeometryBasePoint(block);
+  if (entity.type === 'DIMENSION') return [new DOMMatrix().translate(-base.x, -base.y)];
   const matrices = [];
   const rows = Math.max(1, Math.min(entity.rowCount || 1, 100));
   const columns = Math.max(1, Math.min(entity.columnCount || 1, 100));
   for (let row = 0; row < rows; row += 1) {
     for (let column = 0; column < columns; column += 1) {
       matrices.push(new DOMMatrix()
-        .translate(
-          insertion.x + column * columnStep.x + row * rowStep.x,
-          insertion.y + column * columnStep.y + row * rowStep.y,
-        )
+        .translate(entity.insertionPoint.x + column * (entity.columnSpacing || 0), entity.insertionPoint.y + row * (entity.rowSpacing || 0))
         .rotate((entity.rotation || 0) * 180 / Math.PI)
         .scale(entity.xScale || 1, entity.yScale || 1)
-        .translate(-baseX, -baseY));
+        .translate(-base.x, -base.y));
     }
   }
   return matrices;
 }
+
 function materializeBlock(name, stack = new Set()) {
   const block = blocks.get(name);
   if (!block) return null;
