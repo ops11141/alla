@@ -15,8 +15,6 @@ input{width:100%;box-sizing:border-box;border:1px solid #555;background:#292929;
 button{border:0;border-radius:9px;padding:9px 11px;background:#2f7d32;color:#fff;font-weight:700;margin:2px;cursor:pointer}
 button.alt{background:#444}.row{display:flex;align-items:center;gap:8px;margin-top:8px}.row label{font-size:12px;white-space:nowrap}
 input[type=range]{margin:0}.badge{font-size:11px;color:#9fe6a0;margin-top:8px}
-.map-type{display:flex;gap:6px;margin:0 0 10px}.map-type button{flex:1;margin:0;background:#3b3b3b;border:1px solid #666;min-height:40px}
-.map-type button.active{background:#1976d2;border-color:#64b5f6}
 .actions{display:flex;flex-wrap:wrap;gap:3px}
 .popup-title{font-size:16px;font-weight:800;margin-bottom:6px;direction:rtl}.popup-coords{font-size:12px;line-height:1.6;direction:ltr;text-align:left;margin-bottom:8px}
 .map-actions{display:flex;gap:6px;flex-wrap:wrap;direction:rtl}.map-btn{display:inline-block;text-decoration:none;border-radius:8px;padding:8px 10px;color:#fff;font-weight:800;font-size:12px;cursor:pointer}.google{background:#1976d2}.copy{background:#555;border:0}
@@ -28,10 +26,6 @@ input[type=range]{margin:0}.badge{font-size:11px;color:#9fe6a0;margin-top:8px}
 <div class="panel">
 <h2>🗺️ خريطة المعدات — نسخة اختبار خفيفة</h2>
 <p>هذه نسخة تجريبية باستخدام MapLibre بدل Leaflet لاختبار أداء الجوال. الصفحة الأساسية لا تتأثر.</p>
-<div class="map-type">
-<button id="streetBtn" class="active">🗺️ عادية</button>
-<button id="satBtn">🛰️ أقمار</button>
-</div>
 <input id="search" placeholder="ابحث عن رقم المعدة مثل 17716 أو 871">
 <div class="actions"><button id="find">بحث</button><button class="alt" id="fit">المعدات</button></div>
 <div class="badge" id="status">جاري تجهيز الخريطة…</div>
@@ -47,14 +41,6 @@ osm:{type:'raster',tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tile
 },
 layers:[{id:'osm',type:'raster',source:'osm'}]
 };
-const satelliteStyle={
-version:8,
-sources:{
-sat:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,attribution:'Tiles © Esri'}
-},
-layers:[{id:'sat',type:'raster',source:'sat'}]
-};
-
 const map=new maplibregl.Map({
 container:'map',
 style:streetStyle,
@@ -121,19 +107,6 @@ const v=lat.toFixed(6)+', '+lon.toFixed(6);
 navigator.clipboard?.writeText(v).then(()=>statusEl.textContent='تم نسخ الإحداثيات: '+v).catch(()=>statusEl.textContent='الإحداثيات: '+v);
 }
 function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
-
-function setStyle(style){
-const center=map.getCenter(),zoom=map.getZoom();
-map.setStyle(style);
-map.once('style.load',()=>{
-map.setCenter(center);map.setZoom(zoom);
-addCad();
-addEquipmentLayers();
-statusEl.textContent='تم تغيير نوع الخريطة — المعدات مستمرة.';
-});
-}
-document.getElementById('streetBtn').onclick=()=>{setStyle(streetStyle);streetBtn.classList.add('active');satBtn.classList.remove('active')};
-document.getElementById('satBtn').onclick=()=>{setStyle(satelliteStyle);satBtn.classList.add('active');streetBtn.classList.remove('active')};
 
 document.getElementById('find').onclick=findEquipment;
 document.getElementById('search').addEventListener('keydown',e=>{if(e.key==='Enter')findEquipment()});
