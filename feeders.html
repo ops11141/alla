@@ -457,14 +457,13 @@ th{
 
 
 .vector-search-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.vector-search-bar input{flex:1;min-width:220px;border:1px solid var(--border);border-radius:12px;padding:13px;font:inherit}.vector-drawing-viewport{position:relative;height:75vh;min-height:480px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#050505;touch-action:none}.vector-drawing-viewport iframe{width:100%;height:100%;display:block;border:0;background:#050505}.vector-fallback{position:absolute;inset:0;display:grid;place-items:center;color:#ddd;background:#050505}.vector-search-bar .btn{width:auto}.vector-search-bar .muted{min-width:180px}@media(max-width:700px){.vector-drawing-viewport{height:70vh;min-height:420px}.vector-search-bar .btn{width:auto}.vector-search-bar{align-items:stretch}.vector-search-bar input{min-width:160px}}
-.drawing-export{position:absolute;top:12px;right:12px;z-index:20;direction:rtl}
-.drawing-export>button{min-width:132px;padding:10px 14px;border:1px solid rgba(255,255,255,.22);border-radius:12px;background:rgba(7,95,73,.94);color:#fff;font-weight:800;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.28);backdrop-filter:blur(5px)}
-.drawing-export-menu{display:none;margin-top:7px;min-width:190px;padding:7px;border-radius:13px;background:rgba(18,22,21,.97);border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 26px rgba(0,0,0,.35)}
-.drawing-export.open .drawing-export-menu{display:grid;gap:5px}
-.drawing-export-menu button{border:0;border-radius:9px;padding:10px 11px;background:#26312e;color:#fff;text-align:right;font:inherit;font-weight:700;cursor:pointer}
-.drawing-export-menu button:hover{background:#33433e}
+.drawing-export-top{position:relative;z-index:30;white-space:nowrap}
+.drawing-export-menu-top{display:none;position:absolute;z-index:50;top:calc(100% + 7px);left:0;min-width:190px;padding:7px;border-radius:13px;background:rgba(18,22,21,.97);border:1px solid rgba(255,255,255,.18);box-shadow:0 10px 26px rgba(0,0,0,.35)}
+.drawing-export-menu-top.open{display:grid;gap:5px}
+.drawing-export-menu-top button{border:0;border-radius:9px;padding:10px 11px;background:#26312e;color:#fff;text-align:right;font:inherit;font-weight:700;cursor:pointer}
+.drawing-export-menu-top button:hover{background:#33433e}
 .drawing-export-status{display:none;margin-top:6px;padding:7px 9px;border-radius:9px;background:rgba(0,0,0,.82);color:#fff;font-size:11px;line-height:1.5;max-width:230px}
-@media(max-width:700px){.drawing-export{top:8px;right:8px}.drawing-export>button{min-width:118px;padding:9px 11px;font-size:13px}.drawing-export-menu{min-width:175px}}
+@media(max-width:700px){.drawing-export-top{min-width:118px;padding:9px 11px;font-size:13px}.drawing-export-menu-top{min-width:175px}}
 
 </style>
 </head>
@@ -519,6 +518,16 @@ F-8.13 أو FDR#2.20 أو BSP.F-15.
 
 <div class="search-area">
 
+<button
+class="btn btn-green drawing-export-top"
+type="button"
+onclick="toggleDrawingExportMenu()"
+aria-haspopup="menu"
+aria-expanded="false"
+>
+📸 تصوير الرسم
+</button>
+
 <input
 id="search"
 type="search"
@@ -532,6 +541,12 @@ onclick="clearSearch()"
 >
 مسح البحث
 </button>
+
+<div class="drawing-export-menu drawing-export-menu-top" id="drawingExportTopMenu" role="menu" aria-label="خيارات تصوير الرسم">
+  <button type="button" onclick="exportCurrentDrawingPNG()">🖼️ PNG عالي الجودة</button>
+  <button type="button" onclick="exportCurrentDrawingSVG()">📐 SVG متجهي</button>
+  <button type="button" onclick="shareCurrentDrawing()">📤 مشاركة الرسم</button>
+</div>
 
 </div>
 
@@ -602,15 +617,6 @@ onclick="loadDatabase()"
 
 <div id="fullDrawingStatus" class="status">جاري تحميل قارئ DWG...</div>
 <div class="vector-drawing-viewport" style="height:75vh;min-height:520px">
-  <div class="drawing-export" id="drawingExport">
-    <button type="button" onclick="toggleDrawingExportMenu()" aria-haspopup="menu" aria-expanded="false">📸 تصدير الرسم</button>
-    <div class="drawing-export-menu" role="menu" aria-label="خيارات تصدير الرسم">
-      <button type="button" onclick="exportCurrentDrawingPNG()">🖼️ PNG عالي الجودة</button>
-      <button type="button" onclick="exportCurrentDrawingSVG()">📐 SVG متجهي</button>
-      <button type="button" onclick="shareCurrentDrawing()">📤 مشاركة الرسم</button>
-    </div>
-    <div class="drawing-export-status" id="drawingExportStatus" aria-live="polite"></div>
-  </div>
   <iframe id="vectorDrawingFrame" src="cad-viewer/index.html?file=../cad/FINAL%20DISPATCH%20-%20UPDATE.dwg&open=cad" title="قارئ DWG الداخلي" loading="eager" allow="fullscreen"></iframe>
 </div>
 <div class="drawing-help">استخدم مربع البحث داخل القارئ للعثور على F-8.13 أو أي نص موجود في الرسم. يدعم التكبير والتحريك على الكمبيوتر والجوال.</div>
@@ -1838,18 +1844,18 @@ function initVectorDrawing(){
   },15000);
 }
 function toggleDrawingExportMenu(){
-  const box=document.getElementById("drawingExport");
-  const button=box?.querySelector(":scope > button");
-  if(!box) return;
-  const open=box.classList.toggle("open");
+  const menu=document.getElementById("drawingExportTopMenu");
+  const button=document.querySelector(".drawing-export-top");
+  if(!menu) return;
+  const open=menu.classList.toggle("open");
   if(button) button.setAttribute("aria-expanded",open?"true":"false");
 }
 
 document.addEventListener("click",e=>{
-  const box=document.getElementById("drawingExport");
-  if(box && !box.contains(e.target)){
-    box.classList.remove("open");
-    const button=box.querySelector(":scope > button");
+  const menu=document.getElementById("drawingExportTopMenu");
+  const button=document.querySelector(".drawing-export-top");
+  if(menu && !menu.contains(e.target) && !button?.contains(e.target)){
+    menu.classList.remove("open");
     if(button) button.setAttribute("aria-expanded","false");
   }
 });
