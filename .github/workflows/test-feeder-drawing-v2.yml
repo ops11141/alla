@@ -33,13 +33,14 @@ jobs:
           cd libredwg-0.14
 
           # LibreDWG 0.14 is an Autotools release (not CMake).
-          # Configure a minimal static build and compile with all runner CPUs.
+          # Build the library first because programs/dwg2dxf depends on libredwg.la.
           ./configure \
             --disable-shared \
             --disable-bindings \
             --disable-docs \
             --disable-json
 
+          timeout 12m make -j"$(nproc)" -C src
           timeout 12m make -j"$(nproc)" -C programs dwg2dxf
 
           sudo install -m 0755 programs/dwg2dxf /usr/local/bin/dwg2dxf
