@@ -49,11 +49,45 @@ jobs:
 }"""
           if old_ref not in s:
               raise SystemExit('referenceMatrices marker not found in generated viewer')
-          new_ref = old_ref.replace(
-              "if (entity.type === 'DIMENSION') return [new DOMMatrix().translate(-(block.basePoint?.x || 0), -(block.basePoint?.y || 0))];",
-              "function blockGeometryBasePoint(block) {\\n  const bp = block?.basePoint;\\n  if (!bp || !Number.isFinite(bp.x) || !Number.isFinite(bp.y)) return { x: 0, y: 0 };\\n  const boxes = Object.values(block.directBounds || {}).filter((box) => box && Number.isFinite(box.minX) && Number.isFinite(box.minY) && Number.isFinite(box.maxX) && Number.isFinite(box.maxY));\\n  if (!boxes.length) return { x: 0, y: 0 };\\n  const minX = Math.min(...boxes.map((box) => box.minX));\\n  const minY = Math.min(...boxes.map((box) => box.minY));\\n  const maxX = Math.max(...boxes.map((box) => box.maxX));\\n  const maxY = Math.max(...boxes.map((box) => box.maxY));\\n  const span = Math.max(maxX - minX, maxY - minY, 1);\\n  const margin = span * 0.5;\\n  const nearX = bp.x >= minX - margin && bp.x <= maxX + margin;\\n  const nearY = bp.y >= minY - margin && bp.y <= maxY + margin;\\n  return nearX && nearY ? { x: bp.x, y: bp.y } : { x: 0, y: 0 };\\n}\\n\\nfunction referenceMatrices(entity, block) {\\n  const base = blockGeometryBasePoint(block);\\n  if (entity.type === 'DIMENSION') return [new DOMMatrix().translate(-base.x, -base.y)];\\n  const matrices = [];\\n  const rows = Math.max(1, Math.min(entity.rowCount || 1, 100));\\n  const columns = Math.max(1, Math.min(entity.columnCount || 1, 100));\\n  for (let row = 0; row < rows; row += 1) {\\n    for (let column = 0; column < columns; column += 1) {\\n      matrices.push(new DOMMatrix().translate(entity.insertionPoint.x + column * (entity.columnSpacing || 0), entity.insertionPoint.y + row * (entity.rowSpacing || 0)).rotate((entity.rotation || 0) * 180 / Math.PI).scale(entity.xScale || 1, entity.yScale || 1).translate(-base.x, -base.y));\\n    }\\n  }\\n  return matrices;\\n}"
-          )
-          s = s.replace(old_ref, new_ref)
+          ref_start = s.index("function referenceMatrices(entity, block) {")
+          ref_end = s.index("\n}\n\nfunction materializeBlock", ref_start) + 2
+          new_ref = """function blockGeometryBasePoint(block) {
+  const bp = block?.basePoint;
+  if (!bp || !Number.isFinite(bp.x) || !Number.isFinite(bp.y)) return { x: 0, y: 0 };
+  const boxes = Object.values(block.directBounds || {}).filter((box) =>
+    box && Number.isFinite(box.minX) && Number.isFinite(box.minY)
+    && Number.isFinite(box.maxX) && Number.isFinite(box.maxY)
+  );
+  if (!boxes.length) return { x: 0, y: 0 };
+  const minX = Math.min(...boxes.map((box) => box.minX));
+  const minY = Math.min(...boxes.map((box) => box.minY));
+  const maxX = Math.max(...boxes.map((box) => box.maxX));
+  const maxY = Math.max(...boxes.map((box) => box.maxY));
+  const span = Math.max(maxX - minX, maxY - minY, 1);
+  const margin = span * 0.5;
+  const nearX = bp.x >= minX - margin && bp.x <= maxX + margin;
+  const nearY = bp.y >= minY - margin && bp.y <= maxY + margin;
+  return nearX && nearY ? { x: bp.x, y: bp.y } : { x: 0, y: 0 };
+}
+
+function referenceMatrices(entity, block) {
+  const base = blockGeometryBasePoint(block);
+  if (entity.type === 'DIMENSION') return [new DOMMatrix().translate(-base.x, -base.y)];
+  const matrices = [];
+  const rows = Math.max(1, Math.min(entity.rowCount || 1, 100));
+  const columns = Math.max(1, Math.min(entity.columnCount || 1, 100));
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      matrices.push(new DOMMatrix()
+        .translate(entity.insertionPoint.x + column * (entity.columnSpacing || 0), entity.insertionPoint.y + row * (entity.rowSpacing || 0))
+        .rotate((entity.rotation || 0) * 180 / Math.PI)
+        .scale(entity.xScale || 1, entity.yScale || 1)
+        .translate(-base.x, -base.y));
+    }
+  }
+  return matrices;
+}"""
+          s = s[:ref_start] + new_ref + s[ref_end:]
           # Keep the CADViewer coordinate convention unchanged.
           marker = "applyLanguage();\nresetViewer();\nresize();"
           patch = r'''
