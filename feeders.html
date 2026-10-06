@@ -447,11 +447,11 @@ th{
 @media(max-width:700px){.focus-viewport{height:58vh;min-height:320px}.focus-marker{width:30px;height:30px}.focus-marker.primary{width:44px;height:44px}}
 @media(max-width:600px){.find-result{align-items:flex-start;flex-direction:column}.find-row .btn{width:auto}}
 
-.mobile-drawing-image{display:none;width:100%;height:auto;min-width:100%;background:#05080b;touch-action:pinch-zoom}
+.mobile-drawing-image{display:none;width:100%;height:auto;min-width:100%;background:#05080b;touch-action:pan-x pan-y pinch-zoom;image-rendering:auto;-webkit-user-drag:none}
 @media(max-width:700px){
   .full-drawing-viewer{height:70vh!important;min-height:420px!important;overflow:auto!important;touch-action:pinch-zoom}
   .full-drawing-viewer #fullCadViewerFrame{display:none!important}
-  .mobile-drawing-image{display:block}
+  .mobile-drawing-image{display:block;max-width:none;width:100%;height:auto;object-fit:contain}
 }
 </style>
 </head>
@@ -614,9 +614,9 @@ onclick="loadDatabase()"
 <div id="fullDrawingStatus" class="status">جاري فتح الرسم الأصلي...</div>
 <div class="drawing-viewer full-drawing-viewer" style="height:75vh;min-height:480px">
 <iframe id="fullCadViewerFrame" title="الرسم الكهربائي الكامل" style="width:100%;height:100%;min-height:480px;border:0;background:#000"></iframe>
-<img id="mobileDrawingImage" class="mobile-drawing-image" alt="الرسم الكهربائي الكامل - نسخة خفيفة للجوال" src="data/feeders/mobile-overview.jpg">
+<img id="mobileDrawingImage" class="mobile-drawing-image" alt="الرسم الكهربائي الكامل - نسخة عالية الجودة للجوال" src="data/feeders/drawing-search.jpg">
 </div>
-<div class="drawing-help">يمكنك التكبير والتحريك والاطلاع على الرسم والطبقات مباشرة. قاعدة المغذيات والبيانات القديمة محفوظة أسفل الرسم.</div>
+<div class="drawing-help">يمكنك التكبير والتحريك والاطلاع على الرسم والطبقات مباشرة. استخدم البحث عن المغذي أو المعدة للوصول للمعلومة المطلوبة.</div>
 
 <section class="card equipment-lookup" id="equipmentLookupSection">
   <h3>📍 البحث عن موقع المعدة</h3>
@@ -634,7 +634,7 @@ onclick="loadDatabase()"
 
 <!-- النتائج -->
 
-<section class="card">
+<section class="card" id="feederResultsSection" hidden>
 
 <div class="results-header">
 
@@ -1753,7 +1753,7 @@ function openFullDrawing(){
 
     if(isMobile){
         if(frame) frame.src = "";
-        if(mobileImage) mobileImage.src = "data/feeders/mobile-overview.jpg?v=" + Date.now();
+        if(mobileImage) mobileImage.src = "data/feeders/drawing-search.jpg?v=" + Date.now();
         status.className = "status";
         status.textContent = "✅ تم فتح نسخة خفيفة من الرسم للجوال — بدون تحميل محرك DWG الثقيل.";
         return;
