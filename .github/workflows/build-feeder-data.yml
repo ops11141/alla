@@ -68,5 +68,24 @@ jobs:
             echo "No generated feeder database changes."
           else
             git commit -m "Build feeder database from DWG"
-            git push
+
+            # Another workflow/manual edit may have advanced main while this
+            # build was running. Rebase onto the latest main before pushing.
+            # This avoids non-fast-forward failures caused by concurrent pushes.
+            for attempt in 1 2 3; do
+              git fetch origin main
+              if git rebase origin/main; then
+                if git push origin HEAD:main; then
+                  echo "Generated feeder database pushed successfully."
+                  exit 0
+                fi
+              fi
+
+              git rebase --abort 2>/dev/null || true
+              echo "Push attempt $attempt failed; refreshing main and retrying..."
+              sleep 3
+            done
+
+            echo "Unable to push generated feeder database after 3 attempts."
+            exit 1
           fi
