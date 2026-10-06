@@ -418,6 +418,20 @@ th{
 .find-result strong{direction:ltr}
 .find-result small{color:var(--muted)}
 .find-empty{color:var(--muted);padding:8px}
+.drawing-focus{margin-top:14px;border:2px solid #c92727;border-radius:16px;background:#05080b;overflow:hidden}
+.drawing-focus[hidden]{display:none}
+.focus-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px 12px;background:#111;color:#fff}
+.focus-head strong{color:#fff}
+.focus-head .btn{padding:9px 12px}
+.focus-viewport{position:relative;height:62vh;min-height:360px;overflow:auto;background:#05080b;touch-action:pan-x pan-y pinch-zoom}
+.focus-canvas{position:relative;width:100%;min-width:100%;line-height:0}
+.focus-canvas img{display:block;width:100%;height:auto;user-select:none;-webkit-user-drag:none}
+.focus-markers{position:absolute;inset:0;pointer-events:none}
+.focus-marker{position:absolute;width:34px;height:34px;border:4px solid #ff2b2b;border-radius:50%;background:rgba(255,40,40,.16);box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 18px rgba(255,40,40,.8);transform:translate(-50%,-50%);z-index:2}
+.focus-marker.primary{width:48px;height:48px;border-width:5px;animation:focusPulse 1s ease-in-out 3}
+@keyframes focusPulse{50%{transform:translate(-50%,-50%) scale(1.22)}}
+.focus-hint{padding:9px 12px;background:#111;color:#ddd;font-size:12px}
+@media(max-width:700px){.focus-viewport{height:58vh;min-height:320px}.focus-marker{width:30px;height:30px}.focus-marker.primary{width:44px;height:44px}}
 @media(max-width:600px){.find-result{align-items:flex-start;flex-direction:column}.find-row .btn{width:auto}}
 
 .mobile-drawing-image{display:none;width:100%;height:auto;min-width:100%;background:#05080b;touch-action:pinch-zoom}
@@ -558,6 +572,20 @@ onclick="loadDatabase()"
   </div>
   <div id="drawingSearchStatus" class="find-empty"></div>
   <div id="drawingSearchResults" class="find-results"></div>
+
+  <div id="drawingFocus" class="drawing-focus" hidden>
+    <div class="focus-head">
+      <strong id="focusTitle">📍 تم تحديد موقع العنصر في الرسم</strong>
+      <button class="btn btn-light" type="button" onclick="closeDrawingFocus()">إغلاق التحديد</button>
+    </div>
+    <div id="focusViewport" class="focus-viewport">
+      <div id="focusCanvas" class="focus-canvas">
+        <img id="focusImage" alt="الرسم مع تحديد نتيجة البحث" draggable="false">
+        <div id="focusMarkers" class="focus-markers"></div>
+      </div>
+    </div>
+    <div id="focusHint" class="focus-hint">الدائرة الحمراء تحدد مكان الرقم داخل الرسم. يمكنك التحريك والتكبير.</div>
+  </div>
 </div>
 
 <div class="results-header">
@@ -1363,8 +1391,9 @@ function formatNumber(value){
 ------------------------------------------ */
 
 
-let drawingTextIndex = null;
+let drawingSearchIndex = null;
 let drawingSearchBusy = false;
+let drawingFocusMeta = null;
 
 function normalizeDrawingText(value){
   return String(value ?? "")
@@ -1374,18 +1403,21 @@ function normalizeDrawingText(value){
 }
 
 async function loadDrawingTextIndex(){
-  if(drawingTextIndex) return drawingTextIndex;
+  if(drawingSearchIndex) return drawingSearchIndex;
   if(drawingSearchBusy) return null;
   drawingSearchBusy = true;
   const status = document.getElementById("drawingSearchStatus");
-  if(status) status.textContent = "جاري تحميل فهرس النصوص من الرسم لأول مرة...";
+  if(status) status.textContent = "جاري تحميل فهرس الرسم الذكي...";
   try{
-    const response = await fetch("data/feeders/all_text_entities.json?v=" + Date.now(), {cache:"force-cache"});
+    const response = await fetch("data/feeders/drawing-search-index.json?v=" + Date.now(), {cache:"force-cache"});
     if(!response.ok) throw new Error("تعذر تحميل فهرس الرسم");
-    drawingTextIndex = await response.json();
-    if(!Array.isArray(drawingTextIndex)) throw new Error("صيغة فهرس النصوص غير صحيحة");
-    if(status) status.textContent = "تم تجهيز الفهرس. اكتب رقم المعدة أو المغذي.";
-    return drawingTextIndex;
+    const payload = await response.json();
+    if(!payload || !Array.isArray(payload.entries) || !payload.extents) {
+      throw new Error("صيغة فهرس الرسم غير صحيحة");
+    }
+    drawingSearchIndex = payload;
+    if(status) status.textContent = "تم تجهيز البحث الذكي داخل الرسم.";
+    return drawingSearchIndex;
   } finally {
     drawingSearchBusy = false;
   }
@@ -1406,9 +1438,11 @@ async function searchDrawing(){
   const status = document.getElementById("drawingSearchStatus");
   const resultsBox = document.getElementById("drawingSearchResults");
   const query = (input?.value || "").trim();
+
   if(!query){
     if(status) status.textContent = "اكتب رقم المعدة أو اسم المغذي.";
     if(resultsBox) resultsBox.innerHTML = "";
+    closeDrawingFocus();
     return;
   }
 
@@ -1416,27 +1450,24 @@ async function searchDrawing(){
   if(resultsBox) resultsBox.innerHTML = "";
 
   try{
-    const index = await loadDrawingTextIndex();
-    if(!index) return;
+    const payload = await loadDrawingTextIndex();
+    if(!payload) return;
 
     const results = [];
-    for(const item of index){
-      const text = String(item.text ?? item.value ?? item.name ?? "").trim();
-      const score = drawingSearchScore(text, query);
+    for(const item of payload.entries){
+      const score = drawingSearchScore(item.t, query);
       if(score > 0){
-        const pos = item.position || item.point || {};
         results.push({
-          text,
+          text: String(item.t || ""),
           score,
-          x: Number(pos.x ?? item.x),
-          y: Number(pos.y ?? item.y),
-          z: Number(pos.z ?? item.z),
-          layer: item.layer || ""
+          x: Number(item.x),
+          y: Number(item.y)
         });
       }
     }
 
     results.sort((a,b)=>b.score-a.score);
+
     const unique = [];
     const seen = new Set();
     for(const r of results){
@@ -1445,40 +1476,102 @@ async function searchDrawing(){
         seen.add(key);
         unique.push(r);
       }
-      if(unique.length >= 20) break;
+      if(unique.length >= 30) break;
     }
 
     if(!unique.length){
-      status.textContent = "لم يتم العثور على هذه المعلومة في نصوص الرسم.";
+      status.textContent = "لم يتم العثور على هذه المعلومة في الرسم.";
+      closeDrawingFocus();
       return;
     }
 
-    status.textContent = "تم العثور على " + unique.length + " نتيجة. اختر النتيجة المطلوبة.";
+    status.textContent = "تم العثور على " + unique.length + " موضع. اختر النتيجة المطلوبة ليتم نقلك إليها مباشرة.";
     resultsBox.innerHTML = unique.map((r,i)=>`
       <div class="find-result">
         <div>
           <strong>${escapeHTML(r.text)}</strong>
-          <small> • Layer: ${escapeHTML(r.layer || "غير محدد")} • X: ${formatNumber(r.x)} • Y: ${formatNumber(r.y)}</small>
+          <small> • X: ${formatNumber(r.x)} • Y: ${formatNumber(r.y)}</small>
         </div>
-        <button class="btn btn-light" type="button" onclick='showDrawingLocation(${JSON.stringify(r)})'>تحديد</button>
+        <button class="btn btn-green" type="button" onclick='showDrawingLocation(${JSON.stringify(r)})'>📍 اذهب للموقع</button>
       </div>
     `).join("");
   }catch(error){
     console.error(error);
-    if(status) status.textContent = "تعذر البحث في فهرس الرسم.";
+    if(status) status.textContent = "تعذر البحث في فهرس الرسم. حاول إعادة تحميل الصفحة.";
   }
 }
 
-function showDrawingLocation(result){
+async function showDrawingLocation(result){
   const status = document.getElementById("drawingSearchStatus");
-  if(status){
-    status.innerHTML =
-      "📍 <b>" + escapeHTML(result.text) + "</b> — " +
-      "X: " + formatNumber(result.x) + " ، Y: " + formatNumber(result.y) +
-      (result.layer ? " ، Layer: " + escapeHTML(result.layer) : "") +
-      "<br><span class='muted'>الموقع مستخرج من نفس ملف DWG. الخطوة التالية ستكون ربط هذه الإحداثيات مباشرة بأداة تكبير الرسم.</span>";
+  const focus = document.getElementById("drawingFocus");
+  const title = document.getElementById("focusTitle");
+  const hint = document.getElementById("focusHint");
+  const image = document.getElementById("focusImage");
+  const canvas = document.getElementById("focusCanvas");
+  const markers = document.getElementById("focusMarkers");
+  const viewport = document.getElementById("focusViewport");
+
+  if(!drawingSearchIndex){
+    await loadDrawingTextIndex();
   }
-  document.getElementById("fullDrawingSection")?.scrollIntoView({behavior:"smooth",block:"start"});
+  const ext = drawingSearchIndex?.extents;
+  if(!ext || !Number.isFinite(result.x) || !Number.isFinite(result.y)) return;
+
+  const xRatio = (result.x - Number(ext.xmin)) / (Number(ext.xmax) - Number(ext.xmin));
+  const yRatio = 1 - ((result.y - Number(ext.ymin)) / (Number(ext.ymax) - Number(ext.ymin)));
+  const clamp = v => Math.max(0, Math.min(1, v));
+  const px = clamp(xRatio) * 100;
+  const py = clamp(yRatio) * 100;
+
+  drawingFocusMeta = {px, py};
+
+  title.textContent = "📍 " + result.text + " — تم تحديد الموقع";
+  hint.textContent = "الدائرة الحمراء تحدد مكان الرقم داخل الرسم. جميع النتائج المطابقة تظهر بدوائر، ويمكنك التحريك والتكبير.";
+  if(status){
+    status.innerHTML = "📍 <b>" + escapeHTML(result.text) + "</b> — تم نقلك مباشرة إلى موضعه في الرسم.";
+  }
+
+  if(markers){
+    markers.innerHTML = "";
+    const marker = document.createElement("div");
+    marker.className = "focus-marker primary";
+    marker.style.left = px + "%";
+    marker.style.top = py + "%";
+    marker.title = result.text;
+    markers.appendChild(marker);
+  }
+
+  if(focus) focus.hidden = false;
+
+  const imageUrl = "data/feeders/drawing-search.jpg?v=" + Date.now();
+  if(image && image.src !== imageUrl) image.src = imageUrl;
+
+  const zoom = window.matchMedia("(max-width: 700px)").matches ? 3.8 : 2.6;
+  if(canvas) canvas.style.width = (zoom * 100) + "%";
+
+  const centerTarget = () => {
+    if(!viewport || !canvas) return;
+    const targetX = (px / 100) * canvas.clientWidth;
+    const targetY = (py / 100) * canvas.clientHeight;
+    viewport.scrollLeft = Math.max(0, targetX - viewport.clientWidth / 2);
+    viewport.scrollTop = Math.max(0, targetY - viewport.clientHeight / 2);
+  };
+
+  if(image){
+    if(image.complete) {
+      requestAnimationFrame(centerTarget);
+    } else {
+      image.onload = () => requestAnimationFrame(centerTarget);
+    }
+  }
+
+  focus?.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function closeDrawingFocus(){
+  const focus = document.getElementById("drawingFocus");
+  if(focus) focus.hidden = true;
+  drawingFocusMeta = null;
 }
 
 function openFullDrawing(){
