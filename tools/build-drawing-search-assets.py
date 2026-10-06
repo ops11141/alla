@@ -5,11 +5,10 @@ import math
 import ezdxf
 from ezdxf import bbox
 from ezdxf.addons.drawing import matplotlib
-from ezdxf.addons.drawing.properties import RenderContext
+from ezdxf.addons.drawing.properties import RenderContext, LayoutProperties
 from ezdxf.addons.drawing.frontend import Frontend
 from ezdxf.addons.drawing.matplotlib import MatplotlibBackend
 from ezdxf.addons.drawing.config import Configuration
-from ezdxf.addons.drawing.layout import LayoutProperties
 import matplotlib.pyplot as plt
 from PIL import Image
 
