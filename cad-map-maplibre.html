@@ -33,8 +33,7 @@ input[type=range]{margin:0}.badge{font-size:11px;color:#9fe6a0;margin-top:8px}
 <button id="satBtn">🛰️ أقمار</button>
 </div>
 <input id="search" placeholder="ابحث عن رقم المعدة مثل 17716 أو 871">
-<div class="actions"><button id="find">بحث</button><button class="alt" id="fit">المعدات</button><button class="alt" id="cadBtn">إظهار CAD</button></div>
-<div class="row"><label>شفافية CAD</label><input id="opacity" type="range" min="0" max="100" value="55"></div>
+<div class="actions"><button id="find">بحث</button><button class="alt" id="fit">المعدات</button></div>
 <div class="badge" id="status">جاري تجهيز الخريطة…</div>
 </div>
 
@@ -60,7 +59,7 @@ const map=new maplibregl.Map({
 container:'map',
 style:streetStyle,
 center:[45.97,28.43],
-zoom:12,
+zoom:10,
 maxZoom:20,
 attributionControl:true
 });
@@ -68,9 +67,10 @@ map.addControl(new maplibregl.NavigationControl({showCompass:false}),'top-left')
 
 let equipment=[];
 let selected=null;
-let cadVisible=false;
+let cadVisible=true;
 
 map.on('load',async()=>{
+addCad();
 try{
 const r=await fetch('data/equipment-lookup.json',{cache:'force-cache'});
 const data=await r.json();
@@ -137,6 +137,7 @@ const center=map.getCenter(),zoom=map.getZoom();
 map.setStyle(style);
 map.once('style.load',()=>{
 map.setCenter(center);map.setZoom(zoom);
+if(cadVisible)addCad();
 statusEl.textContent='تم تغيير نوع الخريطة.';
 });
 }
@@ -163,13 +164,8 @@ map.fitBounds(b,{padding:50,maxZoom:14});
 function addCad(){
 if(map.getSource('cad'))return;
 map.addSource('cad',{type:'image',url:'data/feeders/full-drawing.svg',coordinates:[[45.935,28.465],[45.995,28.465],[45.995,28.365],[45.935,28.365]]});
-map.addLayer({id:'cad-layer',type:'raster',source:'cad',paint:{'raster-opacity':+document.getElementById('opacity').value/100}});
+map.addLayer({id:'cad-layer',type:'raster',source:'cad',paint:{'raster-opacity':0.55}});
 }
-document.getElementById('cadBtn').onclick=()=>{
-if(!cadVisible){addCad();cadVisible=true;document.getElementById('cadBtn').textContent='إخفاء CAD';statusEl.textContent='تم تشغيل CAD — إذا ظهر تعليق فهذا يعني أن ملف CAD هو الحمل الرئيسي.'}
-else{map.setLayoutProperty('cad-layer','visibility','none');cadVisible=false;document.getElementById('cadBtn').textContent='إظهار CAD';statusEl.textContent='تم إخفاء CAD.'}
-};
-document.getElementById('opacity').oninput=e=>{if(map.getLayer('cad-layer'))map.setPaintProperty('cad-layer','raster-opacity',+e.target.value/100)};
 </script>
 </body>
 </html>
