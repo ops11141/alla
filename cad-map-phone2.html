@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>خريطة الهاتف - اختبار الأداء</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+html,body,#map{height:100%;margin:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#111}
+#map{direction:ltr}
+.panel{position:absolute;z-index:1000;top:12px;right:12px;width:min(360px,calc(100vw - 24px));background:rgba(20,20,20,.94);color:#fff;border-radius:14px;padding:14px;box-shadow:0 8px 30px #0008}
+.panel h2{font-size:17px;margin:0 0 10px}
+.panel p{font-size:12px;color:#bbb;margin:5px 0 12px;line-height:1.5}
+input{width:100%;box-sizing:border-box;border:1px solid #555;background:#292929;color:#fff;border-radius:9px;padding:10px;margin-bottom:8px}
+button{border:0;border-radius:9px;padding:9px 11px;background:#2f7d32;color:#fff;font-weight:700;margin:2px;cursor:pointer}
+button.alt{background:#444}
+.row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.row label{font-size:12px;white-space:nowrap}
+input[type=range]{margin:0}
+.badge{font-size:11px;color:#9fe6a0;margin-top:8px}
+.map-type{display:flex;gap:6px;margin:0 0 10px}
+.map-type button{flex:1;margin:0;background:#3b3b3b;border:1px solid #666;min-height:40px}
+.map-type button.active{background:#1976d2;border-color:#64b5f6}
+.equipment-label{background:rgba(255,255,255,.94);color:#111;border:1px solid rgba(0,0,0,.28);border-radius:5px;padding:2px 5px;font-size:11px;line-height:1.2;font-weight:800;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.35);direction:rtl;pointer-events:auto}
+.equipment-label:before{display:none}
+.equipment-label:hover{background:#fff;transform:scale(1.08)}
+.search-highlight{background:#ffd400;border:2px solid #111;color:#111;border-radius:6px;padding:3px 7px;font-size:13px;font-weight:900;box-shadow:0 2px 8px #0008}
+.popup-title{font-size:16px;font-weight:800;margin-bottom:6px;direction:rtl}
+.popup-coords{font-size:12px;line-height:1.6;direction:ltr;text-align:left;margin-bottom:8px}
+.map-actions{display:flex;gap:6px;flex-wrap:wrap;direction:rtl}
+.map-btn{display:inline-block;text-decoration:none;border-radius:8px;padding:8px 10px;color:#fff;font-weight:800;font-size:12px;cursor:pointer}
+.map-btn.google{background:#1976d2}.map-btn.copy{background:#555}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="panel">
+  <h2>🗺️ خريطة CAD + الخريطة الواقعية</h2>
+  <p>اختر طريقة عرض الخريطة، ثم كبّر لرؤية أرقام المعدات.</p>
+  <div class="map-type" aria-label="نوع الخريطة">
+    <button type="button" id="streetBtn" class="active">🗺️ الخريطة الافتراضية</button>
+    <button type="button" id="satBtn">🛰️ الخريطة الواقعية</button>
+  </div>
+  <input id="search" placeholder="ابحث عن رقم المعدة مثل 17716 أو 871">
+  <button id="find">بحث</button>
+  <button class="alt" id="fit">المعدات</button>
+  <div class="row">
+    <label>شفافية CAD</label>
+    <input id="opacity" type="range" min="0" max="100" value="55">
+  </div>
+  <div class="badge" id="status">جاري تحميل بيانات المعدات…</div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map=L.map('map',{zoomControl:true,preferCanvas:true}).setView([28.43,45.97],12);
+const street=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:20,attribution:'© OpenStreetMap contributors'}).addTo(map);
+const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri'});
+const streetBtn=document.getElementById('streetBtn');
+const satBtn=document.getElementById('satBtn');
+
+function setMapType(type){
+  if(type==='satellite'){
+    if(map.hasLayer(street)) map.removeLayer(street);
+    satellite.addTo(map);
+    satBtn.classList.add('active'); streetBtn.classList.remove('active');
+  }else{
+    if(map.hasLayer(satellite)) map.removeLayer(satellite);
+    street.addTo(map);
+    streetBtn.classList.add('active'); satBtn.classList.remove('active');
+  }
+}
+streetBtn.addEventListener('click',()=>setMapType('street'));
+satBtn.addEventListener('click',()=>setMapType('satellite'));
+
+let equipment=[];
+const markers=L.layerGroup().addTo(map);
+const labels=L.layerGroup().addTo(map);
+let labelRefreshTimer=null;
+let highlightedLabel=null;
+
+const cadBounds=[[28.365,45.935],[28.465,45.995]];
+let cadLayer=null;
+function addCad(){ /* CAD disabled in this diagnostic build to isolate mobile rendering load. */ }
+addCad();
+
+document.getElementById('opacity').oninput=e=>{
+  if(cadLayer) cadLayer.setOpacity(+e.target.value/100);
+};
+
+function equipmentPopup(name,lat,lon){
+  const mapsUrl='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(lat+','+lon);
+  return '<div class="popup-title">'+escapeHtml(name)+'</div>'+
+    '<div class="popup-coords">Lat: '+lat.toFixed(6)+'<br>Lon: '+lon.toFixed(6)+'</div>'+
+    '<div class="map-actions">'+
+    '<a class="map-btn google" href="'+mapsUrl+'" target="_blank" rel="noopener noreferrer">📍 فتح في Google Maps</a>'+
+    '<button class="map-btn copy" onclick="copyCoords('+lat+','+lon+')">📋 نسخ الإحداثيات</button>'+
+    '</div>';
+}
+function copyCoords(lat,lon){
+  const value=lat.toFixed(6)+', '+lon.toFixed(6);
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(value).then(()=>{document.getElementById('status').textContent='تم نسخ الإحداثيات: '+value}).catch(()=>fallbackCopy(value));
+  }else fallbackCopy(value);
+}
+function fallbackCopy(value){
+  const area=document.createElement('textarea'); area.value=value; document.body.appendChild(area); area.select();
+  try{document.execCommand('copy');document.getElementById('status').textContent='تم نسخ الإحداثيات: '+value}catch(e){document.getElementById('status').textContent='الإحداثيات: '+value}
+  area.remove();
+}
+
+fetch('data/equipment-lookup.json')
+.then(r=>r.json())
+.then(data=>{
+  const records=data.records||{};
+  Object.keys(records).forEach(key=>{
+    (records[key]||[]).forEach(row=>{
+      const name=row[0],lat=+row[1],lon=+row[2];
+      if(!Number.isFinite(lat)||!Number.isFinite(lon)) return;
+      const m=L.circleMarker([lat,lon],{radius:4,weight:1,fillOpacity:.85,bubblingMouseEvents:true});
+      m.bindPopup(equipmentPopup(name,lat,lon),{maxWidth:280});
+      m.options._equipmentKey=key; m.options._equipmentName=name; m.options._equipmentLat=lat; m.options._equipmentLon=lon;
+      markers.addLayer(m); equipment.push(m);
+    });
+  });
+  document.getElementById('status').textContent='تم تحميل '+equipment.length.toLocaleString('en-US')+' نقطة معدات. كبّر الخريطة لإظهار الأرقام.';
+  refreshLabels();
+  if(equipment.length) map.fitBounds(markers.getBounds().pad(.08));
+})
+.catch(e=>document.getElementById('status').textContent='تعذر تحميل قاعدة بيانات المعدات.');
+
+function refreshLabels(){
+  clearTimeout(labelRefreshTimer);
+  labelRefreshTimer=setTimeout(()=>{
+    labels.clearLayers();
+    if(map.getZoom()<16 || !equipment.length) return;
+    const bounds=map.getBounds().pad(.12);
+    const visible=equipment.filter(m=>bounds.contains(m.getLatLng()));
+    const list=visible.length>1200?visible.slice(0,1200):visible;
+    list.forEach(m=>{
+      const label=L.marker(m.getLatLng(),{interactive:true,keyboard:false,zIndexOffset:1000,icon:L.divIcon({className:'',html:'<span class="equipment-label">'+escapeHtml(m.options._equipmentName)+'</span>',iconSize:null,iconAnchor:[-7,9]})});
+      label.on('click',()=>{m.openPopup();map.setView(m.getLatLng(),Math.max(map.getZoom(),18));});
+      label.addTo(labels);
+    });
+    document.getElementById('status').textContent='الزوم '+map.getZoom()+' — ظاهر '+list.length.toLocaleString('en-US')+' رقمًا من '+visible.length.toLocaleString('en-US')+' نقطة ضمن الشاشة.';
+  },100);
+}
+map.on('zoomend moveend',refreshLabels);
+
+document.getElementById('find').onclick=findEquipment;
+document.getElementById('search').addEventListener('keydown',e=>{if(e.key==='Enter')findEquipment()});
+document.getElementById('fit').onclick=()=>{if(equipment.length){map.fitBounds(markers.getBounds().pad(.08));refreshLabels();}};
+
+function findEquipment(){
+  const q=normalize(document.getElementById('search').value);
+  if(!q)return;
+  const hit=equipment.find(m=>normalize(m.options._equipmentName)===q||normalize(m.options._equipmentKey)===q);
+  if(hit){
+    map.setView(hit.getLatLng(),19); hit.openPopup();
+    if(highlightedLabel) map.removeLayer(highlightedLabel);
+    highlightedLabel=L.marker(hit.getLatLng(),{zIndexOffset:3000,icon:L.divIcon({className:'',html:'<span class="search-highlight">'+escapeHtml(hit.options._equipmentName)+'</span>',iconSize:null,iconAnchor:[-8,11]})}).addTo(map);
+    setTimeout(()=>{if(highlightedLabel){map.removeLayer(highlightedLabel);highlightedLabel=null;refreshLabels();}},7000);
+  }else document.getElementById('status').textContent='لم يتم العثور على المعدة المطلوبة.';
+}
+function normalize(v){return String(v||'').toUpperCase().replace(/[\s\-_/.,:;()\[\]{}#\\]+/g,'')}
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+</script>
+</body>
+</html>
