@@ -7,6 +7,7 @@ on:
       - "cad/FINAL DISPATCH - UPDATE.dwg"
       - "tools/test-feeder-drawing-v2.py"
       - "tools/build-drawing-search-assets.py"
+      - "tools/render-mobile-overview.py"
       - ".github/workflows/test-feeder-drawing-v2.yml"
 
 permissions:
@@ -64,10 +65,13 @@ jobs:
       - name: Render lightweight mobile overview
         run: |
           python3 tools/render-mobile-overview.py
+          test -s data/feeders/mobile-overview.jpg
 
       - name: Build searchable drawing focus assets
         run: |
           python3 tools/build-drawing-search-assets.py
+          test -s data/feeders/drawing-search.jpg
+          test -s data/feeders/drawing-search-index.json
 
       - name: Commit test drawing
         run: |
@@ -77,7 +81,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No drawing changes."
           else
-            git commit -m "Publish complete feeder drawing"
+            git commit -m "Publish mobile high quality drawing assets"
             for attempt in 1 2 3; do
               git fetch origin main
               if git rebase origin/main && git push origin HEAD:main; then
