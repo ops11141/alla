@@ -822,15 +822,26 @@ function ocsBasis2d(extrusionDirection) {
     ? { x: nx / length, y: ny / length, z: nz / length }
     : { x: 0, y: 0, z: 1 };
 
-  // AutoCAD defines INSERT position, rotation and array spacing in OCS.
-  // Apply the OCS basis only after the block-local transform.
+  // Build the AutoCAD OCS basis with X/Y/Z preserving a right-handed
+  // coordinate system. For the normal plan case (0,0,1), this MUST be
+  // exactly X=(1,0,0), Y=(0,1,0); otherwise every INSERT is rotated 90°.
   let ax;
   if (Math.abs(normal.x) < 1 / 64 && Math.abs(normal.y) < 1 / 64) {
-    ax = { x: 0, y: normal.z >= 0 ? 1 : -1, z: 0 };
+    ax = {
+      x: normal.z >= 0 ? 1 : -1,
+      y: 0,
+      z: 0,
+    };
   } else {
     const xy = Math.hypot(normal.x, normal.y);
-    ax = { x: -normal.y / xy, y: normal.x / xy, z: 0 };
+    ax = {
+      x: -normal.y / xy,
+      y: normal.x / xy,
+      z: 0,
+    };
   }
+
+  // OCS Y = normal × OCS X.
   const ay = {
     x: normal.y * ax.z - normal.z * ax.y,
     y: normal.z * ax.x - normal.x * ax.z,
