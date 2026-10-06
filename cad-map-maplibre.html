@@ -40,19 +40,17 @@ input[type=range]{margin:0}.badge{font-size:11px;color:#9fe6a0;margin-top:8px}
 <script src="https://unpkg.com/maplibre-gl@5.13.0/dist/maplibre-gl.js"></script>
 <script>
 const statusEl=document.getElementById('status');
-const streetStyle={
-version:8,
-sources:{
-osm:{type:'raster',tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256,attribution:'© OpenStreetMap contributors'}
-},
-layers:[{id:'osm',type:'raster',source:'osm'}]
-};
-const satelliteStyle={
-version:8,
-sources:{
+const baseSources={
+osm:{type:'raster',tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],tileSize:256,attribution:'© OpenStreetMap contributors'},
 sat:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,attribution:'Tiles © Esri'}
-},
-layers:[{id:'sat',type:'raster',source:'sat'}]
+};
+const mapStyle={
+version:8,
+sources:baseSources,
+layers:[
+{id:'osm-base',type:'raster',source:'osm',layout:{visibility:'visible'}},
+{id:'sat-base',type:'raster',source:'sat',layout:{visibility:'none'}}
+]
 };
 
 const map=new maplibregl.Map({
@@ -141,18 +139,16 @@ navigator.clipboard?.writeText(v).then(()=>statusEl.textContent='تم نسخ ا�
 }
 function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
 
-function setStyle(style){
-const center=map.getCenter(),zoom=map.getZoom();
-map.setStyle(style);
-map.once('style.load',()=>{
-map.setCenter(center);map.setZoom(zoom);
-if(cadVisible)addCad();
-addEquipmentLayers();
-statusEl.textContent='تم تغيير نوع الخريطة.';
-});
+function setMapType(type){
+const isSat=type==='satellite';
+map.setLayoutProperty('osm-base','visibility',isSat?'none':'visible');
+map.setLayoutProperty('sat-base','visibility',isSat?'visible':'none');
+streetBtn.classList.toggle('active',!isSat);
+satBtn.classList.toggle('active',isSat);
+statusEl.textContent=isSat?'تم تشغيل الخريطة الفضائية — المعدات وCAD مستمران بالظهور.':'تم تشغيل الخريطة العادية — المعدات وCAD مستمران بالظهور.';
 }
-document.getElementById('streetBtn').onclick=()=>{setStyle(streetStyle);streetBtn.classList.add('active');satBtn.classList.remove('active')};
-document.getElementById('satBtn').onclick=()=>{setStyle(satelliteStyle);satBtn.classList.add('active');streetBtn.classList.remove('active')};
+document.getElementById('streetBtn').onclick=()=>setMapType('street');
+document.getElementById('satBtn').onclick=()=>setMapType('satellite');
 
 document.getElementById('find').onclick=findEquipment;
 document.getElementById('search').addEventListener('keydown',e=>{if(e.key==='Enter')findEquipment()});
