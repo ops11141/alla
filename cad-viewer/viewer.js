@@ -1653,9 +1653,14 @@ async function shareCurrentDrawingFromViewer() {
   }
 }
 
-document.querySelector('#toolCameraButton')?.addEventListener('click', (event) => {
+document.querySelector('#toolCameraButton')?.addEventListener('click', async (event) => {
   event.stopPropagation();
-  toggleCameraMenu();
+  closeCameraMenu();
+  try {
+    await captureCurrentDrawing();
+  } catch (error) {
+    console.error(error);
+  }
 });
 
 document.querySelector('#cameraPngButton')?.addEventListener('click', async (event) => {
