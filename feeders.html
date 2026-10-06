@@ -454,11 +454,7 @@ th{
 @media(max-width:600px){.find-result{align-items:flex-start;flex-direction:column}.find-row .btn{width:auto}}
 
 .mobile-drawing-image{display:none;width:100%;height:auto;min-width:100%;background:#05080b;touch-action:pan-x pan-y pinch-zoom;image-rendering:auto;-webkit-user-drag:none}
-@media(max-width:700px){
-  .full-drawing-viewer{height:70vh!important;min-height:420px!important;overflow:auto!important;touch-action:pinch-zoom}
-  .full-drawing-viewer #fullCadViewerFrame{display:none!important}
-  .mobile-drawing-image{display:block;max-width:none;width:100%;height:auto;object-fit:contain}
-}
+
 </style>
 </head>
 
@@ -595,9 +591,8 @@ onclick="loadDatabase()"
 <div id="fullDrawingStatus" class="status">جاري فتح الرسم الأصلي...</div>
 <div class="drawing-viewer full-drawing-viewer" style="height:75vh;min-height:480px">
 <iframe id="fullCadViewerFrame" title="الرسم الكهربائي الكامل" style="width:100%;height:100%;min-height:480px;border:0;background:#000"></iframe>
-<img id="mobileDrawingImage" class="mobile-drawing-image" alt="الرسم الكهربائي الكامل - نسخة عالية الجودة للجوال" src="data/feeders/drawing-search.jpg">
 </div>
-<div class="drawing-help">يمكنك التكبير والتحريك والاطلاع على الرسم والطبقات مباشرة. استخدم البحث عن المغذي أو المعدة للوصول للمعلومة المطلوبة.</div>
+<div class="drawing-help">يمكنك التكبير والتحريك والاطلاع على الرسم والطبقات مباشرة. وللبحث داخل الرسم استخدم أداة البحث داخل القارئ (Ctrl+F على الكمبيوتر).</div>
 
 <section class="card equipment-lookup" id="equipmentLookupSection">
   <h3>📍 البحث عن موقع المعدة</h3>
@@ -1762,11 +1757,17 @@ async function searchEquipmentLocation(){
 }
 
 function focusEquipmentOnDrawing(item){
-  const input = document.getElementById("drawingSearch");
-  if(!input) return;
-  input.value = item.tf;
-  searchDrawing();
-  document.getElementById("drawingSearch")?.scrollIntoView({behavior:"smooth",block:"center"});
+  const value = String(item?.tf || "").trim();
+  const status = document.getElementById("equipmentLookupStatus");
+  document.getElementById("fullDrawingSection")?.scrollIntoView({behavior:"smooth",block:"start"});
+  if(value){
+    try{
+      navigator.clipboard?.writeText(value);
+    }catch(_){}
+    if(status){
+      status.textContent = "تم نسخ رقم المعدة (" + value + "). افتح البحث داخل قارئ الرسم وابحث بالرقم.";
+    }
+  }
 }
 
 function openFullDrawing(){
@@ -1778,10 +1779,9 @@ function openFullDrawing(){
         "https://raw.githubusercontent.com/ops11141/alla/main/cad/FINAL%20DISPATCH%20-%20UPDATE.dwg";
 
     const viewerUrl =
-        "https://iframe.sharecad.org/cadframe/load?url=" +
+        "https://dwgvieweronline.com/embed?url=" +
         encodeURIComponent(dwgUrl);
-
-    status.className = "status loading";
+status.className = "status loading";
     status.textContent = "جاري فتح الرسم الأصلي عبر قارئ CAD...";
 
     frame.src = viewerUrl;
