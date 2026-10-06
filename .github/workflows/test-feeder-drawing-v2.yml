@@ -20,7 +20,7 @@ jobs:
             build-essential autoconf automake libtool pkg-config \
             libpcre2-dev libxml2-dev texinfo wget
           cd /tmp
-          wget -q https://ftp.gnu.org/pub/gnu/libredwg/libredwg-0.14.tar.xz
+          wget -q https://github.com/LibreDWG/libredwg/releases/download/0.14/libredwg-0.14.tar.xz
           tar -xf libredwg-0.14.tar.xz
           cd libredwg-0.14
           ./configure --disable-shared --disable-bindings --disable-docs
@@ -46,10 +46,19 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/feeders/test-drawings-v2
+          git add data/feeders/drawings
           if git diff --cached --quiet; then
             echo "No drawing changes."
           else
-            git commit -m "Test full feeder drawing v2"
-            git push
+            git commit -m "Publish complete feeder drawing"
+            for attempt in 1 2 3; do
+              git fetch origin main
+              if git rebase origin/main && git push origin HEAD:main; then
+                echo "Drawing pushed successfully."
+                exit 0
+              fi
+              git rebase --abort 2>/dev/null || true
+              sleep 3
+            done
+            exit 1
           fi
