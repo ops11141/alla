@@ -1533,12 +1533,28 @@ async function showDrawingLocation(result){
 
   if(markers){
     markers.innerHTML = "";
-    const marker = document.createElement("div");
-    marker.className = "focus-marker primary";
-    marker.style.left = px + "%";
-    marker.style.top = py + "%";
-    marker.title = result.text;
-    markers.appendChild(marker);
+    const targetKey = normalizeDrawingText(result.text);
+    const allMatches = (drawingSearchIndex.entries || []).filter(item =>
+      normalizeDrawingText(item.t) === targetKey &&
+      Number.isFinite(Number(item.x)) &&
+      Number.isFinite(Number(item.y))
+    );
+
+    const markerItems = allMatches.length ? allMatches : [result];
+    markerItems.forEach((item, index) => {
+      const mx = clamp((Number(item.x) - Number(ext.xmin)) / (Number(ext.xmax) - Number(ext.xmin))) * 100;
+      const my = (1 - clamp((Number(item.y) - Number(ext.ymin)) / (Number(ext.ymax) - Number(ext.ymin)))) * 100;
+      const marker = document.createElement("div");
+      marker.className = "focus-marker" + (Math.abs(Number(item.x)-result.x) < 0.001 && Math.abs(Number(item.y)-result.y) < 0.001 ? " primary" : "");
+      marker.style.left = mx + "%";
+      marker.style.top = my + "%";
+      marker.title = item.t;
+      markers.appendChild(marker);
+    });
+
+    hint.textContent = markerItems.length > 1
+      ? "تم تحديد " + markerItems.length + " مواضع مطابقة للرقم داخل الرسم. الدائرة الكبيرة هي النتيجة التي اخترتها."
+      : "الدائرة الحمراء تحدد مكان الرقم داخل الرسم. يمكنك التحريك والتكبير.";
   }
 
   if(focus) focus.hidden = false;
