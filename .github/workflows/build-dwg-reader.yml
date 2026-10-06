@@ -23,12 +23,78 @@ jobs:
           mkdir -p cad-data
           cp -a /tmp/CADViewer/cad-data/open ./cad-data/open
 
-      - name: Add feeder search API
+      - name: Fix block placement and add feeder search API
         run: |
           python3 <<'PY'
           from pathlib import Path
           p = Path('cad-viewer/viewer.js')
           s = p.read_text(encoding='utf-8-sig')
+
+          # Some DWG blocks expose a base point in drawing coordinates while
+          # their contained geometry is already expressed in local coordinates.
+          # Subtracting that base point again moves those symbols far away.
+          old_ref = """function referenceMatrices(entity, block) {
+  if (entity.type === 'DIMENSION') return [new DOMMatrix().translate(-(block.basePoint?.x || 0), -(block.basePoint?.y || 0))];
+  const matrices = [];
+  const rows = Math.max(1, Math.min(entity.rowCount || 1, 100));
+  const columns = Math.max(1, Math.min(entity.columnCount || 1, 100));
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      matrices.push(new DOMMatrix()
+        .translate(entity.insertionPoint.x + column * (entity.columnSpacing || 0), entity.insertionPoint.y + row * (entity.rowSpacing || 0))
+        .rotate((entity.rotation || 0) * 180 / Math.PI)
+        .scale(entity.xScale || 1, entity.yScale || 1)
+        .translate(-(block.basePoint?.x || 0), -(block.basePoint?.y || 0)));
+    }
+  }
+  return matrices;
+}"""
+          new_ref = """function blockGeometryBasePoint(block) {
+  const bp = block?.basePoint;
+  if (!bp || !Number.isFinite(bp.x) || !Number.isFinite(bp.y)) return { x: 0, y: 0 };
+
+  const boxes = Object.values(block.directBounds || {}).filter((box) =>
+    box && Number.isFinite(box.minX) && Number.isFinite(box.minY)
+    && Number.isFinite(box.maxX) && Number.isFinite(box.maxY)
+  );
+  if (!boxes.length) return { x: 0, y: 0 };
+
+  const minX = Math.min(...boxes.map((box) => box.minX));
+  const minY = Math.min(...boxes.map((box) => box.minY));
+  const maxX = Math.max(...boxes.map((box) => box.maxX));
+  const maxY = Math.max(...boxes.map((box) => box.maxY));
+  const span = Math.max(maxX - minX, maxY - minY, 1);
+
+  // Use the DWG block base point only when it belongs to (or is reasonably
+  // close to) the block's local geometry. Otherwise the geometry is already
+  // local and subtracting the drawing-space base point would displace it.
+  const margin = span * 2;
+  const nearX = bp.x >= minX - margin && bp.x <= maxX + margin;
+  const nearY = bp.y >= minY - margin && bp.y <= maxY + margin;
+  return nearX && nearY ? { x: bp.x, y: bp.y } : { x: 0, y: 0 };
+}
+
+function referenceMatrices(entity, block) {
+  const base = blockGeometryBasePoint(block);
+  if (entity.type === 'DIMENSION') return [new DOMMatrix().translate(-base.x, -base.y)];
+  const matrices = [];
+  const rows = Math.max(1, Math.min(entity.rowCount || 1, 100));
+  const columns = Math.max(1, Math.min(entity.columnCount || 1, 100));
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      matrices.push(new DOMMatrix()
+        .translate(entity.insertionPoint.x + column * (entity.columnSpacing || 0), entity.insertionPoint.y + row * (entity.rowSpacing || 0))
+        .rotate((entity.rotation || 0) * 180 / Math.PI)
+        .scale(entity.xScale || 1, entity.yScale || 1)
+        .translate(-base.x, -base.y));
+    }
+  }
+  return matrices;
+}"""
+          if old_ref not in s:
+              raise SystemExit('referenceMatrices marker not found')
+          s = s.replace(old_ref, new_ref)
+
           marker = "applyLanguage();\nresetViewer();\nresize();"
           patch = r'''
           window.cadViewerSearch = function(query, occurrence = 0) {
