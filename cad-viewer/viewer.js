@@ -1604,6 +1604,77 @@ if (initialFile) {
   setTimeout(() => openUrl(initialFile), 0);
 }
 
+function closeCameraMenu() {
+  const menu = document.querySelector('#toolCameraMenu');
+  const button = document.querySelector('#toolCameraButton');
+  if (menu) menu.hidden = true;
+  if (button) {
+    button.classList.remove('is-open');
+    button.setAttribute('aria-expanded', 'false');
+  }
+}
+
+function toggleCameraMenu() {
+  const menu = document.querySelector('#toolCameraMenu');
+  const button = document.querySelector('#toolCameraButton');
+  if (!menu || !button) return;
+  const open = menu.hidden;
+  menu.hidden = !open;
+  button.classList.toggle('is-open', open);
+  button.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+async function captureCurrentDrawing() {
+  if (!canvas || !canvas.width || !canvas.height) return;
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  if (!blob) throw new Error('تعذر إنشاء صورة الرسم');
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const name = 'feeder-drawing-' + stamp + '.png';
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = name;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+async function shareCurrentDrawingFromViewer() {
+  if (!canvas || !canvas.width || !canvas.height) return;
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  if (!blob) throw new Error('تعذر إنشاء صورة الرسم');
+  const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const file = new File([blob], 'feeder-drawing-' + stamp + '.png', { type: 'image/png' });
+  if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+    await navigator.share({ title: 'رسم المغذي', text: 'رسم كهربائي', files: [file] });
+  } else {
+    await captureCurrentDrawing();
+  }
+}
+
+document.querySelector('#toolCameraButton')?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  toggleCameraMenu();
+});
+
+document.querySelector('#cameraPngButton')?.addEventListener('click', async (event) => {
+  event.stopPropagation();
+  closeCameraMenu();
+  try { await captureCurrentDrawing(); } catch (error) { console.error(error); }
+});
+
+document.querySelector('#cameraShareButton')?.addEventListener('click', async (event) => {
+  event.stopPropagation();
+  closeCameraMenu();
+  try { await shareCurrentDrawingFromViewer(); } catch (error) { console.error(error); }
+});
+
+document.addEventListener('click', (event) => {
+  const wrap = document.querySelector('.fast-cad-camera-wrap');
+  if (wrap && !wrap.contains(event.target)) closeCameraMenu();
+});
+
 applyLanguage();
 resetViewer();
 resize();
