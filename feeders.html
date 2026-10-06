@@ -444,6 +444,12 @@ th{
 .focus-marker.primary{width:48px;height:48px;border-width:5px;animation:focusPulse 1s ease-in-out 3}
 @keyframes focusPulse{50%{transform:translate(-50%,-50%) scale(1.22)}}
 .focus-hint{padding:9px 12px;background:#111;color:#ddd;font-size:12px}
+.cad-search-controls{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin:10px 0}
+.cad-search-controls .btn{padding:8px 12px}
+.cad-search-counter{min-width:58px;text-align:center;font-weight:800;font-size:16px}
+.cad-tag-toggle{font-size:13px;display:flex;align-items:center;gap:5px;margin-inline-start:8px}
+.cad-tag-toggle input{width:18px;height:18px}
+.find-result.active{outline:3px solid #e31b23;background:#fff8f8}
 @media(max-width:700px){.focus-viewport{height:58vh;min-height:320px}.focus-marker{width:30px;height:30px}.focus-marker.primary{width:44px;height:44px}}
 @media(max-width:600px){.find-result{align-items:flex-start;flex-direction:column}.find-row .btn{width:auto}}
 
@@ -580,8 +586,14 @@ onclick="loadDatabase()"
   <div style="font-weight:bold;margin-bottom:8px">🔎 ابحث داخل الرسم</div>
   <div class="muted" style="margin-bottom:10px">اكتب رقم معدة مثل 05108 أو اسم مغذي مثل F-1.8، وسنبحث في البيانات المستخرجة من نفس الرسم.</div>
   <div class="find-row">
-    <input id="drawingSearch" type="search" placeholder="مثال: 05108 أو F-1.8" autocomplete="off">
-    <button class="btn btn-green" type="button" onclick="searchDrawing()">بحث في الرسم</button>
+    <input id="drawingSearch" type="search" placeholder="اكتب رقم المعدة مثل 17716 أو 871" autocomplete="off">
+    <button class="btn btn-green" type="button" onclick="searchDrawing()">🔎 بحث</button>
+  </div>
+  <div class="cad-search-controls">
+    <button class="btn btn-light" type="button" onclick="drawingSearchPrev()">◀ السابق</button>
+    <span id="drawingSearchCounter" class="cad-search-counter">0 / 0</span>
+    <button class="btn btn-light" type="button" onclick="drawingSearchNext()">التالي ▶</button>
+    <label class="cad-tag-toggle"><input id="drawingTagResults" type="checkbox" checked> تحديد كل النتائج</label>
   </div>
   <div id="drawingSearchStatus" class="find-empty"></div>
   <div id="drawingSearchResults" class="find-results"></div>
@@ -1458,154 +1470,162 @@ function drawingSearchScore(text, query){
   return 0;
 }
 
+let drawingSearchMatches = [];
+let drawingSearchCursor = 0;
+
 async function searchDrawing(){
-  const input = document.getElementById("drawingSearch");
-  const status = document.getElementById("drawingSearchStatus");
-  const resultsBox = document.getElementById("drawingSearchResults");
-  const query = (input?.value || "").trim();
+  const input=document.getElementById("drawingSearch");
+  const status=document.getElementById("drawingSearchStatus");
+  const resultsBox=document.getElementById("drawingSearchResults");
+  const counter=document.getElementById("drawingSearchCounter");
+  const query=(input?.value||"").trim();
 
   if(!query){
-    if(status) status.textContent = "اكتب رقم المعدة أو اسم المغذي.";
-    if(resultsBox) resultsBox.innerHTML = "";
+    drawingSearchMatches=[]; drawingSearchCursor=0;
+    if(status) status.textContent="اكتب رقم المعدة أو اسم المغذي.";
+    if(resultsBox) resultsBox.innerHTML="";
+    if(counter) counter.textContent="0 / 0";
     closeDrawingFocus();
     return;
   }
 
-  if(status) status.textContent = "جاري البحث داخل الرسم...";
-  if(resultsBox) resultsBox.innerHTML = "";
+  if(status) status.textContent="جاري البحث في كامل الرسم...";
+  if(resultsBox) resultsBox.innerHTML="";
 
   try{
-    const payload = await loadDrawingTextIndex();
+    const payload=await loadDrawingTextIndex();
     if(!payload) return;
 
-    const results = [];
-    for(const item of payload.entries){
-      const score = drawingSearchScore(item.t, query);
-      if(score > 0){
-        results.push({
-          text: String(item.t || ""),
-          score,
-          x: Number(item.x),
-          y: Number(item.y)
-        });
+    const results=[];
+    for(const item of payload.entries||[]){
+      const score=drawingSearchScore(item.t,query);
+      if(score>0){
+        results.push({text:String(item.t||""),score,x:Number(item.x),y:Number(item.y)});
       }
     }
 
-    results.sort((a,b)=>b.score-a.score);
+    results.sort((a,b)=>b.score-a.score || a.text.localeCompare(b.text) || a.y-b.y || a.x-b.x);
 
-    const unique = [];
-    const seen = new Set();
+    const unique=[];
+    const seen=new Set();
     for(const r of results){
-      const key = r.text + "|" + r.x + "|" + r.y;
-      if(!seen.has(key)){
-        seen.add(key);
-        unique.push(r);
-      }
-      if(unique.length >= 30) break;
+      const key=r.text+"|"+r.x+"|"+r.y;
+      if(!seen.has(key)){seen.add(key);unique.push(r);}
     }
+
+    drawingSearchMatches=unique;
+    drawingSearchCursor=0;
 
     if(!unique.length){
-      status.textContent = "لم يتم العثور على هذه المعلومة في الرسم.";
+      if(status) status.textContent="❌ لم يتم العثور على هذه المعلومة في كامل الرسم.";
+      if(counter) counter.textContent="0 / 0";
       closeDrawingFocus();
       return;
     }
 
-    status.textContent = "تم العثور على " + unique.length + " موضع. اختر النتيجة المطلوبة ليتم نقلك إليها مباشرة.";
-    resultsBox.innerHTML = unique.map((r,i)=>`
-      <div class="find-result">
+    if(status) status.innerHTML="✅ تم العثور على <b>"+unique.length+"</b> موضع في الرسم — يمكنك التنقل بين النتائج بالسابق/التالي.";
+    if(counter) counter.textContent="1 / "+unique.length;
+
+    resultsBox.innerHTML=unique.slice(0,80).map((r,i)=>`
+      <div class="find-result" data-search-index="${i}">
         <div>
           <strong>${escapeHTML(r.text)}</strong>
           <small> • X: ${formatNumber(r.x)} • Y: ${formatNumber(r.y)}</small>
         </div>
-        <button class="btn btn-green" type="button" onclick='showDrawingLocation(${JSON.stringify(r)})'>📍 اذهب للموقع</button>
+        <button class="btn btn-green" type="button" onclick="goToDrawingSearchResult(${i})">📍 تحديد</button>
       </div>
     `).join("");
+
+    await goToDrawingSearchResult(0);
   }catch(error){
     console.error(error);
-    if(status) status.textContent = "تعذر البحث في فهرس الرسم. حاول إعادة تحميل الصفحة.";
+    if(status) status.textContent="❌ تعذر البحث في فهرس الرسم. أعد تحميل الصفحة وحاول مرة أخرى.";
   }
 }
 
-async function showDrawingLocation(result){
-  const status = document.getElementById("drawingSearchStatus");
-  const focus = document.getElementById("drawingFocus");
-  const title = document.getElementById("focusTitle");
-  const hint = document.getElementById("focusHint");
-  const image = document.getElementById("focusImage");
-  const canvas = document.getElementById("focusCanvas");
-  const markers = document.getElementById("focusMarkers");
-  const viewport = document.getElementById("focusViewport");
+async function goToDrawingSearchResult(index){
+  if(!drawingSearchMatches.length) return;
+  drawingSearchCursor=(index+drawingSearchMatches.length)%drawingSearchMatches.length;
+  const result=drawingSearchMatches[drawingSearchCursor];
+  const counter=document.getElementById("drawingSearchCounter");
+  if(counter) counter.textContent=(drawingSearchCursor+1)+" / "+drawingSearchMatches.length;
 
-  if(!drawingSearchIndex){
-    await loadDrawingTextIndex();
-  }
-  const ext = drawingSearchIndex?.extents;
+  document.querySelectorAll("[data-search-index]").forEach(el=>el.classList.remove("active"));
+  const active=document.querySelector('[data-search-index="'+drawingSearchCursor+'"]');
+  if(active) active.classList.add("active");
+
+  await showDrawingLocation(result);
+}
+
+function drawingSearchPrev(){
+  if(drawingSearchMatches.length) goToDrawingSearchResult(drawingSearchCursor-1);
+}
+function drawingSearchNext(){
+  if(drawingSearchMatches.length) goToDrawingSearchResult(drawingSearchCursor+1);
+}
+
+async function showDrawingLocation(result){
+  const status=document.getElementById("drawingSearchStatus");
+  const focus=document.getElementById("drawingFocus");
+  const title=document.getElementById("focusTitle");
+  const hint=document.getElementById("focusHint");
+  const image=document.getElementById("focusImage");
+  const canvas=document.getElementById("focusCanvas");
+  const markers=document.getElementById("focusMarkers");
+  const viewport=document.getElementById("focusViewport");
+  const tagAll=document.getElementById("drawingTagResults")?.checked!==false;
+
+  if(!drawingSearchIndex) await loadDrawingTextIndex();
+  const ext=drawingSearchIndex?.extents;
   if(!ext || !Number.isFinite(result.x) || !Number.isFinite(result.y)) return;
 
-  const xRatio = (result.x - Number(ext.xmin)) / (Number(ext.xmax) - Number(ext.xmin));
-  const yRatio = 1 - ((result.y - Number(ext.ymin)) / (Number(ext.ymax) - Number(ext.ymin)));
-  const clamp = v => Math.max(0, Math.min(1, v));
-  const px = clamp(xRatio) * 100;
-  const py = clamp(yRatio) * 100;
+  const clamp=v=>Math.max(0,Math.min(1,v));
+  const px=clamp((result.x-Number(ext.xmin))/(Number(ext.xmax)-Number(ext.xmin)))*100;
+  const py=(1-clamp((result.y-Number(ext.ymin))/(Number(ext.ymax)-Number(ext.ymin))))*100;
 
-  drawingFocusMeta = {px, py};
-
-  title.textContent = "📍 " + result.text + " — تم تحديد الموقع";
-  hint.textContent = "الدائرة الحمراء تحدد مكان الرقم داخل الرسم. جميع النتائج المطابقة تظهر بدوائر، ويمكنك التحريك والتكبير.";
-  if(status){
-    status.innerHTML = "📍 <b>" + escapeHTML(result.text) + "</b> — تم نقلك مباشرة إلى موضعه في الرسم.";
-  }
+  title.textContent="📍 "+result.text+" — نتيجة "+(drawingSearchCursor+1)+" من "+drawingSearchMatches.length;
+  if(status) status.innerHTML="📍 <b>"+escapeHTML(result.text)+"</b> — الموضع "+(drawingSearchCursor+1)+" من "+drawingSearchMatches.length+" في الرسم.";
 
   if(markers){
-    markers.innerHTML = "";
-    const targetKey = normalizeDrawingText(result.text);
-    const allMatches = (drawingSearchIndex.entries || []).filter(item =>
-      normalizeDrawingText(item.t) === targetKey &&
-      Number.isFinite(Number(item.x)) &&
-      Number.isFinite(Number(item.y))
-    );
+    markers.innerHTML="";
+    const targetKey=normalizeDrawingText(result.text);
+    const allMatches=tagAll
+      ? (drawingSearchIndex.entries||[]).filter(item=>normalizeDrawingText(item.t)===targetKey)
+      : [result];
 
-    const markerItems = allMatches.length ? allMatches : [result];
-    markerItems.forEach((item, index) => {
-      const mx = clamp((Number(item.x) - Number(ext.xmin)) / (Number(ext.xmax) - Number(ext.xmin))) * 100;
-      const my = (1 - clamp((Number(item.y) - Number(ext.ymin)) / (Number(ext.ymax) - Number(ext.ymin)))) * 100;
-      const marker = document.createElement("div");
-      marker.className = "focus-marker" + (Math.abs(Number(item.x)-result.x) < 0.001 && Math.abs(Number(item.y)-result.y) < 0.001 ? " primary" : "");
-      marker.style.left = mx + "%";
-      marker.style.top = my + "%";
-      marker.title = item.t;
+    const markerItems=allMatches.length?allMatches:[result];
+    markerItems.forEach(item=>{
+      const mx=clamp((Number(item.x)-Number(ext.xmin))/(Number(ext.xmax)-Number(ext.xmin)))*100;
+      const my=(1-clamp((Number(item.y)-Number(ext.ymin))/(Number(ext.ymax)-Number(ext.ymin))))*100;
+      const marker=document.createElement("div");
+      const primary=Math.abs(Number(item.x)-result.x)<0.001 && Math.abs(Number(item.y)-result.y)<0.001;
+      marker.className="focus-marker"+(primary?" primary":"");
+      marker.style.left=mx+"%"; marker.style.top=my+"%"; marker.title=item.t;
       markers.appendChild(marker);
     });
-
-    hint.textContent = markerItems.length > 1
-      ? "تم تحديد " + markerItems.length + " مواضع مطابقة للرقم داخل الرسم. الدائرة الكبيرة هي النتيجة التي اخترتها."
-      : "الدائرة الحمراء تحدد مكان الرقم داخل الرسم. يمكنك التحريك والتكبير.";
+    hint.textContent=tagAll && markerItems.length>1
+      ? "تم تحديد جميع المواضع المطابقة. استخدم السابق/التالي للانتقال بين كل ظهور."
+      : "تم تحديد هذا الظهور فقط. فعّل «تحديد كل النتائج» لإظهار جميع المواضع.";
   }
 
-  if(focus) focus.hidden = false;
+  if(focus) focus.hidden=false;
+  const imageUrl="data/feeders/drawing-search.jpg?v="+Date.now();
+  if(image && image.src!==imageUrl) image.src=imageUrl;
 
-  const imageUrl = "data/feeders/drawing-search.jpg?v=" + Date.now();
-  if(image && image.src !== imageUrl) image.src = imageUrl;
+  const zoom=window.matchMedia("(max-width:700px)").matches?3.8:2.6;
+  if(canvas) canvas.style.width=(zoom*100)+"%";
 
-  const zoom = window.matchMedia("(max-width: 700px)").matches ? 3.8 : 2.6;
-  if(canvas) canvas.style.width = (zoom * 100) + "%";
-
-  const centerTarget = () => {
-    if(!viewport || !canvas) return;
-    const targetX = (px / 100) * canvas.clientWidth;
-    const targetY = (py / 100) * canvas.clientHeight;
-    viewport.scrollLeft = Math.max(0, targetX - viewport.clientWidth / 2);
-    viewport.scrollTop = Math.max(0, targetY - viewport.clientHeight / 2);
+  const centerTarget=()=>{
+    if(!viewport||!canvas) return;
+    const targetX=(px/100)*canvas.clientWidth;
+    const targetY=(py/100)*canvas.clientHeight;
+    viewport.scrollLeft=Math.max(0,targetX-viewport.clientWidth/2);
+    viewport.scrollTop=Math.max(0,targetY-viewport.clientHeight/2);
   };
-
   if(image){
-    if(image.complete) {
-      requestAnimationFrame(centerTarget);
-    } else {
-      image.onload = () => requestAnimationFrame(centerTarget);
-    }
+    if(image.complete) requestAnimationFrame(centerTarget);
+    else image.onload=()=>requestAnimationFrame(centerTarget);
   }
-
   focus?.scrollIntoView({behavior:"smooth",block:"start"});
 }
 
