@@ -149,7 +149,46 @@ function refreshLabels(){
     document.getElementById('status').textContent='الزوم '+map.getZoom()+' — ظاهر '+list.length.toLocaleString('en-US')+' رقمًا من '+visible.length.toLocaleString('en-US')+' نقطة ضمن الشاشة.';
   },100);
 }
-let renderTimer=null; function renderVisible(){clearTimeout(renderTimer);renderTimer=setTimeout(()=>{markers.clearLayers(); labels.clearLayers(); const b=map.getBounds().pad(.08); const z=map.getZoom(); const max=z<13?150:z<15?400:z<17?900:1800; const rows=allRows.filter(r=>b.contains([r.lat,r.lon])); const chosen=rows.slice(0,max); equipment=chosen.map(r=>{const m=L.circleMarker([r.lat,r.lon],{radius:z<16?3:4,weight:1,fillOpacity:.85,bubblingMouseEvents:true}); m.options._equipmentKey=r.key;m.options._equipmentName=r.name;m.options._equipmentLat=r.lat;m.options._equipmentLon=r.lon;m.bindPopup(equipmentPopup(r.name,r.lat,r.lon),{maxWidth:280});markers.addLayer(m);return m;}); if(z>=16){chosen.slice(0,500).forEach(r=>L.marker([r.lat,r.lon],{interactive:true,keyboard:false,icon:L.divIcon({className:'',html:'<span class="equipment-label">'+escapeHtml(r.name)+'</span>',iconSize:null,iconAnchor:[-7,9]})}).addTo(labels));} document.getElementById('status').textContent='زوم '+z+' — معروض '+chosen.length.toLocaleString('en-US')+' من '+rows.length.toLocaleString('en-US')+' نقطة ضمن الشاشة.';},80)} map.on('zoomend moveend',renderVisible);
+let renderTimer=null;
+function renderVisible(){
+  clearTimeout(renderTimer);
+  renderTimer=setTimeout(()=>{
+    markers.clearLayers(); labels.clearLayers();
+    const b=map.getBounds().pad(.08);
+    const z=map.getZoom();
+    const max=z<13?180:z<15?500:z<17?1100:2200;
+    const rows=allRows.filter(r=>b.contains([r.lat,r.lon]));
+    let chosen=rows;
+    if(rows.length>max){
+      const cellSize=Math.max(1,Math.ceil(Math.sqrt(rows.length/max)));
+      const cells=new Map();
+      rows.forEach(r=>{
+        const latKey=Math.floor((r.lat-b.getSouth())/(b.getNorth()-b.getSouth())*cellSize);
+        const lonKey=Math.floor((r.lon-b.getWest())/(b.getEast()-b.getWest())*cellSize);
+        const key=latKey+'_'+lonKey;
+        if(!cells.has(key)) cells.set(key,r);
+      });
+      chosen=Array.from(cells.values()).slice(0,max);
+      if(chosen.length<max){
+        const seen=new Set(chosen);
+        for(const r of rows){if(chosen.length>=max)break;if(!seen.has(r)){chosen.push(r);seen.add(r);}}
+      }
+    }
+    equipment=chosen.map(r=>{
+      const m=L.circleMarker([r.lat,r.lon],{
+        radius:z<16?4:5,color:'#1976d2',weight:1,fillColor:'#1976d2',fillOpacity:.9,bubblingMouseEvents:true
+      });
+      m.options._equipmentKey=r.key;m.options._equipmentName=r.name;m.options._equipmentLat=r.lat;m.options._equipmentLon=r.lon;
+      m.bindPopup(equipmentPopup(r.name,r.lat,r.lon),{maxWidth:280});
+      markers.addLayer(m);return m;
+    });
+    if(z>=16){
+      chosen.slice(0,600).forEach(r=>L.marker([r.lat,r.lon],{interactive:true,keyboard:false,icon:L.divIcon({className:'',html:'<span class="equipment-label">'+escapeHtml(r.name)+'</span>',iconSize:null,iconAnchor:[-7,9]})}).addTo(labels));
+    }
+    document.getElementById('status').textContent='زوم '+z+' — معروض '+chosen.length.toLocaleString('en-US')+' من '+rows.length.toLocaleString('en-US')+' نقطة ضمن الشاشة.';
+  },80);
+}
+map.on('zoomend moveend',renderVisible);
 
 document.getElementById('find').onclick=findEquipment;
 document.getElementById('search').addEventListener('keydown',e=>{if(e.key==='Enter')findEquipment()});
