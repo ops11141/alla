@@ -91,18 +91,26 @@ map.on('mouseleave',layerId,()=>map.getCanvas().style.cursor='');
 }
 async function loadFeeders(){
 if(feedersLoaded)return;
-statusEl.textContent='جاري تحميل طبقة المغذيات…';
+statusEl.textContent='جاري تحميل مسارات المغذيات من CAD…';
 try{
-const [fr,sr]=await Promise.all([fetch('../data/feeders/feeders.json'),fetch('../data/feeders/stations.json')]);
-const feeders=await fr.json(), stations=await sr.json();
-const fs=feeders.map(f=>{const p=f.positions?.[0]; if(!p)return null; const c=cadToLngLat(p.x,p.y); return {type:'Feature',geometry:{type:'Point',coordinates:c},properties:{name:f.name,info:'المحطة: '+(f.station||'غير محددة')+' | درجة المطابقة: '+(f.stationConfidence||'')}}}).filter(Boolean);
-map.addSource('feeders-layer',{type:'geojson',data:{type:'FeatureCollection',features:fs}});
-addPointLayer('feeders-layer','feeder-points','#f39c12',5);
-addLabelLayer('feeders-layer','feeder-labels','name');
-bindLayerClick('feeder-points','name');
+const raw=await fetch('../data/feeders/feeder-routes.geojson').then(r=>{if(!r.ok)throw new Error('route file '+r.status);return r.json();});
+const features=(raw.features||[]).map(f=>{
+const g=f.geometry;
+if(!g||g.type!=='MultiLineString')return null;
+return {...f,geometry:{type:'MultiLineString',coordinates:g.coordinates.map(line=>line.map(([x,y])=>cadToLngLat(x,y)))}};
+}).filter(Boolean);
+map.addSource('feeders-layer',{type:'geojson',data:{type:'FeatureCollection',features}});
+if(!map.getLayer('feeder-routes-line'))map.addLayer({id:'feeder-routes-line',type:'line',source:'feeders-layer',paint:{'line-color':['match',['get','confidence'],'high','#e67e22','medium','#f39c12','#d35400'],'line-width':['interpolate',['linear'],['zoom'],8,2,12,3.5,16,6],'line-opacity':.9,'line-blur':.15}});
+map.on('click','feeder-routes-line',e=>{
+const f=e.features?.[0];if(!f)return;
+const p=f.properties||{};
+new maplibregl.Popup({maxWidth:'320px'}).setLngLat(e.lngLat).setHTML('<div class="popup-title">المغذي '+escapeHtml(p.name||'')+'</div><div class="popup-coords">المحطة: '+escapeHtml(p.station||'غير محددة')+'<br>درجة المطابقة: '+escapeHtml(p.confidence||'')+'</div>').addTo(map);
+});
+map.on('mouseenter','feeder-routes-line',()=>map.getCanvas().style.cursor='pointer');
+map.on('mouseleave','feeder-routes-line',()=>map.getCanvas().style.cursor='');
 feedersLoaded=true;
-statusEl.textContent='تم تحميل '+fs.length.toLocaleString('ar-SA')+' مغذي من قاعدة بيانات DWG.';
-}catch(e){console.error(e);statusEl.textContent='تعذر تحميل بيانات المغذيات.'}
+statusEl.textContent='تم تحميل '+features.length.toLocaleString('ar-SA')+' مسار مغذي من هندسة CAD.';
+}catch(e){console.error(e);statusEl.textContent='تعذر تحميل مسارات المغذيات. تأكد من اكتمال بناء بيانات CAD.'}
 }
 async function loadSubstations(){
 if(substationsLoaded)return;
@@ -221,7 +229,7 @@ setLayerVisibility(['cad-layer'],cadVisible);
 statusEl.textContent=cadVisible?'تم إظهار رسم CAD.':'تم إخفاء رسم CAD.';
 };
 document.getElementById('toggleFeeders').onchange=async e=>{
-if(e.target.checked){await loadFeeders();setLayerVisibility(['feeder-points','feeder-labels'],true);}else setLayerVisibility(['feeder-points','feeder-labels'],false);
+if(e.target.checked){await loadFeeders();setLayerVisibility(['feeder-routes-line'],true);}else setLayerVisibility(['feeder-routes-line'],false);
 };
 document.getElementById('toggleMeters').onchange=async e=>{
 if(e.target.checked){await loadMeters();setLayerVisibility(['meter-clusters','meter-counts','meter-points'],true);}else setLayerVisibility(['meter-clusters','meter-counts','meter-points'],false);
