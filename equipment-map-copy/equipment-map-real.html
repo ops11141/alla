@@ -93,7 +93,7 @@ async function loadFeeders(){
 if(feedersLoaded)return;
 statusEl.textContent='جاري تحميل طبقة المغذيات…';
 try{
-const [fr,sr]=await Promise.all([fetch('../../data/feeders/feeders.json'),fetch('../../data/feeders/stations.json')]);
+const [fr,sr]=await Promise.all([fetch('../data/feeders/feeders.json'),fetch('../data/feeders/stations.json')]);
 const feeders=await fr.json(), stations=await sr.json();
 const fs=feeders.map(f=>{const p=f.positions?.[0]; if(!p)return null; const c=cadToLngLat(p.x,p.y); return {type:'Feature',geometry:{type:'Point',coordinates:c},properties:{name:f.name,info:'المحطة: '+(f.station||'غير محددة')+' | درجة المطابقة: '+(f.stationConfidence||'')}}}).filter(Boolean);
 map.addSource('feeders-layer',{type:'geojson',data:{type:'FeatureCollection',features:fs}});
@@ -108,7 +108,7 @@ async function loadSubstations(){
 if(substationsLoaded)return;
 statusEl.textContent='جاري تحميل طبقة المحطات…';
 try{
-const r=await fetch('../../data/feeders/stations.json'); const stations=await r.json();
+const r=await fetch('../data/feeders/stations.json'); const stations=await r.json();
 const fs=stations.map(s=>{const c=cadToLngLat(s.x,s.y);return {type:'Feature',geometry:{type:'Point',coordinates:c},properties:{name:s.name,info:'طبقة CAD: '+s.layer}}});
 map.addSource('substations-layer',{type:'geojson',data:{type:'FeatureCollection',features:fs}});
 addPointLayer('substations-layer','substation-points','#8e44ad',8);
@@ -122,7 +122,7 @@ async function loadMeters(){
 if(metersLoaded)return;
 statusEl.textContent='جاري تحميل قاعدة بيانات العدادات…';
 try{
-const files=Array.from({length:15},(_,i)=>'../../data/part-'+(i+1)+'.json');
+const files=Array.from({length:15},(_,i)=>'../data/part-'+(i+1)+'.json');
 const parts=await Promise.all(files.map(u=>fetch(u).then(r=>r.json())));
 const rows=parts.flat();
 const fs=rows.map(r=>{
