@@ -1684,18 +1684,12 @@ console.log(
 
 
 // ==================================================
-// CLEANUP
+// KEEP DXF FOR DOWNSTREAM ROUTE BUILD
 // ==================================================
+//
+// The route-geometry builder runs immediately after this script
+// and needs the converted DXF. Keep it in /tmp until the job ends.
+// GitHub Actions will clean the runner automatically.
 
-try {
-
-  fs.unlinkSync(
-    DXF
-  );
-
-}
-catch {
-
-  // Ignore cleanup errors.
-
-}
+console.log("");
+console.log(`DXF retained for route geometry: ${DXF}`);
