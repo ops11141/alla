@@ -1,19 +1,16 @@
 import json
 import math
 import re
+import heapq
 from pathlib import Path
-
 import ezdxf
 from shapely.geometry import LineString, Point
-from shapely.ops import unary_union
 
 DXF = Path("/tmp/final-dispatch.dxf")
 FEEDERS = Path("data/feeders/feeders.json")
 STATIONS = Path("data/feeders/stations.json")
 OUT_DIR = Path("data/feeders/routes")
 MANIFEST = Path("data/feeders/feeder-routes-manifest.json")
-
-# اختبار أولي: نبني مسار مغذٍ واحد فقط من هندسة CAD الأصلية.
 TEST_FEEDER = "F-8.13"
 
 doc = ezdxf.readfile(DXF)
@@ -25,138 +22,150 @@ def entity_lines(entity):
     try:
         t = entity.dxftype()
         if t == "LINE":
-            a, b = entity.dxf.start, entity.dxf.end
-            return [[(float(a.x), float(a.y)), (float(b.x), float(b.y))]]
+            a,b=entity.dxf.start,entity.dxf.end
+            return [[(float(a.x),float(a.y)),(float(b.x),float(b.y))]]
         if t == "LWPOLYLINE":
-            pts = [(float(p[0]), float(p[1])) for p in entity.get_points("xy")]
-            return [list(pair) for pair in zip(pts, pts[1:]) if pair[0] != pair[1]]
+            pts=[(float(p[0]),float(p[1])) for p in entity.get_points("xy")]
+            return [[pts[i],pts[i+1]] for i in range(len(pts)-1) if pts[i]!=pts[i+1]]
         if t == "POLYLINE":
-            pts = [(float(v.dxf.location.x), float(v.dxf.location.y)) for v in entity.vertices]
-            return [list(pair) for pair in zip(pts, pts[1:]) if pair[0] != pair[1]]
+            pts=[(float(v.dxf.location.x),float(v.dxf.location.y)) for v in entity.vertices]
+            return [[pts[i],pts[i+1]] for i in range(len(pts)-1) if pts[i]!=pts[i+1]]
     except Exception:
         pass
     return []
 
-# نستخدم خطوط المسار الحقيقية فقط. fedr no طبقة نصوص/تسميات وليست مسارًا.
 def is_route_layer(layer):
-    s = layer.lower().strip()
-    # F-8.13 must come from its exact feeder layer when present.
-    return s in {"fdr#8.13", "fdr 8 13", "fdr  8  13", "d fdr 8 13", "d fdr  8  13"}
+    s=layer.lower().strip()
+    return (
+        "d_ug cable" in s or
+        "d_ug main line" in s or
+        "o h main feeder" in s or
+        re.match(r"^fdr\b",s,re.I) or
+        re.match(r"^d fdr\b",s,re.I)
+    )
 
-segments = []
+segments=[]
 for entity in msp:
-    layer = str(getattr(entity.dxf, "layer", ""))
+    layer=str(getattr(entity.dxf,"layer",""))
     if not is_route_layer(layer):
         continue
     for pair in entity_lines(entity):
         try:
-            geom = LineString(pair)
-            if geom.length > 0.5:
-                segments.append((geom, layer))
-        except Exception:
-            pass
+            g=LineString(pair)
+            if g.length>0.5:
+                segments.append(g)
 
 def norm(s):
-    return re.sub(r"[^a-z0-9]", "", str(s or "").lower())
+    return re.sub(r"[^a-z0-9]","",str(s or "").lower())
 
-station_points = []
+station_points=[]
 for s in stations:
     try:
-        station_points.append((str(s.get("name", "")), Point(float(s["x"]), float(s["y"]))))
+        station_points.append((str(s.get("name","")),Point(float(s["x"]),float(s["y"]))))
     except Exception:
         pass
 
-def station_anchor(feeder):
-    target = norm(feeder.get("station"))
-    candidates = [(n, p) for n, p in station_points if norm(n) == target]
-    if not candidates:
-        return None
-    labels = []
-    for p in feeder.get("positions") or []:
-        try:
-            labels.append(Point(float(p["x"]), float(p["y"])))
-        except Exception:
-            pass
-    if not labels:
-        return candidates[0][1]
-    # اختر نسخة المحطة الأقرب إلى إحدى تسميات المغذي في الرسم.
-    return min(candidates, key=lambda item: min(item[1].distance(lp) for lp in labels))[1]
+feeder=next((f for f in feeders if str(f.get("name","")).strip().upper()==TEST_FEEDER.upper()),None)
+if not feeder:
+    raise SystemExit("F-8.13 not found")
 
-def choose_label(feeder, anchor):
-    labels = []
-    for p in feeder.get("positions") or []:
-        try:
-            labels.append(Point(float(p["x"]), float(p["y"])))
-        except Exception:
-            pass
-    if not labels:
-        return None
-    # نختار تسمية المغذي الأقرب للمحطة، لا كل النسخ المتكررة للاسم في الرسم.
-    return min(labels, key=lambda p: p.distance(anchor))
+target_station=norm(feeder.get("station"))
+station_candidates=[(n,p) for n,p in station_points if norm(n)==target_station]
+if not station_candidates:
+    raise SystemExit("station not found")
 
-features = []
-for feeder in feeders:
-    if str(feeder.get("name", "")).strip().upper() != TEST_FEEDER.upper():
-        continue
+labels=[]
+for p in feeder.get("positions") or []:
+    try: labels.append(Point(float(p["x"]),float(p["y"])))
+    except Exception: pass
+if not labels:
+    raise SystemExit("feeder label positions not found")
 
-    anchor = station_anchor(feeder)
-    label = choose_label(feeder, anchor) if anchor else None
-    if label is None:
-        continue
+# Use the station copy closest to the feeder's label.
+anchor=min(station_candidates,key=lambda item:min(item[1].distance(lp) for lp in labels))[1]
+label=min(labels,key=lambda p:p.distance(anchor))
 
-    # البداية تكون قرب تسمية F-8.13، ثم نربطها فقط بخطوط CAD الأصلية.
-    seed = [
-        i for i, (geom, _) in enumerate(segments)
-        if geom.distance(label) <= 30
-    ]
-    if not seed:
-        continue
+# Build a graph from ORIGINAL CAD route segments only.
+# Segment endpoints are snapped into nodes with a small CAD tolerance.
+TOL=12.0
+nodes=[]
+node_xy=[]
+def node_for(pt):
+    best=-1; bd=TOL
+    for i,q in enumerate(node_xy):
+        d=math.hypot(pt[0]-q[0],pt[1]-q[1])
+        if d<=bd:
+            best=i; bd=d
+    if best>=0:
+        return best
+    node_xy.append(pt)
+    return len(node_xy)-1
 
-    selected = [segments[i][0] for i in seed]
-    # لا نصل شبكة المدينة كاملة؛ نستخدم فقط هندسة طبقة المغذي نفسها.
-    merged = unary_union(selected)
-    geoms = list(merged.geoms) if hasattr(merged, "geoms") else [merged]
-    coords = []
-    for geom in geoms:
-        if geom.geom_type == "LineString" and len(geom.coords) >= 2:
-            coords.append([[round(x, 3), round(y, 3)] for x, y in geom.coords])
+edges=[]
+for g in segments:
+    a,b=list(g.coords)[0],list(g.coords)[-1]
+    u=node_for(a); v=node_for(b)
+    if u!=v:
+        w=g.length
+        edges.append((u,v,w,g))
 
-    if not coords:
-        continue
+adj=[[] for _ in node_xy]
+for u,v,w,g in edges:
+    adj[u].append((v,w,g))
+    adj[v].append((u,w,g))
 
-    features.append({
-        "type": "Feature",
-        "geometry": {"type": "MultiLineString", "coordinates": coords},
-        "properties": {
-            "name": feeder.get("name", ""),
-            "station": feeder.get("station") or "",
-            "mode": "original-cad-geometry",
-            "source": "FINAL DISPATCH - UPDATE.dwg"
-        }
-    })
+def nearest_node(point,maxdist):
+    best=None; bd=maxdist
+    for i,q in enumerate(node_xy):
+        d=math.hypot(point.x-q[0],point.y-q[1])
+        if d<=bd:
+            best=i; bd=d
+    return best,bd
 
-OUT_DIR.mkdir(parents=True, exist_ok=True)
-for path in OUT_DIR.glob("part-*.json"):
-    path.unlink()
+start,start_d=nearest_node(anchor,80)
+goal,goal_d=nearest_node(label,80)
+features=[]
 
-chunk_name = "part-01.json"
-(OUT_DIR / chunk_name).write_text(
-    json.dumps({"type": "FeatureCollection", "features": features},
-               ensure_ascii=False, separators=(",", ":")),
-    encoding="utf-8"
-)
+if start is not None and goal is not None:
+    dist={start:0.0}
+    prev={}
+    pq=[(0.0,start)]
+    while pq:
+        d,u=heapq.heappop(pq)
+        if d!=dist.get(u): continue
+        if u==goal: break
+        for v,w,g in adj[u]:
+            nd=d+w
+            if nd<dist.get(v,float("inf")):
+                dist[v]=nd
+                prev[v]=(u,g)
+                heapq.heappush(pq,(nd,v))
+    if goal in prev or goal==start:
+        path=[]
+        cur=goal
+        while cur!=start:
+            u,g=prev[cur]
+            coords=[[round(x,3),round(y,3)] for x,y in g.coords]
+            # Orient every segment in station -> feeder-label direction.
+            a=node_xy[u]; b=node_xy[cur]
+            if math.hypot(coords[0][0]-a[0],coords[0][1]-a[1]) > math.hypot(coords[-1][0]-a[0],coords[-1][1]-a[1]):
+                coords.reverse()
+            path.append(coords)
+            cur=u
+        path.reverse()
+        features=[{"type":"Feature","geometry":{"type":"MultiLineString","coordinates":path},
+                   "properties":{"name":TEST_FEEDER,"station":feeder.get("station",""),
+                                 "mode":"original-cad-shortest-path",
+                                 "source":"FINAL DISPATCH - UPDATE.dwg"}}]
 
-MANIFEST.write_text(
-    json.dumps({
-        "type": "feeder-route-manifest",
-        "test": TEST_FEEDER,
-        "totalFeatures": len(features),
-        "chunkSize": 1,
-        "chunks": [{"file": f"routes/{chunk_name}",
-                    "features": len(features),
-                    "bytes": (OUT_DIR / chunk_name).stat().st_size}]
-    }, ensure_ascii=False, separators=(",", ":")),
-    encoding="utf-8"
-)
-
-print(f"Generated {len(features)} exact CAD route feature(s) for {TEST_FEEDER}.")
+OUT_DIR.mkdir(parents=True,exist_ok=True)
+for p in OUT_DIR.glob("part-*.json"): p.unlink()
+part=OUT_DIR/"part-01.json"
+part.write_text(json.dumps({"type":"FeatureCollection","features":features},ensure_ascii=False,separators=(",",":")),encoding="utf-8")
+MANIFEST.write_text(json.dumps({
+    "type":"feeder-route-manifest","test":TEST_FEEDER,"totalFeatures":len(features),
+    "diagnostics":{"routeSegments":len(segments),"graphNodes":len(node_xy),"graphEdges":len(edges),
+                   "stationSnapDistance":start_d,"labelSnapDistance":goal_d},
+    "chunks":[{"file":"routes/part-01.json","features":len(features),"bytes":part.stat().st_size}]
+},ensure_ascii=False,separators=(",",":")),encoding="utf-8")
+print("Generated",len(features),"original-CAD path(s) for",TEST_FEEDER)
