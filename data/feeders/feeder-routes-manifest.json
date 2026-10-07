@@ -1,1 +1,1 @@
-{"type":"feeder-route-manifest","test":"F-8.13","totalFeatures":1,"chunkSize":1,"chunks":[{"file":"routes/part-01.json","features":1,"bytes":645711}]}
+{"type":"feeder-route-manifest","test":"F-8.13","totalFeatures":0,"chunkSize":1,"chunks":[{"file":"routes/part-01.json","features":0,"bytes":42}]}
