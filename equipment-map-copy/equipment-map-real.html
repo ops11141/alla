@@ -28,7 +28,7 @@ input[type=range]{margin:0}.badge{font-size:11px;color:#9fe6a0;margin-top:8px}
 <div class="layer-panel">
 <h3>طبقات الخريطة</h3>
 <label class="layer-item"><span>المعدات</span><input id="toggleEquipment" type="checkbox" checked></label>
-<label class="layer-item"><span>المغذيات</span><input id="toggleFeeders" type="checkbox"></label>
+<label class="layer-item"><span>المغذيات من الرسم الأصلي</span><input id="toggleFeeders" type="checkbox"></label>
 <label class="layer-item"><span>العدادات</span><input id="toggleMeters" type="checkbox"></label>
 <label class="layer-item"><span>المحطات</span><input id="toggleSubstations" type="checkbox"></label>
 <label class="layer-item"><span>الكابلات والخطوط</span><input id="toggleLines" type="checkbox"></label>
@@ -91,27 +91,50 @@ map.on('mouseleave',layerId,()=>map.getCanvas().style.cursor='');
 }
 async function loadFeeders(){
 if(feedersLoaded)return;
-statusEl.textContent='جاري تحميل مسارات المغذيات من CAD…';
+statusEl.textContent='جاري تحميل أسماء المغذيات من الرسم الأصلي…';
 try{
-const manifest=await fetch('../data/feeders/feeder-routes-manifest.json').then(r=>{if(!r.ok)throw new Error('route manifest '+r.status);return r.json();});
-const parts=await Promise.all((manifest.chunks||[]).map(c=>fetch('../data/feeders/'+c.file).then(r=>{if(!r.ok)throw new Error('route chunk '+r.status);return r.json();})));
-const features=parts.flatMap(p=>p.features||[]).map(f=>{
-const g=f.geometry;
-if(!g||g.type!=='MultiLineString')return null;
-return {...f,geometry:{type:'MultiLineString',coordinates:g.coordinates.map(line=>line.map(([x,y])=>cadToLngLat(x,y)))}};
-}).filter(Boolean);
+const feeders=await fetch('../data/feeders/feeders.json',{cache:'force-cache'}).then(r=>{if(!r.ok)throw new Error('feeders '+r.status);return r.json();});
+const features=[];
+const seen=new Set();
+for(const feeder of feeders||[]){
+  const name=String(feeder.name||'').trim();
+  for(const p of (feeder.positions||[])){
+    const x=Number(p.x),y=Number(p.y);
+    if(!name||!Number.isFinite(x)||!Number.isFinite(y))continue;
+    const c=cadToLngLat(x,y);
+    const key=name+'|'+c[0].toFixed(6)+'|'+c[1].toFixed(6);
+    if(seen.has(key))continue;
+    seen.add(key);
+    features.push({
+      type:'Feature',
+      geometry:{type:'Point',coordinates:c},
+      properties:{
+        name,
+        station:String(feeder.station||'غير محددة'),
+        info:'موضع اسم المغذي كما هو موجود في ملف الرسم CAD'
+      }
+    });
+  }
+}
 map.addSource('feeders-layer',{type:'geojson',data:{type:'FeatureCollection',features}});
-if(!map.getLayer('feeder-routes-line'))map.addLayer({id:'feeder-routes-line',type:'line',source:'feeders-layer',paint:{'line-color':['match',['get','confidence'],'high','#e67e22','medium','#f39c12','#d35400'],'line-width':['interpolate',['linear'],['zoom'],8,2,12,3.5,16,6],'line-opacity':.9,'line-blur':.15}});
-map.on('click','feeder-routes-line',e=>{
-const f=e.features?.[0];if(!f)return;
-const p=f.properties||{};
-new maplibregl.Popup({maxWidth:'320px'}).setLngLat(e.lngLat).setHTML('<div class="popup-title">المغذي '+escapeHtml(p.name||'')+'</div><div class="popup-coords">المحطة: '+escapeHtml(p.station||'غير محددة')+'<br>درجة المطابقة: '+escapeHtml(p.confidence||'')+'</div>').addTo(map);
+addPointLayer('feeders-layer','feeder-label-points','#2f7d32',5);
+if(!map.getLayer('feeder-labels'))map.addLayer({
+  id:'feeder-labels',
+  type:'symbol',
+  source:'feeders-layer',
+  layout:{
+    'text-field':['get','name'],
+    'text-size':['interpolate',['linear'],['zoom'],10,8,14,10,18,12],
+    'text-offset':[0,1.1],
+    'text-anchor':'top',
+    'text-allow-overlap':false
+  },
+  paint:{'text-color':'#1b5e20','text-halo-color':'#fff','text-halo-width':1.5}
 });
-map.on('mouseenter','feeder-routes-line',()=>map.getCanvas().style.cursor='pointer');
-map.on('mouseleave','feeder-routes-line',()=>map.getCanvas().style.cursor='');
+bindLayerClick('feeder-label-points','name');
 feedersLoaded=true;
-statusEl.textContent='تم تحميل '+features.length.toLocaleString('ar-SA')+' مسار مغذي من هندسة CAD.';
-}catch(e){console.error(e);statusEl.textContent='تعذر تحميل مسارات المغذيات. تأكد من اكتمال بناء بيانات CAD.'}
+statusEl.textContent='تم تحميل '+features.length.toLocaleString('ar-SA')+' موضع اسم مغذي من الرسم الأصلي — بدون رسم مسارات جديدة.';
+}catch(e){console.error(e);statusEl.textContent='تعذر تحميل أسماء المغذيات من بيانات الرسم الأصلي.'}
 }
 async function loadSubstations(){
 if(substationsLoaded)return;
@@ -230,7 +253,7 @@ setLayerVisibility(['cad-layer'],cadVisible);
 statusEl.textContent=cadVisible?'تم إظهار رسم CAD.':'تم إخفاء رسم CAD.';
 };
 document.getElementById('toggleFeeders').onchange=async e=>{
-if(e.target.checked){await loadFeeders();setLayerVisibility(['feeder-routes-line'],true);}else setLayerVisibility(['feeder-routes-line'],false);
+if(e.target.checked){await loadFeeders();setLayerVisibility(['feeder-label-points','feeder-labels'],true);}else setLayerVisibility(['feeder-label-points','feeder-labels'],false);
 };
 document.getElementById('toggleMeters').onchange=async e=>{
 if(e.target.checked){await loadMeters();setLayerVisibility(['meter-clusters','meter-counts','meter-points'],true);}else setLayerVisibility(['meter-clusters','meter-counts','meter-points'],false);
