@@ -62,26 +62,26 @@ for feeder in feeders:
     # segments. This is deliberately a route layer, not a point-at-label layer.
     selected = []
     for geom, layer in segments:
-        if min(geom.distance(p) for p in labels) <= 180:
+        if min(geom.distance(p) for p in labels) <= 35:
             selected.append(geom)
 
     if not selected:
         continue
 
-    for _ in range(4):
+    for _ in range(3):
         union = unary_union(selected)
         additions = []
         selected_ids = {id(x) for x in selected}
         for geom, layer in segments:
             if id(geom) in selected_ids:
                 continue
-            if geom.distance(union) <= 80:
+            if geom.distance(union) <= 25:
                 additions.append(geom)
         if not additions:
             break
         selected.extend(additions)
 
-    merged = unary_union(selected).simplify(0.25, preserve_topology=True)
+    merged = unary_union(selected).simplify(0.75, preserve_topology=True)
     geoms = list(merged.geoms) if hasattr(merged, "geoms") else [merged]
     coords = []
     for geom in geoms:
