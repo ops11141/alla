@@ -28,12 +28,13 @@ input[type=range]{margin:0}.badge{font-size:11px;color:#9fe6a0;margin-top:8px}
 <div class="layer-panel">
 <h3>طبقات الخريطة</h3>
 <label class="layer-item"><span>المعدات</span><input id="toggleEquipment" type="checkbox" checked></label>
+<label class="layer-item"><span>المغذيات</span><input id="toggleFeeders" type="checkbox"></label>
+<label class="layer-item"><span>العدادات</span><input id="toggleMeters" type="checkbox"></label>
+<label class="layer-item"><span>المحطات</span><input id="toggleSubstations" type="checkbox"></label>
+<label class="layer-item"><span>الكابلات والخطوط</span><input id="toggleLines" type="checkbox"></label>
+<label class="layer-item"><span>الكبائن واللوحات</span><input id="toggleCabinets" type="checkbox"></label>
 <label class="layer-item"><span>رسم CAD</span><input id="toggleCad" type="checkbox" checked></label>
-<label class="layer-item"><span>المغذيات</span><input id="toggleFeeders" type="checkbox" disabled></label>
-<label class="layer-item"><span>المحطات</span><input id="toggleSubstations" type="checkbox" disabled></label>
-<label class="layer-item"><span>الكابلات والخطوط</span><input id="toggleLines" type="checkbox" disabled></label>
-<label class="layer-item"><span>الكبائن واللوحات</span><input id="toggleCabinets" type="checkbox" disabled></label>
-<div class="layer-meta">الطبقات غير المتاحة الآن مجهزة للإضافة عند توفير بياناتها، ولن يتم إنشاء بيانات وهمية.</div>
+<div class="layer-meta">فعّل أي طبقة عند الحاجة. البيانات تُحمّل عند تشغيل الطبقة لتقليل استهلاك الذاكرة.</div>
 </div>
 <div class="panel">
 <input id="search" placeholder="ابحث عن رقم المعدة مثل 17716 أو 871">
@@ -65,6 +66,80 @@ let equipment=[];
 let selected=null;
 let cadVisible=true;
 let equipmentVisible=true;
+let feedersLoaded=false, metersLoaded=false, substationsLoaded=false;
+let linesVisible=false, cabinetsVisible=false;
+const CAD_BOUNDS={minX:87884.97798286064,maxX:131565.9304095608,minY:713.4627917406143,maxY:22216.93411639452,minLon:45.935,maxLon:45.995,minLat:28.365,maxLat:28.465};
+function cadToLngLat(x,y){
+const lon=CAD_BOUNDS.minLon+(x-CAD_BOUNDS.minX)/(CAD_BOUNDS.maxX-CAD_BOUNDS.minX)*(CAD_BOUNDS.maxLon-CAD_BOUNDS.minLon);
+const lat=CAD_BOUNDS.maxLat-(y-CAD_BOUNDS.minY)/(CAD_BOUNDS.maxY-CAD_BOUNDS.minY)*(CAD_BOUNDS.maxLat-CAD_BOUNDS.minLat);
+return [lon,lat];
+}
+function addPointLayer(sourceId,layerId,color,radius){
+if(!map.getLayer(layerId))map.addLayer({id:layerId,type:'circle',source:sourceId,paint:{'circle-radius':radius,'circle-color':color,'circle-stroke-color':'#fff','circle-stroke-width':1.5,'circle-opacity':.92}});
+}
+function addLabelLayer(sourceId,layerId,field){
+if(!map.getLayer(layerId))map.addLayer({id:layerId,type:'symbol',source:sourceId,layout:{'text-field':['get',field],'text-size':10,'text-offset':[0,1.1],'text-anchor':'top','text-allow-overlap':false},paint:{'text-color':'#111','text-halo-color':'#fff','text-halo-width':1.2}});
+}
+function bindLayerClick(layerId,titleField){
+map.on('click',layerId,e=>{
+const f=e.features?.[0]; if(!f)return;
+const p=f.properties||{}, c=f.geometry.coordinates;
+new maplibregl.Popup({maxWidth:'320px'}).setLngLat(c).setHTML('<div class="popup-title">'+escapeHtml(p[titleField]||'')+'</div><div class="popup-coords">'+escapeHtml(p.info||'')+'</div>').addTo(map);
+});
+map.on('mouseenter',layerId,()=>map.getCanvas().style.cursor='pointer');
+map.on('mouseleave',layerId,()=>map.getCanvas().style.cursor='');
+}
+async function loadFeeders(){
+if(feedersLoaded)return;
+statusEl.textContent='جاري تحميل طبقة المغذيات…';
+try{
+const [fr,sr]=await Promise.all([fetch('../../data/feeders/feeders.json'),fetch('../../data/feeders/stations.json')]);
+const feeders=await fr.json(), stations=await sr.json();
+const fs=feeders.map(f=>{const p=f.positions?.[0]; if(!p)return null; const c=cadToLngLat(p.x,p.y); return {type:'Feature',geometry:{type:'Point',coordinates:c},properties:{name:f.name,info:'المحطة: '+(f.station||'غير محددة')+' | درجة المطابقة: '+(f.stationConfidence||'')}}}).filter(Boolean);
+map.addSource('feeders-layer',{type:'geojson',data:{type:'FeatureCollection',features:fs}});
+addPointLayer('feeders-layer','feeder-points','#f39c12',5);
+addLabelLayer('feeders-layer','feeder-labels','name');
+bindLayerClick('feeder-points','name');
+feedersLoaded=true;
+statusEl.textContent='تم تحميل '+fs.length.toLocaleString('ar-SA')+' مغذي من قاعدة بيانات DWG.';
+}catch(e){console.error(e);statusEl.textContent='تعذر تحميل بيانات المغذيات.'}
+}
+async function loadSubstations(){
+if(substationsLoaded)return;
+statusEl.textContent='جاري تحميل طبقة المحطات…';
+try{
+const r=await fetch('../../data/feeders/stations.json'); const stations=await r.json();
+const fs=stations.map(s=>{const c=cadToLngLat(s.x,s.y);return {type:'Feature',geometry:{type:'Point',coordinates:c},properties:{name:s.name,info:'طبقة CAD: '+s.layer}}});
+map.addSource('substations-layer',{type:'geojson',data:{type:'FeatureCollection',features:fs}});
+addPointLayer('substations-layer','substation-points','#8e44ad',8);
+addLabelLayer('substations-layer','substation-labels','name');
+bindLayerClick('substation-points','name');
+substationsLoaded=true;
+statusEl.textContent='تم تحميل مواقع المحطات المستخرجة من CAD.';
+}catch(e){console.error(e);statusEl.textContent='تعذر تحميل بيانات المحطات.'}
+}
+async function loadMeters(){
+if(metersLoaded)return;
+statusEl.textContent='جاري تحميل قاعدة بيانات العدادات…';
+try{
+const files=Array.from({length:15},(_,i)=>'../../data/part-'+(i+1)+'.json');
+const parts=await Promise.all(files.map(u=>fetch(u).then(r=>r.json())));
+const rows=parts.flat();
+const fs=rows.map(r=>{
+const lat=Number(r.lat),lng=Number(r.lng);
+if(!Number.isFinite(lat)||!Number.isFinite(lng))return null;
+return {type:'Feature',geometry:{type:'Point',coordinates:[lng,lat]},properties:{name:String(r.d||r.a||'عداد'),info:'الحساب: '+String(r.a??'')+' | الاشتراك: '+String(r.s??'')+' | الرقم التفصيلي: '+String(r.d??'')}};
+}).filter(Boolean);
+map.addSource('meters-layer',{type:'geojson',data:{type:'FeatureCollection',features:fs},cluster:true,clusterMaxZoom:13,clusterRadius:35});
+map.addLayer({id:'meter-clusters',type:'circle',source:'meters-layer',filter:['has','point_count'],paint:{'circle-radius':['step',['get','point_count'],15,20,19,100,24,500,29],'circle-color':['step',['get','point_count'],'#16a085',20,'#2980b9',100,'#d35400',500,'#c0392b'],'circle-stroke-color':'#fff','circle-stroke-width':1.5}});
+map.addLayer({id:'meter-counts',type:'symbol',source:'meters-layer',filter:['has','point_count'],layout:{'text-field':['get','point_count_abbreviated'],'text-size':11},paint:{'text-color':'#fff'}});
+map.addLayer({id:'meter-points',type:'circle',source:'meters-layer',filter:['!',['has','point_count']],minzoom:13,paint:{'circle-radius':['interpolate',['linear'],['zoom'],13,3,17,5,20,7],'circle-color':'#00a879','circle-stroke-color':'#fff','circle-stroke-width':1}});
+map.on('click','meter-clusters',e=>{const f=map.queryRenderedFeatures(e.point,{layers:['meter-clusters']})[0];map.getSource('meters-layer').getClusterExpansionZoom(f.properties.cluster_id,(err,z)=>{if(!err)map.easeTo({center:f.geometry.coordinates,zoom:z});});});
+map.on('click','meter-points',e=>{const f=e.features[0];const c=f.geometry.coordinates;new maplibregl.Popup({maxWidth:'330px'}).setLngLat(c).setHTML('<div class="popup-title">عداد '+escapeHtml(f.properties.name)+'</div><div class="popup-coords">'+escapeHtml(f.properties.info)+'</div><div class="map-actions"><a class="map-btn google" target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(c[1]+','+c[0])+'">📍 Google Maps</a></div>').addTo(map);});
+metersLoaded=true;
+statusEl.textContent='تم تحميل بيانات العدادات ذات الإحداثيات.';
+}catch(e){console.error(e);statusEl.textContent='تعذر تحميل قاعدة بيانات العدادات.'}
+}
 
 function addEquipmentLayers(){
 if(!equipment.length)return;
@@ -144,6 +219,24 @@ document.getElementById('toggleCad').onchange=e=>{
 cadVisible=e.target.checked;
 setLayerVisibility(['cad-layer'],cadVisible);
 statusEl.textContent=cadVisible?'تم إظهار رسم CAD.':'تم إخفاء رسم CAD.';
+};
+document.getElementById('toggleFeeders').onchange=async e=>{
+if(e.target.checked){await loadFeeders();setLayerVisibility(['feeder-points','feeder-labels'],true);}else setLayerVisibility(['feeder-points','feeder-labels'],false);
+};
+document.getElementById('toggleMeters').onchange=async e=>{
+if(e.target.checked){await loadMeters();setLayerVisibility(['meter-clusters','meter-counts','meter-points'],true);}else setLayerVisibility(['meter-clusters','meter-counts','meter-points'],false);
+};
+document.getElementById('toggleSubstations').onchange=async e=>{
+if(e.target.checked){await loadSubstations();setLayerVisibility(['substation-points','substation-labels'],true);}else setLayerVisibility(['substation-points','substation-labels'],false);
+};
+document.getElementById('toggleLines').onchange=e=>{
+linesVisible=e.target.checked;
+statusEl.textContent=linesVisible?'طبقة الكابلات والخطوط ممثلة ضمن رسم CAD الحالي.':'تم إخفاء طبقة الكابلات والخطوط.';
+setLayerVisibility(['cad-layer'],linesVisible||cadVisible);
+};
+document.getElementById('toggleCabinets').onchange=e=>{
+cabinetsVisible=e.target.checked;
+statusEl.textContent=cabinetsVisible?'بيانات الكبائن واللوحات ستظهر عند توفير طبقة إحداثيات مستقلة لها.':'تم إيقاف طبقة الكبائن واللوحات.';
 };
 
 document.getElementById('fit').onclick=()=>{
