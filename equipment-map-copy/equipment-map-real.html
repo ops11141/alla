@@ -91,50 +91,44 @@ map.on('mouseleave',layerId,()=>map.getCanvas().style.cursor='');
 }
 async function loadFeeders(){
 if(feedersLoaded)return;
-statusEl.textContent='جاري تحميل أسماء المغذيات من الرسم الأصلي…';
+statusEl.textContent='جاري تحميل مسار المغذي من هندسة CAD الأصلية…';
 try{
-const feeders=await fetch('../data/feeders/feeders.json',{cache:'force-cache'}).then(r=>{if(!r.ok)throw new Error('feeders '+r.status);return r.json();});
-const features=[];
-const seen=new Set();
-for(const feeder of feeders||[]){
-  const name=String(feeder.name||'').trim();
-  for(const p of (feeder.positions||[])){
-    const x=Number(p.x),y=Number(p.y);
-    if(!name||!Number.isFinite(x)||!Number.isFinite(y))continue;
-    const c=cadToLngLat(x,y);
-    const key=name+'|'+c[0].toFixed(6)+'|'+c[1].toFixed(6);
-    if(seen.has(key))continue;
-    seen.add(key);
-    features.push({
-      type:'Feature',
-      geometry:{type:'Point',coordinates:c},
-      properties:{
-        name,
-        station:String(feeder.station||'غير محددة'),
-        info:'موضع اسم المغذي كما هو موجود في ملف الرسم CAD'
-      }
-    });
-  }
-}
+const manifest=await fetch('../data/feeders/feeder-routes-manifest.json',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('route manifest '+r.status);return r.json();});
+const parts=await Promise.all((manifest.chunks||[]).map(ch=>fetch('../data/feeders/'+ch.file,{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error('route chunk '+r.status);return r.json();})));
+const features=parts.flatMap(p=>p.features||[]).filter(f=>f.geometry&&f.geometry.type==='MultiLineString');
 map.addSource('feeders-layer',{type:'geojson',data:{type:'FeatureCollection',features}});
-addPointLayer('feeders-layer','feeder-label-points','#2f7d32',5);
-if(!map.getLayer('feeder-labels'))map.addLayer({
-  id:'feeder-labels',
-  type:'symbol',
-  source:'feeders-layer',
-  layout:{
-    'text-field':['get','name'],
-    'text-size':['interpolate',['linear'],['zoom'],10,8,14,10,18,12],
-    'text-offset':[0,1.1],
-    'text-anchor':'top',
-    'text-allow-overlap':false
-  },
-  paint:{'text-color':'#1b5e20','text-halo-color':'#fff','text-halo-width':1.5}
+if(!map.getLayer('feeder-routes-line'))map.addLayer({
+id:'feeder-routes-line',type:'line',source:'feeders-layer',
+paint:{'line-color':'#e53935','line-width':['interpolate',['linear'],['zoom'],9,2.5,13,4,17,7],'line-opacity':0.95}
 });
-bindLayerClick('feeder-label-points','name');
+if(!map.getLayer('feeder-routes-arrows'))map.addLayer({
+id:'feeder-routes-arrows',type:'symbol',source:'feeders-layer',
+layout:{
+'symbol-placement':'line',
+'symbol-spacing':120,
+'text-field':'▶',
+'text-size':['interpolate',['linear'],['zoom'],10,10,16,15],
+'text-rotation-alignment':'map',
+'text-pitch-alignment':'map',
+'text-keep-upright':false,
+'text-allow-overlap':true
+},
+paint:{'text-color':'#e53935','text-halo-color':'#fff','text-halo-width':1.5}
+});
+map.on('click','feeder-routes-line',e=>{
+const f=e.features?.[0];if(!f)return;
+const p=f.properties||{};
+new maplibregl.Popup({maxWidth:'320px'}).setLngLat(e.lngLat).setHTML(
+'<div class="popup-title">المغذي '+escapeHtml(p.name||'')+'</div>'+
+'<div class="popup-coords">المحطة: '+escapeHtml(p.station||'غير محددة')+
+'<br>المصدر: رسم CAD الأصلي</div>'
+).addTo(map);
+});
+map.on('mouseenter','feeder-routes-line',()=>map.getCanvas().style.cursor='pointer');
+map.on('mouseleave','feeder-routes-line',()=>map.getCanvas().style.cursor='');
 feedersLoaded=true;
-statusEl.textContent='تم تحميل '+features.length.toLocaleString('ar-SA')+' موضع اسم مغذي من الرسم الأصلي — بدون رسم مسارات جديدة.';
-}catch(e){console.error(e);statusEl.textContent='تعذر تحميل أسماء المغذيات من بيانات الرسم الأصلي.'}
+statusEl.textContent='تم عرض المسار الحقيقي من رسم CAD للمغذي '+escapeHtml(manifest.test||'')+'.';
+}catch(e){console.error(e);statusEl.textContent='تعذر تحميل مسار CAD للمغذي التجريبي.'}
 }
 async function loadSubstations(){
 if(substationsLoaded)return;
@@ -253,7 +247,7 @@ setLayerVisibility(['cad-layer'],cadVisible);
 statusEl.textContent=cadVisible?'تم إظهار رسم CAD.':'تم إخفاء رسم CAD.';
 };
 document.getElementById('toggleFeeders').onchange=async e=>{
-if(e.target.checked){await loadFeeders();setLayerVisibility(['feeder-label-points','feeder-labels'],true);}else setLayerVisibility(['feeder-label-points','feeder-labels'],false);
+if(e.target.checked){await loadFeeders();setLayerVisibility(['feeder-routes-line','feeder-routes-arrows'],true);}else setLayerVisibility(['feeder-routes-line','feeder-routes-arrows'],false);
 };
 document.getElementById('toggleMeters').onchange=async e=>{
 if(e.target.checked){await loadMeters();setLayerVisibility(['meter-clusters','meter-counts','meter-points'],true);}else setLayerVisibility(['meter-clusters','meter-counts','meter-points'],false);
