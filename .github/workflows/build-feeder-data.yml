@@ -6,6 +6,7 @@ on:
     paths:
       - "cad/FINAL DISPATCH - UPDATE.dwg"
       - "tools/build-feeders.mjs"
+      - "tools/build-feeder-routes.py"
       - "package.json"
       - ".github/workflows/build-feeder-data.yml"
 
@@ -54,8 +55,16 @@ jobs:
       - name: Install Node dependencies
         run: npm install
 
+      - name: Install route geometry dependencies
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install ezdxf shapely
+
       - name: Build feeder database
         run: npm run build:feeders
+
+      - name: Build feeder route geometry
+        run: python3 tools/build-feeder-routes.py
 
       - name: Commit generated database
         run: |
