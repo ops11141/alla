@@ -40,13 +40,8 @@ def entity_lines(entity):
 # نستخدم خطوط المسار الحقيقية فقط. fedr no طبقة نصوص/تسميات وليست مسارًا.
 def is_route_layer(layer):
     s = layer.lower().strip()
-    return (
-        "d_ug cable" in s
-        or "d_ug main line" in s
-        or "o h main feeder" in s
-        or re.search(r"^fdr\b", s, re.I) is not None
-        or re.search(r"^d fdr\b", s, re.I) is not None
-    )
+    # F-8.13 must come from its exact feeder layer when present.
+    return s in {"fdr#8.13", "fdr 8 13", "fdr  8  13", "d fdr 8 13", "d fdr  8  13"}
 
 segments = []
 for entity in msp:
@@ -99,22 +94,6 @@ def choose_label(feeder, anchor):
     # نختار تسمية المغذي الأقرب للمحطة، لا كل النسخ المتكررة للاسم في الرسم.
     return min(labels, key=lambda p: p.distance(anchor))
 
-def connected_component(seed_ids, tolerance=6.0):
-    selected = set(seed_ids)
-    changed = True
-    while changed:
-        changed = False
-        current = [segments[i][0] for i in selected]
-        union = unary_union(current)
-        for i, (geom, _) in enumerate(segments):
-            if i in selected:
-                continue
-            # الاتصال الهندسي الحقيقي أو فجوة صغيرة جدًا في CAD.
-            if geom.distance(union) <= tolerance:
-                selected.add(i)
-                changed = True
-    return selected
-
 features = []
 for feeder in feeders:
     if str(feeder.get("name", "")).strip().upper() != TEST_FEEDER.upper():
@@ -133,10 +112,8 @@ for feeder in feeders:
     if not seed:
         continue
 
-    component = connected_component(seed, tolerance=6.0)
-    selected = [segments[i][0] for i in sorted(component)]
-
-    # لا نضيف أي خطوط تخمينية: كل جزء هنا موجود أصلًا في DWG.
+    selected = [segments[i][0] for i in seed]
+    # لا نصل شبكة المدينة كاملة؛ نستخدم فقط هندسة طبقة المغذي نفسها.
     merged = unary_union(selected)
     geoms = list(merged.geoms) if hasattr(merged, "geoms") else [merged]
     coords = []
