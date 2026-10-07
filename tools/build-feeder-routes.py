@@ -1,4 +1,5 @@
 import json
+import math
 import re
 from pathlib import Path
 
@@ -8,12 +9,17 @@ from shapely.ops import unary_union
 
 DXF = Path("/tmp/final-dispatch.dxf")
 FEEDERS = Path("data/feeders/feeders.json")
+STATIONS = Path("data/feeders/stations.json")
 OUT_DIR = Path("data/feeders/routes")
 MANIFEST = Path("data/feeders/feeder-routes-manifest.json")
+
+# اختبار أولي: نبني مسار مغذٍ واحد فقط من هندسة CAD الأصلية.
+TEST_FEEDER = "F-8.13"
 
 doc = ezdxf.readfile(DXF)
 msp = doc.modelspace()
 feeders = json.loads(FEEDERS.read_text(encoding="utf-8"))
+stations = json.loads(STATIONS.read_text(encoding="utf-8"))
 
 def entity_lines(entity):
     try:
@@ -31,24 +37,45 @@ def entity_lines(entity):
         pass
     return []
 
-# These are the CAD layers that can carry electrical route geometry.
-# Text/labels are never rendered as feeder geometry.
-allowed = re.compile(r"(d_ug cable|d_ug main line|o h main feeder|fdr|fedr)", re.I)
-segments = []
+# نستخدم خطوط المسار الحقيقية فقط. fedr no طبقة نصوص/تسميات وليست مسارًا.
+def is_route_layer(layer):
+    s = layer.lower().strip()
+    return (
+        "d_ug cable" in s
+        or "d_ug main line" in s
+        or "o h main feeder" in s
+        or re.search(r"^fdr\b", s, re.I) is not None
+        or re.search(r"^d fdr\b", s, re.I) is not None
+    )
 
+segments = []
 for entity in msp:
     layer = str(getattr(entity.dxf, "layer", ""))
-    if not allowed.search(layer):
+    if not is_route_layer(layer):
         continue
     for pair in entity_lines(entity):
         try:
-            segments.append((LineString(pair), layer))
+            geom = LineString(pair)
+            if geom.length > 0.5:
+                segments.append((geom, layer))
         except Exception:
             pass
 
-features = []
+def norm(s):
+    return re.sub(r"[^a-z0-9]", "", str(s or "").lower())
 
-for feeder in feeders:
+station_points = []
+for s in stations:
+    try:
+        station_points.append((str(s.get("name", "")), Point(float(s["x"]), float(s["y"]))))
+    except Exception:
+        pass
+
+def station_anchor(feeder):
+    target = norm(feeder.get("station"))
+    candidates = [(n, p) for n, p in station_points if norm(n) == target]
+    if not candidates:
+        return None
     labels = []
     for p in feeder.get("positions") or []:
         try:
@@ -56,32 +83,61 @@ for feeder in feeders:
         except Exception:
             pass
     if not labels:
-        continue
+        return candidates[0][1]
+    # اختر نسخة المحطة الأقرب إلى إحدى تسميات المغذي في الرسم.
+    return min(candidates, key=lambda item: min(item[1].distance(lp) for lp in labels))[1]
 
-    # Seed from actual feeder-label locations, then follow connected CAD route
-    # segments. This is deliberately a route layer, not a point-at-label layer.
-    selected = []
-    for geom, layer in segments:
-        if min(geom.distance(p) for p in labels) <= 35:
-            selected.append(geom)
+def choose_label(feeder, anchor):
+    labels = []
+    for p in feeder.get("positions") or []:
+        try:
+            labels.append(Point(float(p["x"]), float(p["y"])))
+        except Exception:
+            pass
+    if not labels:
+        return None
+    # نختار تسمية المغذي الأقرب للمحطة، لا كل النسخ المتكررة للاسم في الرسم.
+    return min(labels, key=lambda p: p.distance(anchor))
 
-    if not selected:
-        continue
-
-    for _ in range(3):
-        union = unary_union(selected)
-        additions = []
-        selected_ids = {id(x) for x in selected}
-        for geom, layer in segments:
-            if id(geom) in selected_ids:
+def connected_component(seed_ids, tolerance=6.0):
+    selected = set(seed_ids)
+    changed = True
+    while changed:
+        changed = False
+        current = [segments[i][0] for i in selected]
+        union = unary_union(current)
+        for i, (geom, _) in enumerate(segments):
+            if i in selected:
                 continue
-            if geom.distance(union) <= 25:
-                additions.append(geom)
-        if not additions:
-            break
-        selected.extend(additions)
+            # الاتصال الهندسي الحقيقي أو فجوة صغيرة جدًا في CAD.
+            if geom.distance(union) <= tolerance:
+                selected.add(i)
+                changed = True
+    return selected
 
-    merged = unary_union(selected).simplify(0.75, preserve_topology=True)
+features = []
+for feeder in feeders:
+    if str(feeder.get("name", "")).strip().upper() != TEST_FEEDER.upper():
+        continue
+
+    anchor = station_anchor(feeder)
+    label = choose_label(feeder, anchor) if anchor else None
+    if label is None:
+        continue
+
+    # البداية تكون قرب تسمية F-8.13، ثم نربطها فقط بخطوط CAD الأصلية.
+    seed = [
+        i for i, (geom, _) in enumerate(segments)
+        if geom.distance(label) <= 30
+    ]
+    if not seed:
+        continue
+
+    component = connected_component(seed, tolerance=6.0)
+    selected = [segments[i][0] for i in sorted(component)]
+
+    # لا نضيف أي خطوط تخمينية: كل جزء هنا موجود أصلًا في DWG.
+    merged = unary_union(selected)
     geoms = list(merged.geoms) if hasattr(merged, "geoms") else [merged]
     coords = []
     for geom in geoms:
@@ -97,39 +153,33 @@ for feeder in feeders:
         "properties": {
             "name": feeder.get("name", ""),
             "station": feeder.get("station") or "",
-            "confidence": feeder.get("stationConfidence") or ""
+            "mode": "original-cad-geometry",
+            "source": "FINAL DISPATCH - UPDATE.dwg"
         }
     })
 
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-
-# GitHub rejects files larger than 100 MB. Split the route collection into
-# compact chunks so the browser can load all routes without a monolithic file.
-CHUNK_SIZE = 20
-chunks = []
-for i in range(0, len(features), CHUNK_SIZE):
-    chunk = features[i:i + CHUNK_SIZE]
-    name = f"part-{(i // CHUNK_SIZE) + 1:02d}.json"
-    path = OUT_DIR / name
-    path.write_text(
-        json.dumps({"type": "FeatureCollection", "features": chunk},
-                   ensure_ascii=False, separators=(",", ":")),
-        encoding="utf-8"
-    )
-    chunks.append({"file": f"routes/{name}", "features": len(chunk), "bytes": path.stat().st_size})
-
-# Remove stale chunks from a previous build.
 for path in OUT_DIR.glob("part-*.json"):
-    if path.name not in {c["file"].split("/")[-1] for c in chunks}:
-        path.unlink()
+    path.unlink()
+
+chunk_name = "part-01.json"
+(OUT_DIR / chunk_name).write_text(
+    json.dumps({"type": "FeatureCollection", "features": features},
+               ensure_ascii=False, separators=(",", ":")),
+    encoding="utf-8"
+)
 
 MANIFEST.write_text(
     json.dumps({
         "type": "feeder-route-manifest",
+        "test": TEST_FEEDER,
         "totalFeatures": len(features),
-        "chunkSize": CHUNK_SIZE,
-        "chunks": chunks
+        "chunkSize": 1,
+        "chunks": [{"file": f"routes/{chunk_name}",
+                    "features": len(features),
+                    "bytes": (OUT_DIR / chunk_name).stat().st_size}]
     }, ensure_ascii=False, separators=(",", ":")),
     encoding="utf-8"
 )
-print(f"Generated {len(features)} feeder routes in {len(chunks)} chunks -> {OUT_DIR}")
+
+print(f"Generated {len(features)} exact CAD route feature(s) for {TEST_FEEDER}.")
