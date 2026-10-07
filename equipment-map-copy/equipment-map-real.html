@@ -93,8 +93,9 @@ async function loadFeeders(){
 if(feedersLoaded)return;
 statusEl.textContent='جاري تحميل مسارات المغذيات من CAD…';
 try{
-const raw=await fetch('../data/feeders/feeder-routes.geojson').then(r=>{if(!r.ok)throw new Error('route file '+r.status);return r.json();});
-const features=(raw.features||[]).map(f=>{
+const manifest=await fetch('../data/feeders/feeder-routes-manifest.json').then(r=>{if(!r.ok)throw new Error('route manifest '+r.status);return r.json();});
+const parts=await Promise.all((manifest.chunks||[]).map(c=>fetch('../data/feeders/'+c.file).then(r=>{if(!r.ok)throw new Error('route chunk '+r.status);return r.json();})));
+const features=parts.flatMap(p=>p.features||[]).map(f=>{
 const g=f.geometry;
 if(!g||g.type!=='MultiLineString')return null;
 return {...f,geometry:{type:'MultiLineString',coordinates:g.coordinates.map(line=>line.map(([x,y])=>cadToLngLat(x,y)))}};
