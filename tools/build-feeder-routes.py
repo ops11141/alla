@@ -8,7 +8,8 @@ from shapely.ops import unary_union
 
 DXF = Path("/tmp/final-dispatch.dxf")
 FEEDERS = Path("data/feeders/feeders.json")
-OUT = Path("data/feeders/feeder-routes.geojson")
+OUT_DIR = Path("data/feeders/routes")
+MANIFEST = Path("data/feeders/feeder-routes-manifest.json")
 
 doc = ezdxf.readfile(DXF)
 msp = doc.modelspace()
@@ -100,8 +101,35 @@ for feeder in feeders:
         }
     })
 
-OUT.write_text(
-    json.dumps({"type": "FeatureCollection", "features": features}, ensure_ascii=False, separators=(",", ":")),
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+# GitHub rejects files larger than 100 MB. Split the route collection into
+# compact chunks so the browser can load all routes without a monolithic file.
+CHUNK_SIZE = 20
+chunks = []
+for i in range(0, len(features), CHUNK_SIZE):
+    chunk = features[i:i + CHUNK_SIZE]
+    name = f"part-{(i // CHUNK_SIZE) + 1:02d}.json"
+    path = OUT_DIR / name
+    path.write_text(
+        json.dumps({"type": "FeatureCollection", "features": chunk},
+                   ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8"
+    )
+    chunks.append({"file": f"routes/{name}", "features": len(chunk), "bytes": path.stat().st_size})
+
+# Remove stale chunks from a previous build.
+for path in OUT_DIR.glob("part-*.json"):
+    if path.name not in {c["file"].split("/")[-1] for c in chunks}:
+        path.unlink()
+
+MANIFEST.write_text(
+    json.dumps({
+        "type": "feeder-route-manifest",
+        "totalFeatures": len(features),
+        "chunkSize": CHUNK_SIZE,
+        "chunks": chunks
+    }, ensure_ascii=False, separators=(",", ":")),
     encoding="utf-8"
 )
-print(f"Generated {len(features)} feeder routes -> {OUT} ({OUT.stat().st_size} bytes)")
+print(f"Generated {len(features)} feeder routes in {len(chunks)} chunks -> {OUT_DIR}")
