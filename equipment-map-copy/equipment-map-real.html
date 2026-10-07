@@ -9,6 +9,8 @@
 html,body,#map{height:100%;margin:0}
 body{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#111}
 #map{direction:ltr}
+.layer-panel{position:absolute;z-index:12;top:12px;right:12px;width:min(260px,calc(100vw - 24px));background:rgba(20,20,20,.94);color:#fff;border-radius:14px;padding:12px;box-shadow:0 8px 30px #0008;direction:rtl}
+.layer-panel h3{font-size:15px;margin:0 0 9px}.layer-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 4px;border-bottom:1px solid #333;font-size:13px}.layer-item:last-child{border-bottom:0}.layer-item input{width:auto;margin:0;accent-color:#2f7d32}.layer-meta{font-size:10px;color:#999;margin-top:7px;line-height:1.4}
 .panel{position:absolute;z-index:10;bottom:12px;left:50%;transform:translateX(-50%);width:min(420px,calc(100vw - 24px));background:rgba(20,20,20,.94);color:#fff;border-radius:14px;padding:10px;box-shadow:0 8px 30px #0008}
 .panel h2{font-size:17px;margin:0 0 8px}.panel p{font-size:12px;color:#bbb;margin:5px 0 12px;line-height:1.5}
 input{width:100%;box-sizing:border-box;border:1px solid #555;background:#292929;color:#fff;border-radius:9px;padding:10px;margin-bottom:6px}
@@ -23,6 +25,16 @@ input[type=range]{margin:0}.badge{font-size:11px;color:#9fe6a0;margin-top:8px}
 </head>
 <body>
 <div id="map"></div>
+<div class="layer-panel">
+<h3>طبقات الخريطة</h3>
+<label class="layer-item"><span>المعدات</span><input id="toggleEquipment" type="checkbox" checked></label>
+<label class="layer-item"><span>رسم CAD</span><input id="toggleCad" type="checkbox" checked></label>
+<label class="layer-item"><span>المغذيات</span><input id="toggleFeeders" type="checkbox" disabled></label>
+<label class="layer-item"><span>المحطات</span><input id="toggleSubstations" type="checkbox" disabled></label>
+<label class="layer-item"><span>الكابلات والخطوط</span><input id="toggleLines" type="checkbox" disabled></label>
+<label class="layer-item"><span>الكبائن واللوحات</span><input id="toggleCabinets" type="checkbox" disabled></label>
+<div class="layer-meta">الطبقات غير المتاحة الآن مجهزة للإضافة عند توفير بياناتها، ولن يتم إنشاء بيانات وهمية.</div>
+</div>
 <div class="panel">
 <input id="search" placeholder="ابحث عن رقم المعدة مثل 17716 أو 871">
 <div class="actions"><button id="find">بحث</button><button class="alt" id="fit">المعدات</button></div>
@@ -52,6 +64,7 @@ map.addControl(new maplibregl.NavigationControl({showCompass:false}),'top-left')
 let equipment=[];
 let selected=null;
 let cadVisible=true;
+let equipmentVisible=true;
 
 function addEquipmentLayers(){
 if(!equipment.length)return;
@@ -116,6 +129,22 @@ if(!hit){statusEl.textContent='لم يتم العثور على المعدة ال
 const [lon,lat]=hit.geometry.coordinates;
 map.easeTo({center:[lon,lat],zoom:19,duration:600});showPopup(hit.properties.name,lat,lon);
 }
+
+function setLayerVisibility(layerIds,visible){
+layerIds.forEach(id=>{
+if(map.getLayer(id))map.setLayoutProperty(id,'visibility',visible?'visible':'none');
+});
+}
+document.getElementById('toggleEquipment').onchange=e=>{
+equipmentVisible=e.target.checked;
+setLayerVisibility(['clusters','cluster-count','equipment-points','equipment-labels'],equipmentVisible);
+statusEl.textContent=equipmentVisible?'تم إظهار طبقة المعدات.':'تم إخفاء طبقة المعدات.';
+};
+document.getElementById('toggleCad').onchange=e=>{
+cadVisible=e.target.checked;
+setLayerVisibility(['cad-layer'],cadVisible);
+statusEl.textContent=cadVisible?'تم إظهار رسم CAD.':'تم إخفاء رسم CAD.';
+};
 
 document.getElementById('fit').onclick=()=>{
 if(!equipment.length)return;
