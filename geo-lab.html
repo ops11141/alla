@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>مختبر GEO.dwg — التجارب والتحليل</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f7f6;color:#17382f;font-family:Arial,Tahoma,sans-serif}
+header{background:linear-gradient(135deg,#07583f,#0b7656);color:#fff;padding:28px 18px;text-align:center}
+.logo{width:76px;height:76px;background:#fff;color:#07583f;border-radius:20px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:22px;margin:0 auto 12px}
+h1{margin:0;font-size:28px}.sub{margin:8px 0 0;opacity:.9}
+main{max-width:1100px;margin:auto;padding:22px 16px}.notice{background:#fff8e8;border:1px solid #ead6ad;border-radius:16px;padding:15px;margin-bottom:18px;color:#694b18;font-weight:700}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.card{background:#fff;border:1px solid #dbe6e1;border-radius:20px;padding:20px;box-shadow:0 5px 18px #17382f10}
+.card h2{margin:0 0 9px;font-size:19px}.card p{margin:0 0 15px;color:#64746f;line-height:1.6}
+.btn{display:block;text-decoration:none;text-align:center;background:#07583f;color:#fff;padding:12px;border-radius:12px;font-weight:800}.btn.secondary{background:#edf4f1;color:#07583f}
+.status{display:inline-block;padding:5px 9px;border-radius:9px;background:#e6f5ee;color:#086044;font-size:12px;font-weight:800}
+.section{margin:26px 0 12px;font-size:21px}
+ul{margin:8px 0;padding-right:20px;line-height:2}
+footer{text-align:center;color:#788984;padding:24px}
+@media(max-width:600px){h1{font-size:23px}}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">SEC</div>
+<h1>مختبر GEO.dwg</h1>
+<div class="sub">مساحة مستقلة لتجارب CAD واستخراج مسارات المغذيات والمعدات</div>
+</header>
+<main>
+<div class="notice">هذه الصفحة تجريبية مستقلة داخل <b>ops11141/alla</b>. لا تحذف أو تعدّل ملفات المصدر؛ جميع عمليات الاستخراج والتحويل تكون في نسخ مشتقة.</div>
+
+<h2 class="section">أدوات العمل</h2>
+<div class="grid">
+<div class="card"><h2>عارض CAD</h2><p>فتح DWG/DXF وعرض الهندسة والكيانات مباشرة باستخدام محرك LibreDWG الموجود في المشروع.</p><span class="status">جاهز</span><br><br><a class="btn" href="./cad-viewer/">فتح العارض</a></div>
+<div class="card"><h2>استخراج البيانات الخام</h2><p>تصدير الكيانات التي يفككها العارض كما هي، بدون حذف أو تبسيط، لاستخدامها في التحليل اللاحق.</p><span class="status">مضاف</span></div>
+<div class="card"><h2>تحليل المغذيات والمسارات</h2><p>مساحة العمل التالية لاستخراج خطوط المغذيات، الكابلات، الوصلات، والمعدات من الهندسة الفعلية.</p><span class="status">قيد التطوير</span></div>
+<div class="card"><h2>بيانات المعدات</h2><p>تجميع RMU وEOS والمحولات والمفاتيح وغيرها مع ربطها بإحداثياتها الهندسية عند توفرها.</p><span class="status">قيد التطوير</span></div>
+</div>
+
+<h2 class="section">سجل العمل</h2>
+<div class="card">
+<ul>
+<li>الحفاظ على ملف GEO.dwg الأصلي دون تعديل.</li>
+<li>استخدام العارض الشخصي الحالي كمصدر فك DWG.</li>
+<li>حفظ الكيانات الخام قبل أي معالجة.</li>
+<li>فصل البيانات المستخرجة عن بيانات المصدر.</li>
+<li>الهدف النهائي: ربط المسارات والمعدات بخريطة المشروع.</li>
+</ul>
+</div>
+
+<h2 class="section">الملفات والنتائج</h2>
+<div class="grid">
+<div class="card"><h2>GEO.dwg</h2><p>مصدر العمل الأصلي. لا يتم تغييره أثناء التجارب.</p><span class="status">مصدر</span></div>
+<div class="card"><h2>GEO-raw-extraction.json</h2><p>الناتج الخام من العارض، ويحتوي على الكيانات والملخصات والـ blocks المستخرجة.</p><span class="status">ناتج تجريبي</span></div>
+<div class="card"><h2>Feeder Routes</h2><p>سيتم إنشاء طبقة مستقلة لمسارات المغذيات مع الاحتفاظ بمرجع للكيانات الأصلية.</p><span class="status">التالي</span></div>
+</div>
+</main>
+<footer>GEO DWG Lab — ops11141/alla</footer>
+</body>
+</html>
