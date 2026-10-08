@@ -1837,12 +1837,152 @@ function toggleCameraMenu() {
   button.setAttribute('aria-expanded', open ? 'true' : 'false');
 }
 
+function parseCanvasBackgroundColor(value) {
+  const match = String(value || '').match(/^#([0-9a-f]{6})$/i);
+  if (!match) return [9, 11, 14];
+  const n = Number.parseInt(match[1], 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+function detectCurrentFrameScreenBounds() {
+  if (!canvas || !canvas.width || !canvas.height) return null;
+  const state = searchHighlightState;
+  if (!state?.matches?.length || state.currentIndex < 0) return null;
+  const match = state.matches[state.currentIndex];
+  if (!match || !Number.isFinite(match.x) || !Number.isFinite(match.y)) return null;
+
+  const ratio = Math.max(1, Math.min(devicePixelRatio || 1, 2));
+  const targetX = camera.x + match.x * camera.scale;
+  const targetY = camera.y - match.y * camera.scale;
+  const px = Math.round(targetX * ratio);
+  const py = Math.round(targetY * ratio);
+  if (px < 0 || py < 0 || px >= canvas.width || py >= canvas.height) return null;
+
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  const data = image.data;
+  const [br, bg, bb] = parseCanvasBackgroundColor(backgroundColor);
+
+  const isInk = (x, y) => {
+    const o = (y * canvas.width + x) * 4;
+    const d = Math.abs(data[o] - br) + Math.abs(data[o + 1] - bg) + Math.abs(data[o + 2] - bb);
+    return d > 65 && data[o + 3] > 80;
+  };
+
+  const step = 2;
+  const minHRun = Math.max(40, Math.floor(canvas.width * 0.32 / step));
+  const minVRun = Math.max(40, Math.floor(canvas.height * 0.32 / step));
+
+  function longestHorizontalRun(y) {
+    let best = 0, run = 0;
+    for (let x = 0; x < canvas.width; x += step) {
+      if (isInk(x, y)) run += 1;
+      else { best = Math.max(best, run); run = 0; }
+    }
+    return Math.max(best, run);
+  }
+
+  function longestVerticalRun(x) {
+    let best = 0, run = 0;
+    for (let y = 0; y < canvas.height; y += step) {
+      if (isInk(x, y)) run += 1;
+      else { best = Math.max(best, run); run = 0; }
+    }
+    return Math.max(best, run);
+  }
+
+  function findHorizontal(from, direction) {
+    const limit = direction < 0 ? 0 : canvas.height - 1;
+    for (let y = from; direction < 0 ? y >= limit : y <= limit; y += direction * step) {
+      if (longestHorizontalRun(y) >= minHRun) return y;
+    }
+    return null;
+  }
+
+  function findVertical(from, direction) {
+    const limit = direction < 0 ? 0 : canvas.width - 1;
+    for (let x = from; direction < 0 ? x >= limit : x <= limit; x += direction * step) {
+      if (longestVerticalRun(x) >= minVRun) return x;
+    }
+    return null;
+  }
+
+  const top = findHorizontal(py, -1);
+  const bottom = findHorizontal(py, 1);
+  const left = findVertical(px, -1);
+  const right = findVertical(px, 1);
+  if (top === null || bottom === null || left === null || right === null) return null;
+
+  const minWidth = canvas.width * 0.18;
+  const minHeight = canvas.height * 0.12;
+  if (right - left < minWidth || bottom - top < minHeight) return null;
+
+  return {
+    left: left / ratio,
+    top: top / ratio,
+    right: right / ratio,
+    bottom: bottom / ratio,
+  };
+}
+
+async function waitForDrawingFrame() {
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+}
+
 async function captureCurrentDrawing() {
   if (!canvas || !canvas.width || !canvas.height) return;
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+
+  const frame = detectCurrentFrameScreenBounds();
+  const savedCamera = { ...camera };
+  let crop = null;
+
+  if (frame) {
+    const ratio = Math.max(1, Math.min(devicePixelRatio || 1, 2));
+    const pad = 5;
+    const left = Math.max(0, frame.left - pad);
+    const top = Math.max(0, frame.top - pad);
+    const right = Math.min(canvas.clientWidth, frame.right + pad);
+    const bottom = Math.min(canvas.clientHeight, frame.bottom + pad);
+    const worldLeft = (left - savedCamera.x) / savedCamera.scale;
+    const worldRight = (right - savedCamera.x) / savedCamera.scale;
+    const worldTop = (savedCamera.y - top) / savedCamera.scale;
+    const worldBottom = (savedCamera.y - bottom) / savedCamera.scale;
+    const worldWidth = Math.max(worldRight - worldLeft, 1e-9);
+    const worldHeight = Math.max(worldTop - worldBottom, 1e-9);
+    camera.scale = Math.min(canvas.clientWidth / worldWidth, canvas.clientHeight / worldHeight) * 0.94;
+    camera.x = canvas.clientWidth / 2 - (worldLeft + worldRight) / 2 * camera.scale;
+    camera.y = canvas.clientHeight / 2 + (worldTop + worldBottom) / 2 * camera.scale;
+    scheduleRender();
+    await waitForDrawingFrame();
+
+    const newLeft = canvas.clientWidth / 2 - worldWidth * camera.scale / 2;
+    const newTop = canvas.clientHeight / 2 - worldHeight * camera.scale / 2;
+    crop = {
+      x: Math.max(0, Math.floor((newLeft - 4) * ratio)),
+      y: Math.max(0, Math.floor((newTop - 4) * ratio)),
+      width: Math.min(canvas.width, Math.ceil((worldWidth * camera.scale + 8) * ratio)),
+      height: Math.min(canvas.height, Math.ceil((worldHeight * camera.scale + 8) * ratio)),
+    };
+  }
+
+  let blob;
+  if (crop) {
+    const output = document.createElement('canvas');
+    output.width = crop.width;
+    output.height = crop.height;
+    const outputContext = output.getContext('2d');
+    outputContext.drawImage(canvas, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
+    blob = await new Promise((resolve) => output.toBlob(resolve, 'image/png'));
+  } else {
+    blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  }
+
+  camera = savedCamera;
+  scheduleRender();
+
   if (!blob) throw new Error('تعذر إنشاء صورة الرسم');
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const name = 'feeder-drawing-' + stamp + '.png';
+  const name = crop ? 'feeder-frame-' + stamp + '.png' : 'feeder-drawing-' + stamp + '.png';
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
