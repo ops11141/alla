@@ -1542,11 +1542,26 @@ async function extractDwgFromZip(zipUrl) {
   if (target.method === 0) {
     dwgBytes = compressed;
   } else if (target.method === 8) {
-    if (!('DecompressionStream' in window)) {
-      throw new Error('المتصفح لا يدعم فك ضغط ZIP تلقائيًا');
+    // Prefer the browser's native inflater, but keep a fallback for
+    // Android WebViews/browsers where DecompressionStream is unavailable
+    // or rejects this ZIP's raw-deflate stream.
+    let nativeError = null;
+    if ('DecompressionStream' in window) {
+      try {
+        const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+        dwgBytes = new Uint8Array(await new Response(stream).arrayBuffer());
+      } catch (error) {
+        nativeError = error;
+      }
     }
-    const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
-    dwgBytes = new Uint8Array(await new Response(stream).arrayBuffer());
+    if (!dwgBytes) {
+      try {
+        const fflate = await import('https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/browser.js');
+        dwgBytes = fflate.decompressSync(compressed);
+      } catch (fallbackError) {
+        throw new Error('تعذر فك ضغط GEO.zip: ' + (fallbackError?.message || nativeError?.message || fallbackError));
+      }
+    }
   } else {
     throw new Error('طريقة ضغط ZIP غير مدعومة: ' + target.method);
   }
@@ -1561,6 +1576,7 @@ async function openZip(url) {
   try {
     setLoading(true);
     setStatus('downloading', { name: 'GEO.zip' });
+    console.info('[GEO Lab] Loading ZIP:', url);
     const absoluteUrl = new URL(url, window.location.href).href;
     const extracted = await extractDwgFromZip(absoluteUrl);
     await openDrawingBuffer(extracted.name, extracted.bytes.buffer);
