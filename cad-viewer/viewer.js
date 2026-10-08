@@ -1793,7 +1793,20 @@ window.cadViewerSearch = function(query, occurrence = 0) {
   camera.x = canvas.clientWidth / 2 - item.x * camera.scale;
   camera.y = canvas.clientHeight / 2 + item.y * camera.scale;
   scheduleRender();
-  return { found: true, count: matches.length, index, text: item.text, x: item.x, y: item.y };
+  return {
+    found: true,
+    count: matches.length,
+    index,
+    text: item.text,
+    x: item.x,
+    y: item.y,
+    results: searchHighlightState.matches.map((match, resultIndex) => ({
+      index: resultIndex,
+      text: match.text,
+      x: match.x,
+      y: match.y,
+    })),
+  };
 };
 window.cadViewerGetTextCount = function() {
   return textItems.length;
