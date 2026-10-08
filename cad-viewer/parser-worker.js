@@ -35,7 +35,10 @@ self.onmessage = async ({ data }) => {
         self.postMessage({ type: 'batch', batch });
       },
       2000,
-      { includeBlocks: data.includeBlocks !== false },
+      {
+        includeBlocks: data.includeBlocks !== false,
+        onProgress: (progress) => self.postMessage({ type: 'progress', progress }),
+      },
     );
 
     self.postMessage({
