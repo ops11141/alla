@@ -1576,7 +1576,8 @@ async async function openDirectParts(manifestUrl) {
   try {
     setLoading(true);
     setStatus('downloading', { name: 'GEO.dwg' });
-    const manifestResponse = await fetch(manifestUrl, { cache: 'no-store' });
+    const manifestAbsoluteUrl = new URL(manifestUrl, window.location.href).href;
+    const manifestResponse = await fetch(manifestAbsoluteUrl, { cache: 'no-store' });
     if (!manifestResponse.ok) throw new Error('تعذر تحميل قائمة أجزاء GEO.dwg');
     const manifest = await manifestResponse.json();
     if (!Array.isArray(manifest.parts) || !manifest.parts.length) throw new Error('قائمة أجزاء GEO.dwg فارغة');
@@ -1584,7 +1585,7 @@ async async function openDirectParts(manifestUrl) {
     const buffers = [];
     let total = 0;
     for (let i = 0; i < manifest.parts.length; i += 1) {
-      const partUrl = new URL(manifest.parts[i], manifestUrl).href;
+      const partUrl = new URL(manifest.parts[i], manifestAbsoluteUrl).href;
       setStatus('downloading', { name: 'GEO.dwg (' + (i + 1) + '/' + manifest.parts.length + ')' });
       const response = await fetch(partUrl, { cache: 'no-store' });
       if (!response.ok) throw new Error('تعذر تحميل الجزء ' + (i + 1) + ' من GEO.dwg');
