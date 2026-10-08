@@ -13,7 +13,10 @@
     .feeder-cad-result{display:flex;align-items:center;gap:8px;width:100%;padding:8px 9px;margin:2px 0;border:1px solid transparent;border-radius:6px;background:#1e293b;color:#f1f5f9;text-align:right;cursor:pointer;font-size:12px}
     .feeder-cad-result:hover,.feeder-cad-result.is-current{border-color:#ef4444;background:#3f1d1d}
     .feeder-cad-result-index{flex:0 0 34px;color:#fca5a5;font-weight:800;text-align:center}
-    .feeder-cad-result-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.feeder-cad-result-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .feeder-cad-result-actions{margin-inline-start:auto;flex:0 0 auto;display:flex;gap:4px}
+    .feeder-cad-location{border:0;border-radius:6px;padding:6px 8px;background:#087f5b;color:#fff;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
+    .feeder-cad-location:disabled{opacity:.4;cursor:not-allowed}
 
     @media(max-width:600px){#feederCadSearch{top:5px;gap:4px;padding:5px;overflow:visible}#feederCadSearch span{display:none}#feederCadSearchCount{display:inline-block!important;min-width:42px;padding:7px 4px}#feederCadSearch input{font-size:13px;padding:8px;min-width:90px}#feederCadSearch button{padding:8px 8px;font-size:12px}}
   `;
@@ -31,6 +34,12 @@
   let occurrence = 0;
   let resultCount = 0;
   let lastQuery = '';
+  let equipmentRecords = null;
+
+  fetch('../data/equipment-lookup.json', { cache: 'force-cache' })
+    .then(response => response.ok ? response.json() : Promise.reject(new Error('equipment database unavailable')))
+    .then(data => { equipmentRecords = data.records || {}; if (browsePanel.classList.contains('is-open')) renderBrowseList(); })
+    .catch(() => { equipmentRecords = {}; });
 
   const input = document.getElementById('feederCadSearchInput');
   const searchBtn = document.getElementById('feederCadSearchBtn');
@@ -79,8 +88,22 @@
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'feeder-cad-result' + (item.index === occurrence ? ' is-current' : '');
-      button.innerHTML = '<span class="feeder-cad-result-index">' + (item.index + 1) + '</span><span class="feeder-cad-result-text"></span>';
+      button.innerHTML = '<span class="feeder-cad-result-index">' + (item.index + 1) + '</span><span class="feeder-cad-result-text"></span><span class="feeder-cad-result-actions"><button type="button" class="feeder-cad-location">📍 الذهاب للموقع</button></span>';
       button.querySelector('.feeder-cad-result-text').textContent = item.text;
+      const locationButton = button.querySelector('.feeder-cad-location');
+      const normalized = String(item.text || '').toUpperCase().replace(/[\s\-_/.,:;()\[\]{}#\\]+/g, '');
+      const rows = equipmentRecords?.[normalized] || equipmentRecords?.[String(item.text || '')] || [];
+      const validRow = rows.find(row => Number.isFinite(Number(row?.[1])) && Number.isFinite(Number(row?.[2])));
+      locationButton.disabled = !validRow;
+      locationButton.title = validRow ? 'فتح موقع المعدة في Google Maps' : 'لا يوجد موقع مسجل لهذه المعدة';
+      locationButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        if (!validRow) return;
+        const lat = Number(validRow[1]);
+        const lon = Number(validRow[2]);
+        const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(lat + ',' + lon);
+        window.open(url, '_blank', 'noopener,noreferrer');
+      });
       button.addEventListener('click', () => {
         occurrence = item.index;
         runSearch(false);
