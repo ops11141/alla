@@ -23,6 +23,10 @@
   box.innerHTML = '<input id="feederCadSearchInput" placeholder="🔎 ابحث داخل الرسم مثل F-8.13" autocomplete="off"><button id="feederCadSearchBtn">بحث</button><button id="feederCadSearchPrev" class="nav" type="button" disabled>السابق</button><span id="feederCadSearchCount">0/0</span><button id="feederCadSearchNext" class="nav" type="button" disabled>التالي</button><button id="feederCadSearchBrowse" class="nav" type="button" disabled>استعراض</button><span id="feederCadSearchStatus">جاهز</span><div id="feederCadBrowsePanel" aria-label="استعراض نتائج البحث"></div>';
   const host = document.querySelector('.viewer-canvas-area') || document.body;
   host.appendChild(box);
+  // Keep the browse panel outside the canvas container so it cannot be clipped by
+  // the viewer's overflow/transform layers.
+  const browsePanelElement = box.querySelector('#feederCadBrowsePanel');
+  if (browsePanelElement) document.body.appendChild(browsePanelElement);
 
   let occurrence = 0;
   let resultCount = 0;
