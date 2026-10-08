@@ -93,7 +93,14 @@
       button.querySelector('.feeder-cad-result-text').textContent = item.text;
       const locationButton = button.querySelector('.feeder-cad-location');
       const normalized = String(item.text || '').toUpperCase().replace(/[\s\-_/.,:;()\[\]{}#\\]+/g, '');
-      const rows = equipmentRecords?.[normalized] || equipmentRecords?.[String(item.text || '')] || [];
+      const locationKeys = [normalized, String(item.text || '')];
+      // CAD labels sometimes omit the zero-padding after the first three digits:
+      // 04237 -> database key 042037 (042-037), 60422 -> 604022 (604-022).
+      if (/^\d{4,5}$/.test(normalized)) {
+        const padded = normalized.slice(0, 3) + normalized.slice(3).padStart(3, '0');
+        locationKeys.push(padded);
+      }
+      const rows = locationKeys.flatMap(key => equipmentRecords?.[key] || []);
       const validRow = rows.find(row => Number.isFinite(Number(row?.[1])) && Number.isFinite(Number(row?.[2])));
       locationButton.disabled = !validRow;
       locationButton.title = validRow ? 'فتح موقع المعدة في Google Maps' : 'لا يوجد موقع مسجل لهذه المعدة';
