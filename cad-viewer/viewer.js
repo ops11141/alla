@@ -1572,6 +1572,42 @@ async function extractDwgFromZip(zipUrl) {
   return { name: target.name.split('/').pop() || 'GEO.dwg', bytes: dwgBytes };
 }
 
+async function openDirectParts(manifestUrl) {
+  try {
+    setLoading(true);
+    setStatus('downloading', { name: 'GEO.dwg' });
+    const manifestResponse = await fetch(manifestUrl, { cache: 'no-store' });
+    if (!manifestResponse.ok) throw new Error('تعذر تحميل قائمة أجزاء GEO.dwg');
+    const manifest = await manifestResponse.json();
+    if (!Array.isArray(manifest.parts) || !manifest.parts.length) throw new Error('قائمة أجزاء GEO.dwg فارغة');
+
+    const buffers = [];
+    let total = 0;
+    for (let i = 0; i < manifest.parts.length; i += 1) {
+      const partUrl = new URL(manifest.parts[i], manifestUrl).href;
+      setStatus('downloading', { name: 'GEO.dwg (' + (i + 1) + '/' + manifest.parts.length + ')' });
+      const response = await fetch(partUrl, { cache: 'no-store' });
+      if (!response.ok) throw new Error('تعذر تحميل الجزء ' + (i + 1) + ' من GEO.dwg');
+      const part = await response.arrayBuffer();
+      buffers.push(part);
+      total += part.byteLength;
+    }
+
+    const combined = new Uint8Array(total);
+    let offset = 0;
+    for (const part of buffers) {
+      combined.set(new Uint8Array(part), offset);
+      offset += part.byteLength;
+    }
+    await openDrawingBuffer(manifest.name || 'GEO.dwg', combined.buffer);
+  } catch (error) {
+    setStatus('openFailed', { message: error instanceof Error ? error.message : String(error) });
+    openButton.disabled = false;
+    setLoading(false);
+    finishDrawingLoad();
+  }
+}
+
 async function openZip(url) {
   try {
     setLoading(true);
@@ -2236,7 +2272,7 @@ applyLanguage();
 resetViewer();
 resize();
 
-const autoZip = new URLSearchParams(window.location.search).get('zip');
-if (autoZip) {
-  openZip(autoZip);
+const autoParts = new URLSearchParams(window.location.search).get('parts');
+if (autoParts) {
+  openDirectParts(autoParts);
 }
