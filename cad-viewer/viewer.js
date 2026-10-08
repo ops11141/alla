@@ -1491,6 +1491,87 @@ async function openFile(file) {
   }
 }
 
+async function extractDwgFromZip(zipUrl) {
+  const response = await fetch(zipUrl);
+  if (!response.ok) throw new Error('تعذر تحميل ملف GEO.zip');
+  const buffer = await response.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  const view = new DataView(buffer);
+
+  // Locate the ZIP end-of-central-directory record.
+  let eocd = -1;
+  const start = Math.max(0, bytes.length - 65557);
+  for (let i = bytes.length - 22; i >= start; i -= 1) {
+    if (view.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('ملف ZIP غير صالح');
+
+  const entryCount = view.getUint16(eocd + 10, true);
+  const centralOffset = view.getUint32(eocd + 16, true);
+  let cursor = centralOffset;
+  let target = null;
+
+  for (let i = 0; i < entryCount; i += 1) {
+    if (view.getUint32(cursor, true) !== 0x02014b50) break;
+    const method = view.getUint16(cursor + 10, true);
+    const compressedSize = view.getUint32(cursor + 20, true);
+    const uncompressedSize = view.getUint32(cursor + 24, true);
+    const nameLength = view.getUint16(cursor + 28, true);
+    const extraLength = view.getUint16(cursor + 30, true);
+    const commentLength = view.getUint16(cursor + 32, true);
+    const localOffset = view.getUint32(cursor + 42, true);
+    const nameBytes = bytes.subarray(cursor + 46, cursor + 46 + nameLength);
+    const name = new TextDecoder().decode(nameBytes);
+    if (name.toLowerCase().endsWith('.dwg')) {
+      target = { name, method, compressedSize, uncompressedSize, localOffset };
+      break;
+    }
+    cursor += 46 + nameLength + extraLength + commentLength;
+  }
+
+  if (!target) throw new Error('لم يتم العثور على ملف DWG داخل ZIP');
+
+  const local = target.localOffset;
+  if (view.getUint32(local, true) !== 0x04034b50) throw new Error('رأس ملف DWG داخل ZIP غير صالح');
+  const localNameLength = view.getUint16(local + 26, true);
+  const localExtraLength = view.getUint16(local + 28, true);
+  const dataStart = local + 30 + localNameLength + localExtraLength;
+  const compressed = bytes.subarray(dataStart, dataStart + target.compressedSize);
+
+  let dwgBytes;
+  if (target.method === 0) {
+    dwgBytes = compressed;
+  } else if (target.method === 8) {
+    if (!('DecompressionStream' in window)) {
+      throw new Error('المتصفح لا يدعم فك ضغط ZIP تلقائيًا');
+    }
+    const stream = new Blob([compressed]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    dwgBytes = new Uint8Array(await new Response(stream).arrayBuffer());
+  } else {
+    throw new Error('طريقة ضغط ZIP غير مدعومة: ' + target.method);
+  }
+
+  if (target.uncompressedSize && dwgBytes.length !== target.uncompressedSize) {
+    console.warn('GEO ZIP size mismatch', dwgBytes.length, target.uncompressedSize);
+  }
+  return { name: target.name.split('/').pop() || 'GEO.dwg', bytes: dwgBytes };
+}
+
+async function openZip(url) {
+  try {
+    setLoading(true);
+    setStatus('downloading', { name: 'GEO.zip' });
+    const absoluteUrl = new URL(url, window.location.href).href;
+    const extracted = await extractDwgFromZip(absoluteUrl);
+    await openDrawingBuffer(extracted.name, extracted.bytes.buffer);
+  } catch (error) {
+    setStatus('openFailed', { message: error instanceof Error ? error.message : String(error) });
+    openButton.disabled = false;
+    setLoading(false);
+    finishDrawingLoad();
+  }
+}
+
 async function openUrl(url) {
   const name = decodeURIComponent(new URL(url, window.location.href).pathname.split('/').pop() || t('drawingFile'));
   try {
@@ -2138,3 +2219,8 @@ document.addEventListener('click', (event) => {
 applyLanguage();
 resetViewer();
 resize();
+
+const autoZip = new URLSearchParams(window.location.search).get('zip');
+if (autoZip) {
+  openZip(autoZip);
+}
