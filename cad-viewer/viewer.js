@@ -1572,24 +1572,53 @@ async function extractDwgFromZip(zipUrl) {
   return { name: target.name.split('/').pop() || 'GEO.dwg', bytes: dwgBytes };
 }
 
-async async function openDirectParts(manifestUrl) {
+async async function fetchBinaryWithFallback(url, fallbackUrl) {
+  try {
+    const response = await fetch(url, { cache: 'no-store' });
+    if (response.ok) return new Uint8Array(await response.arrayBuffer());
+  } catch (error) {
+    console.warn('[GEO Lab] primary fetch failed', url, error);
+  }
+  if (fallbackUrl) {
+    const response = await fetch(fallbackUrl, { cache: 'no-store' });
+    if (response.ok) return new Uint8Array(await response.arrayBuffer());
+  }
+  throw new Error('تعذر الوصول إلى الملف: ' + url);
+}
+
+async function openDirectParts(manifestUrl) {
   try {
     setLoading(true);
     setStatus('downloading', { name: 'GEO.dwg' });
-    const manifestAbsoluteUrl = new URL(manifestUrl, window.location.href).href;
-    const manifestResponse = await fetch(manifestAbsoluteUrl, { cache: 'no-store' });
-    if (!manifestResponse.ok) throw new Error('تعذر تحميل قائمة أجزاء GEO.dwg');
-    const manifest = await manifestResponse.json();
-    if (!Array.isArray(manifest.parts) || !manifest.parts.length) throw new Error('قائمة أجزاء GEO.dwg فارغة');
+
+    const pageManifestUrl = new URL(manifestUrl, window.location.href).href;
+    const rawBase = 'https://raw.githubusercontent.com/ops11141/alla/main/cad-viewer/data/';
+    let manifest;
+
+    try {
+      const response = await fetch(pageManifestUrl, { cache: 'no-store' });
+      if (!response.ok) throw new Error('manifest page failed');
+      manifest = await response.json();
+    } catch {
+      const response = await fetch(rawBase + 'geo-manifest.json', { cache: 'no-store' });
+      if (!response.ok) throw new Error('تعذر تحميل قائمة أجزاء GEO.dwg');
+      manifest = await response.json();
+    }
+
+    if (!Array.isArray(manifest.parts) || !manifest.parts.length) {
+      throw new Error('قائمة أجزاء GEO.dwg فارغة');
+    }
 
     const buffers = [];
     let total = 0;
+
     for (let i = 0; i < manifest.parts.length; i += 1) {
-      const partUrl = new URL(manifest.parts[i], manifestAbsoluteUrl).href;
+      const name = manifest.parts[i];
+      const pagePartUrl = new URL(name, pageManifestUrl).href;
+      const rawPartUrl = rawBase + encodeURIComponent(name);
       setStatus('downloading', { name: 'GEO.dwg (' + (i + 1) + '/' + manifest.parts.length + ')' });
-      const response = await fetch(partUrl, { cache: 'no-store' });
-      if (!response.ok) throw new Error('تعذر تحميل الجزء ' + (i + 1) + ' من GEO.dwg');
-      const part = await response.arrayBuffer();
+
+      const part = await fetchBinaryWithFallback(pagePartUrl, rawPartUrl);
       buffers.push(part);
       total += part.byteLength;
     }
@@ -1597,18 +1626,24 @@ async async function openDirectParts(manifestUrl) {
     const combined = new Uint8Array(total);
     let offset = 0;
     for (const part of buffers) {
-      combined.set(new Uint8Array(part), offset);
+      combined.set(part, offset);
       offset += part.byteLength;
     }
+
+    if (manifest.totalBytes && total !== manifest.totalBytes) {
+      throw new Error('اكتمل التحميل لكن حجم GEO.dwg غير مطابق: ' + total + ' / ' + manifest.totalBytes);
+    }
+
+    console.info('[GEO Lab] Reassembled GEO.dwg:', total, 'bytes');
     await openDrawingBuffer(manifest.name || 'GEO.dwg', combined.buffer);
   } catch (error) {
+    console.error('[GEO Lab] Direct DWG load failed:', error);
     setStatus('openFailed', { message: error instanceof Error ? error.message : String(error) });
     openButton.disabled = false;
     setLoading(false);
     finishDrawingLoad();
   }
 }
-
 async function openZip(url) {
   try {
     setLoading(true);
