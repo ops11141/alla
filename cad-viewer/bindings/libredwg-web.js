@@ -3505,6 +3505,7 @@ class LibreDwgConverter {
   convertForViewer(data, onBatch, batchSize = 2e3, options = {}) {
     this.entityConverter.clear();
     const includeBlocks = options.includeBlocks !== false;
+    const onProgress = typeof options.onProgress === 'function' ? options.onProgress : () => {};
     const libredwg = this.libredwg;
     const classes = [];
     const layers = [];
@@ -3514,7 +3515,11 @@ class LibreDwgConverter {
     this.convertClasses(data, classes);
     this.entityConverter.setClasses(classes);
     const numObjects = libredwg.dwg_get_num_objects(data);
+    onProgress({ phase: 'scan', current: 0, total: numObjects });
     for (let i = 0; i < numObjects; i++) {
+      if (i === 0 || i % 500 === 0 || i === numObjects - 1) {
+        onProgress({ phase: 'scan', current: i + 1, total: numObjects });
+      }
       const obj = libredwg.dwg_get_object(data, i);
       if (!obj) continue;
       const tio = this.safeObjectTio(obj);
@@ -3552,6 +3557,8 @@ class LibreDwgConverter {
       blocks.length = 0;
       blocks.push(...modelBlocks);
     }
+    const estimatedEntities = blocks.reduce((sum, block) => sum + Number(block.numOwned || 0), 0);
+    onProgress({ phase: 'scan-complete', current: numObjects, total: numObjects, estimatedEntities });
     let entityCount = 0;
     const emitBlock = (block) => {
       let batch = [];
@@ -3560,6 +3567,7 @@ class LibreDwgConverter {
       const emit = () => {
         if (batch.length === 0) return;
         entityCount += batch.length;
+        onProgress({ phase: 'entities', current: entityCount, total: estimatedEntities || entityCount });
         onBatch({
           kind,
           blockName: block.name,
