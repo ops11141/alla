@@ -1861,40 +1861,53 @@ function detectCurrentFrameScreenBounds() {
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
   const image = ctx.getImageData(0, 0, canvas.width, canvas.height);
   const data = image.data;
-  const [br, bg, bb] = parseCanvasBackgroundColor(backgroundColor);
 
-  const isInk = (x, y) => {
+  // The drawing frames are cyan. Detect the frame color specifically instead
+  // of treating every long CAD line as a possible frame boundary.
+  const isFramePixel = (x, y) => {
     const o = (y * canvas.width + x) * 4;
-    const d = Math.abs(data[o] - br) + Math.abs(data[o + 1] - bg) + Math.abs(data[o + 2] - bb);
-    return d > 65 && data[o + 3] > 80;
+    const red = data[o], green = data[o + 1], blue = data[o + 2], alpha = data[o + 3];
+    return alpha > 100 && red < 100 && green > 95 && blue > 120 &&
+      green + blue > red * 2 + 130;
   };
 
   const step = 2;
-  const minHRun = Math.max(40, Math.floor(canvas.width * 0.32 / step));
-  const minVRun = Math.max(40, Math.floor(canvas.height * 0.32 / step));
+  const minHRun = Math.max(60, Math.floor(canvas.width * 0.45 / step));
+  const minVRun = Math.max(60, Math.floor(canvas.height * 0.25 / step));
 
-  function longestHorizontalRun(y) {
-    let best = 0, run = 0;
+  function horizontalRunAt(y) {
+    let best = 0, run = 0, bestCenter = null;
     for (let x = 0; x < canvas.width; x += step) {
-      if (isInk(x, y)) run += 1;
-      else { best = Math.max(best, run); run = 0; }
+      if (isFramePixel(x, y)) {
+        run += 1;
+        if (run > best) {
+          best = run;
+          bestCenter = x - (run * step) / 2;
+        }
+      } else run = 0;
     }
-    return Math.max(best, run);
+    return { length: best, center: bestCenter };
   }
 
-  function longestVerticalRun(x) {
-    let best = 0, run = 0;
+  function verticalRunAt(x) {
+    let best = 0, run = 0, bestCenter = null;
     for (let y = 0; y < canvas.height; y += step) {
-      if (isInk(x, y)) run += 1;
-      else { best = Math.max(best, run); run = 0; }
+      if (isFramePixel(x, y)) {
+        run += 1;
+        if (run > best) {
+          best = run;
+          bestCenter = y - (run * step) / 2;
+        }
+      } else run = 0;
     }
-    return Math.max(best, run);
+    return { length: best, center: bestCenter };
   }
 
   function findHorizontal(from, direction) {
     const limit = direction < 0 ? 0 : canvas.height - 1;
     for (let y = from; direction < 0 ? y >= limit : y <= limit; y += direction * step) {
-      if (longestHorizontalRun(y) >= minHRun) return y;
+      const run = horizontalRunAt(y);
+      if (run.length >= minHRun) return y;
     }
     return null;
   }
@@ -1902,7 +1915,8 @@ function detectCurrentFrameScreenBounds() {
   function findVertical(from, direction) {
     const limit = direction < 0 ? 0 : canvas.width - 1;
     for (let x = from; direction < 0 ? x >= limit : x <= limit; x += direction * step) {
-      if (longestVerticalRun(x) >= minVRun) return x;
+      const run = verticalRunAt(x);
+      if (run.length >= minVRun) return x;
     }
     return null;
   }
@@ -1913,8 +1927,8 @@ function detectCurrentFrameScreenBounds() {
   const right = findVertical(px, 1);
   if (top === null || bottom === null || left === null || right === null) return null;
 
-  const minWidth = canvas.width * 0.18;
-  const minHeight = canvas.height * 0.12;
+  const minWidth = canvas.width * 0.35;
+  const minHeight = canvas.height * 0.15;
   if (right - left < minWidth || bottom - top < minHeight) return null;
 
   return {
@@ -1924,6 +1938,7 @@ function detectCurrentFrameScreenBounds() {
     bottom: bottom / ratio,
   };
 }
+
 
 async function waitForDrawingFrame() {
   await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
