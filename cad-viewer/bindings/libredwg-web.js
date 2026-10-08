@@ -3502,8 +3502,9 @@ class LibreDwgConverter {
    * Editing tables, dictionaries, layouts, xrecords, thumbnails, and other non-visual objects
    * are deliberately skipped so large drawings do not need a second full JavaScript database.
    */
-  convertForViewer(data, onBatch, batchSize = 2e3) {
+  convertForViewer(data, onBatch, batchSize = 2e3, options = {}) {
     this.entityConverter.clear();
+    const includeBlocks = options.includeBlocks !== false;
     const libredwg = this.libredwg;
     const classes = [];
     const layers = [];
@@ -3546,6 +3547,11 @@ class LibreDwgConverter {
     blocks.sort(
       (a, b) => Number(isModelSpace(b.name)) - Number(isModelSpace(a.name))
     );
+    if (!includeBlocks) {
+      const modelBlocks = blocks.filter((block) => isModelSpace(block.name));
+      blocks.length = 0;
+      blocks.push(...modelBlocks);
+    }
     let entityCount = 0;
     const emitBlock = (block) => {
       let batch = [];
