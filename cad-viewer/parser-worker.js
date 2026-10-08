@@ -35,6 +35,7 @@ self.onmessage = async ({ data }) => {
         self.postMessage({ type: 'batch', batch });
       },
       2000,
+      { includeBlocks: data.includeBlocks !== false },
     );
 
     self.postMessage({
