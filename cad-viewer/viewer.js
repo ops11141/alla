@@ -12,6 +12,7 @@ const centerOpenButton = document.querySelector('#centerOpenButton');
 const emptyState = document.querySelector('#emptyState');
 const loadingOverlay = document.querySelector('#mlcad-loading');
 const toolOpenButton = document.querySelector('#toolOpenButton');
+const toolExportCadButton = document.querySelector('#toolExportCadButton');
 const toolPanButton = document.querySelector('#toolPanButton');
 const toolFitButton = document.querySelector('#toolFitButton');
 const toolZoomInButton = document.querySelector('#toolZoomInButton');
@@ -131,6 +132,9 @@ const STAGES = [
 ];
 
 let worker;
+let rawCadEntities = [];
+let rawCadBlocks = [];
+let rawCadSummary = null;
 let stagePaths;
 let visibleStages;
 let blocks;
@@ -359,6 +363,9 @@ function freshBoundsMap() {
 }
 
 function resetViewer() {
+  rawCadEntities = [];
+  rawCadBlocks = [];
+  rawCadSummary = null;
   worker?.terminate();
   releaseCanvasInteractions();
   setDrawingInteractionControls(false);
@@ -811,6 +818,9 @@ function consumeModelBatch(batch) {
 }
 
 function consumeBatch(batch) {
+  // Preserve the complete decoded entities for optional export. Nothing is deleted or simplified.
+  rawCadEntities.push(...batch.entities);
+  if (batch.kind === 'block') rawCadBlocks.push({ blockName: batch.blockName, basePoint: batch.basePoint, entities: batch.entities });
   entityCount += batch.entities.length;
   if (batch.kind === 'block') consumeBlockBatch(batch);
   else consumeModelBatch(batch);
@@ -1385,6 +1395,7 @@ async function openCadBuffer(name, buffer) {
       setStatus('loadingOutline');
     }
     if (data.type === 'done') {
+      rawCadSummary = data.summary;
       layerColors = new Map((data.summary.layers ?? []).map((layer) => [layer.name, layer]));
       hasOpenedFile = true;
       document.title = name;
@@ -1689,9 +1700,34 @@ function releaseCanvasInteractions() {
   canvas.classList.remove('dragging');
 }
 
+function exportRawCadData() {
+  if (!rawCadEntities.length) {
+    window.alert('لا توجد بيانات DWG مستخرجة بعد. افتح الملف أولاً.');
+    return;
+  }
+  const payload = {
+    source: 'ops11141/alla CAD Viewer',
+    exportedAt: new Date().toISOString(),
+    entityCount: rawCadEntities.length,
+    summary: rawCadSummary,
+    entities: rawCadEntities,
+    blocks: rawCadBlocks,
+  };
+  const blob = new Blob([JSON.stringify(payload)], { type: 'application/json;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'GEO-raw-extraction.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 openButton.addEventListener('click', () => fileInput.click());
 centerOpenButton.addEventListener('click', () => fileInput.click());
 toolOpenButton.addEventListener('click', () => fileInput.click());
+toolExportCadButton?.addEventListener('click', exportRawCadData);
 toolPanButton.addEventListener('click', () => setInteractionMode('pan'));
 toolFitButton.addEventListener('click', fitView);
 toolZoomInButton.addEventListener('click', () => zoomBy(1.25));
