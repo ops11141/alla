@@ -1846,20 +1846,11 @@ function parseCanvasBackgroundColor(value) {
 
 function detectCurrentFrameScreenBounds(options = {}) {
   if (!canvas || !canvas.width || !canvas.height) return null;
-  const state = searchHighlightState;
-  const hasSearchTarget = Boolean(
-    state?.matches?.length &&
-    state.currentIndex >= 0 &&
-    Number.isFinite(state.matches[state.currentIndex]?.x) &&
-    Number.isFinite(state.matches[state.currentIndex]?.y),
-  );
-  const match = hasSearchTarget ? state.matches[state.currentIndex] : null;
-
-  // When there is no active search, use the center of the current viewport
-  // as the target. This lets the camera capture the feeder currently being
-  // viewed without requiring the user to search for an equipment first.
-  const targetWorldX = match ? match.x : (canvas.clientWidth / 2 - camera.x) / camera.scale;
-  const targetWorldY = match ? match.y : (camera.y - canvas.clientHeight / 2) / camera.scale;
+  // Camera capture is intentionally independent of the search box.
+  // Always use the center of the CURRENT viewport, so a previous search
+  // can never cause the camera to capture another feeder.
+  const targetWorldX = (canvas.clientWidth / 2 - camera.x) / camera.scale;
+  const targetWorldY = (camera.y - canvas.clientHeight / 2) / camera.scale;
 
   const ratio = Math.max(1, Math.min(devicePixelRatio || 1, 2));
   const targetX = camera.x + targetWorldX * camera.scale;
