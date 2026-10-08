@@ -1572,7 +1572,7 @@ async function extractDwgFromZip(zipUrl) {
   return { name: target.name.split('/').pop() || 'GEO.dwg', bytes: dwgBytes };
 }
 
-async async function fetchBinaryWithFallback(url, fallbackUrl) {
+async function fetchBinaryWithFallback(url, fallbackUrl) {
   try {
     const response = await fetch(url, { cache: 'no-store' });
     if (response.ok) return new Uint8Array(await response.arrayBuffer());
