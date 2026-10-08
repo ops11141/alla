@@ -1,0 +1,12 @@
+{
+  "name": "GEO.dwg",
+  "parts": [
+    "GEO.part01.bin",
+    "GEO.part02.bin",
+    "GEO.part03.bin",
+    "GEO.part04.bin",
+    "GEO.part05.bin",
+    "GEO.part06.bin"
+  ],
+  "totalBytes": 29310275
+}
