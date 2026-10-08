@@ -14,9 +14,7 @@
     .feeder-cad-result:hover,.feeder-cad-result.is-current{border-color:#ef4444;background:#3f1d1d}
     .feeder-cad-result-index{flex:0 0 34px;color:#fca5a5;font-weight:800;text-align:center}
 .feeder-cad-result-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .feeder-cad-result-actions{margin-inline-start:auto;flex:0 0 auto;display:flex;gap:4px}
-    .feeder-cad-location{border:0;border-radius:6px;padding:6px 8px;background:#087f5b;color:#fff;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap}
-    .feeder-cad-location:disabled{opacity:.4;cursor:not-allowed}
+    
 
     @media(max-width:600px){#feederCadSearch{top:5px;gap:4px;padding:5px;overflow:visible}#feederCadSearch span{display:none}#feederCadSearchCount{display:inline-block!important;min-width:42px;padding:7px 4px}#feederCadSearch input{font-size:13px;padding:8px;min-width:90px}#feederCadSearch button{padding:8px 8px;font-size:12px}}
   `;
@@ -89,29 +87,8 @@
       button.className = 'feeder-cad-result' + (item.index === occurrence ? ' is-current' : '');
       button.setAttribute('role', 'button');
       button.tabIndex = 0;
-      button.innerHTML = '<span class="feeder-cad-result-index">' + (item.index + 1) + '</span><span class="feeder-cad-result-text"></span><span class="feeder-cad-result-actions"><button type="button" class="feeder-cad-location">📍 الذهاب للموقع</button></span>';
+      button.innerHTML = '<span class="feeder-cad-result-index">' + (item.index + 1) + '</span><span class="feeder-cad-result-text"></span>';
       button.querySelector('.feeder-cad-result-text').textContent = item.text;
-      const locationButton = button.querySelector('.feeder-cad-location');
-      const normalized = String(item.text || '').toUpperCase().replace(/[\s\-_/.,:;()\[\]{}#\\]+/g, '');
-      const locationKeys = [normalized, String(item.text || '')];
-      // CAD labels sometimes omit the zero-padding after the first three digits:
-      // 04237 -> database key 042037 (042-037), 60422 -> 604022 (604-022).
-      if (/^\d{4,5}$/.test(normalized)) {
-        const padded = normalized.slice(0, 3) + normalized.slice(3).padStart(3, '0');
-        locationKeys.push(padded);
-      }
-      const rows = locationKeys.flatMap(key => equipmentRecords?.[key] || []);
-      const validRow = rows.find(row => Number.isFinite(Number(row?.[1])) && Number.isFinite(Number(row?.[2])));
-      locationButton.disabled = !validRow;
-      locationButton.title = validRow ? 'فتح موقع المعدة في Google Maps' : 'لا يوجد موقع مسجل لهذه المعدة';
-      locationButton.addEventListener('click', (event) => {
-        event.stopPropagation();
-        if (!validRow) return;
-        const lat = Number(validRow[1]);
-        const lon = Number(validRow[2]);
-        const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(lat + ',' + lon);
-        window.open(url, '_blank', 'noopener,noreferrer');
-      });
       const selectResult = () => {
         occurrence = item.index;
         runSearch(false);
