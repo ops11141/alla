@@ -1374,7 +1374,7 @@ function render() {
   }
 }
 
-async function openCadBuffer(name, buffer) {
+async function openCadBuffer(name, buffer, options = {}) {
   activateRenderer('cad');
   modelViewer.cancelImport();
   beginDrawingLoad();
@@ -1414,7 +1414,7 @@ async function openCadBuffer(name, buffer) {
     setLoading(false);
     finishDrawingLoad();
   };
-  worker.postMessage({ type: 'open', buffer }, [buffer]);
+  worker.postMessage({ type: 'open', buffer, includeBlocks: options.includeBlocks !== false }, [buffer]);
 }
 
 async function openModelBuffer(name, buffer, format) {
@@ -1466,10 +1466,10 @@ async function openModelBuffer(name, buffer, format) {
   openButton.disabled = false;
 }
 
-async function openDrawingBuffer(name, buffer) {
+async function openDrawingBuffer(name, buffer, options = {}) {
   const extension = String(name).split('.').pop().toLowerCase();
   if (CAD_EXTENSIONS.has(extension)) {
-    return openCadBuffer(name, buffer);
+    return openCadBuffer(name, buffer, options);
   }
   const modelFormat = MODEL_FORMATS.get(extension);
   if (modelFormat) {
@@ -1635,7 +1635,7 @@ async function openDirectParts(manifestUrl) {
     }
 
     console.info('[GEO Lab] Reassembled GEO.dwg:', total, 'bytes');
-    await openDrawingBuffer(manifest.name || 'GEO.dwg', combined.buffer);
+    await openDrawingBuffer(manifest.name || 'GEO.dwg', combined.buffer, { includeBlocks: false });
   } catch (error) {
     console.error('[GEO Lab] Direct DWG load failed:', error);
     setStatus('openFailed', { message: error instanceof Error ? error.message : String(error) });
