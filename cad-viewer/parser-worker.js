@@ -2,7 +2,7 @@
 
 function getRuntime() {
   if (!runtimePromise) {
-    runtimePromise = import('./bindings/libredwg-web.js').then(async (bindings) => ({
+    runtimePromise = import('./bindings/libredwg-web.js?v=20261008-progress-forward-7').then(async (bindings) => ({
       bindings,
       libredwg: await bindings.LibreDwg.create(new URL('./wasm/', import.meta.url).href.replace(/\/$/, '')),
     }));
