@@ -1572,7 +1572,7 @@ async function extractDwgFromZip(zipUrl) {
   return { name: target.name.split('/').pop() || 'GEO.dwg', bytes: dwgBytes };
 }
 
-async function openDirectParts(manifestUrl) {
+async async function openDirectParts(manifestUrl) {
   try {
     setLoading(true);
     setStatus('downloading', { name: 'GEO.dwg' });
