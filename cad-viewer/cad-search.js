@@ -8,12 +8,19 @@
     #feederCadSearch button:disabled{opacity:.45;cursor:not-allowed}
     #feederCadSearch span{color:#e5e7eb;font-size:12px;white-space:nowrap}
     #feederCadSearchCount{min-width:52px;text-align:center;padding:7px 6px;border:1px solid #475569;border-radius:7px;background:#1e293b;color:#fff;font-weight:800;font-variant-numeric:tabular-nums}
+    #feederCadBrowsePanel{position:absolute;z-index:81;top:calc(100% + 6px);left:0;right:0;display:none;max-height:min(55vh,460px);overflow:auto;padding:7px;border:1px solid #475569;border-radius:9px;background:rgba(15,23,42,.98);box-shadow:0 10px 28px rgba(0,0,0,.45)}
+    #feederCadBrowsePanel.is-open{display:block}
+    .feeder-cad-result{display:flex;align-items:center;gap:8px;width:100%;padding:8px 9px;margin:2px 0;border:1px solid transparent;border-radius:6px;background:#1e293b;color:#f1f5f9;text-align:right;cursor:pointer;font-size:12px}
+    .feeder-cad-result:hover,.feeder-cad-result.is-current{border-color:#ef4444;background:#3f1d1d}
+    .feeder-cad-result-index{flex:0 0 34px;color:#fca5a5;font-weight:800;text-align:center}
+    .feeder-cad-result-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
     @media(max-width:600px){#feederCadSearch{top:5px;gap:4px;padding:5px}#feederCadSearch span{display:none}#feederCadSearch input{font-size:13px;padding:8px}#feederCadSearch button{padding:8px 9px;font-size:12px}}
   `;
   document.head.appendChild(style);
   const box = document.createElement('div');
   box.id = 'feederCadSearch';
-  box.innerHTML = '<input id="feederCadSearchInput" placeholder="🔎 ابحث داخل الرسم مثل F-8.13" autocomplete="off"><button id="feederCadSearchBtn">بحث</button><button id="feederCadSearchPrev" class="nav" type="button" disabled>السابق</button><span id="feederCadSearchCount">0/0</span><button id="feederCadSearchNext" class="nav" type="button" disabled>التالي</button><span id="feederCadSearchStatus">جاهز</span>';
+  box.innerHTML = '<input id="feederCadSearchInput" placeholder="🔎 ابحث داخل الرسم مثل F-8.13" autocomplete="off"><button id="feederCadSearchBtn">بحث</button><button id="feederCadSearchPrev" class="nav" type="button" disabled>السابق</button><span id="feederCadSearchCount">0/0</span><button id="feederCadSearchNext" class="nav" type="button" disabled>التالي</button><button id="feederCadSearchBrowse" class="nav" type="button" disabled>استعراض</button><span id="feederCadSearchStatus">جاهز</span><div id="feederCadBrowsePanel" aria-label="استعراض نتائج البحث"></div>';
   const host = document.querySelector('.viewer-canvas-area') || document.body;
   host.appendChild(box);
 
@@ -27,12 +34,16 @@
   const nextBtn = document.getElementById('feederCadSearchNext');
   const status = document.getElementById('feederCadSearchStatus');
   const countBox = document.getElementById('feederCadSearchCount');
+  const browseBtn = document.getElementById('feederCadSearchBrowse');
+  const browsePanel = document.getElementById('feederCadBrowsePanel');
+  let browseResults = [];
 
   function updateButtons() {
     const enabled = resultCount > 1;
     prevBtn.disabled = !enabled;
     nextBtn.disabled = !enabled;
     countBox.textContent = resultCount ? ((occurrence + 1) + '/' + resultCount) : '0/0';
+    browseBtn.disabled = resultCount < 1;
   }
 
   function runSearch(reset = true) {
@@ -43,6 +54,8 @@
     const result = window.cadViewerSearch?.(query, occurrence);
     if (!result?.found) {
       resultCount = 0;
+      browseResults = [];
+      browsePanel.classList.remove('is-open');
       status.textContent = query ? 'لم يتم العثور' : 'جاهز';
       updateButtons();
       return;
@@ -50,19 +63,47 @@
 
     resultCount = result.count;
     occurrence = result.index;
+    browseResults = result.results || [];
     status.textContent = (result.index + 1) + '/' + result.count + '  ' + result.text;
     updateButtons();
+    if (browsePanel.classList.contains('is-open')) renderBrowseList();
+  }
+
+  function renderBrowseList() {
+    browsePanel.innerHTML = '';
+    browseResults.forEach((item) => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'feeder-cad-result' + (item.index === occurrence ? ' is-current' : '');
+      button.innerHTML = '<span class="feeder-cad-result-index">' + (item.index + 1) + '</span><span class="feeder-cad-result-text"></span>';
+      button.querySelector('.feeder-cad-result-text').textContent = item.text;
+      button.addEventListener('click', () => {
+        occurrence = item.index;
+        runSearch(false);
+        renderBrowseList();
+      });
+      browsePanel.appendChild(button);
+    });
+  }
+
+  function toggleBrowse() {
+    if (!resultCount) return;
+    const open = !browsePanel.classList.contains('is-open');
+    browsePanel.classList.toggle('is-open', open);
+    if (open) renderBrowseList();
   }
 
   function moveResult(step) {
     if (!lastQuery || resultCount < 2) return;
     occurrence = (occurrence + step + resultCount) % resultCount;
     runSearch(false);
+    if (browsePanel.classList.contains('is-open')) renderBrowseList();
   }
 
   searchBtn.onclick = () => runSearch(true);
   prevBtn.onclick = () => moveResult(-1);
   nextBtn.onclick = () => moveResult(1);
+  browseBtn.onclick = toggleBrowse;
 
   input.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
@@ -81,6 +122,8 @@
     occurrence = 0;
     resultCount = 0;
     lastQuery = '';
+    browseResults = [];
+    browsePanel.classList.remove('is-open');
     status.textContent = 'جاهز';
     updateButtons();
   });
