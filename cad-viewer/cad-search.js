@@ -85,9 +85,10 @@
   function renderBrowseList() {
     browsePanel.innerHTML = '';
     browseResults.forEach((item) => {
-      const button = document.createElement('button');
-      button.type = 'button';
+      const button = document.createElement('div');
       button.className = 'feeder-cad-result' + (item.index === occurrence ? ' is-current' : '');
+      button.setAttribute('role', 'button');
+      button.tabIndex = 0;
       button.innerHTML = '<span class="feeder-cad-result-index">' + (item.index + 1) + '</span><span class="feeder-cad-result-text"></span><span class="feeder-cad-result-actions"><button type="button" class="feeder-cad-location">📍 الذهاب للموقع</button></span>';
       button.querySelector('.feeder-cad-result-text').textContent = item.text;
       const locationButton = button.querySelector('.feeder-cad-location');
@@ -104,10 +105,20 @@
         const url = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(lat + ',' + lon);
         window.open(url, '_blank', 'noopener,noreferrer');
       });
-      button.addEventListener('click', () => {
+      const selectResult = () => {
         occurrence = item.index;
         runSearch(false);
         renderBrowseList();
+      };
+      button.addEventListener('click', (event) => {
+        if (event.target.closest('.feeder-cad-location')) return;
+        selectResult();
+      });
+      button.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          selectResult();
+        }
       });
       browsePanel.appendChild(button);
     });
