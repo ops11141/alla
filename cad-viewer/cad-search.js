@@ -15,7 +15,7 @@
     .feeder-cad-result-index{flex:0 0 34px;color:#fca5a5;font-weight:800;text-align:center}
     .feeder-cad-result-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-    @media(max-width:600px){#feederCadSearch{top:5px;gap:4px;padding:5px}#feederCadSearch span{display:none}#feederCadSearch input{font-size:13px;padding:8px}#feederCadSearch button{padding:8px 9px;font-size:12px}}
+    @media(max-width:600px){#feederCadSearch{top:5px;gap:4px;padding:5px;overflow:visible}#feederCadSearch span{display:none}#feederCadSearchCount{display:inline-block!important;min-width:42px;padding:7px 4px}#feederCadSearch input{font-size:13px;padding:8px;min-width:90px}#feederCadSearch button{padding:8px 8px;font-size:12px}}
   `;
   document.head.appendChild(style);
   const box = document.createElement('div');
