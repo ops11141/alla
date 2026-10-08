@@ -1847,13 +1847,23 @@ function parseCanvasBackgroundColor(value) {
 function detectCurrentFrameScreenBounds(options = {}) {
   if (!canvas || !canvas.width || !canvas.height) return null;
   const state = searchHighlightState;
-  if (!state?.matches?.length || state.currentIndex < 0) return null;
-  const match = state.matches[state.currentIndex];
-  if (!match || !Number.isFinite(match.x) || !Number.isFinite(match.y)) return null;
+  const hasSearchTarget = Boolean(
+    state?.matches?.length &&
+    state.currentIndex >= 0 &&
+    Number.isFinite(state.matches[state.currentIndex]?.x) &&
+    Number.isFinite(state.matches[state.currentIndex]?.y),
+  );
+  const match = hasSearchTarget ? state.matches[state.currentIndex] : null;
+
+  // When there is no active search, use the center of the current viewport
+  // as the target. This lets the camera capture the feeder currently being
+  // viewed without requiring the user to search for an equipment first.
+  const targetWorldX = match ? match.x : (canvas.clientWidth / 2 - camera.x) / camera.scale;
+  const targetWorldY = match ? match.y : (camera.y - canvas.clientHeight / 2) / camera.scale;
 
   const ratio = Math.max(1, Math.min(devicePixelRatio || 1, 2));
-  const targetX = camera.x + match.x * camera.scale;
-  const targetY = camera.y - match.y * camera.scale;
+  const targetX = camera.x + targetWorldX * camera.scale;
+  const targetY = camera.y - targetWorldY * camera.scale;
   const px = Math.round(targetX * ratio);
   const py = Math.round(targetY * ratio);
   if (px < 0 || py < 0 || px >= canvas.width || py >= canvas.height) return null;
