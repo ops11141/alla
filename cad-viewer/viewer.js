@@ -1844,7 +1844,7 @@ function parseCanvasBackgroundColor(value) {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-function detectCurrentFrameScreenBounds() {
+function detectCurrentFrameScreenBounds(options = {}) {
   if (!canvas || !canvas.width || !canvas.height) return null;
   const state = searchHighlightState;
   if (!state?.matches?.length || state.currentIndex < 0) return null;
@@ -1872,42 +1872,35 @@ function detectCurrentFrameScreenBounds() {
   };
 
   const step = 2;
-  const minHRun = Math.max(60, Math.floor(canvas.width * 0.45 / step));
-  const minVRun = Math.max(60, Math.floor(canvas.height * 0.25 / step));
+  const minHRun = Math.max(40, Math.floor(canvas.width * (options.allowSmallFrame ? 0.16 : 0.45) / step));
+  const minVRun = Math.max(40, Math.floor(canvas.height * (options.allowSmallFrame ? 0.10 : 0.25) / step));
 
   function horizontalRunAt(y) {
-    let best = 0, run = 0, bestCenter = null;
+    let best = 0, run = 0;
     for (let x = 0; x < canvas.width; x += step) {
       if (isFramePixel(x, y)) {
         run += 1;
-        if (run > best) {
-          best = run;
-          bestCenter = x - (run * step) / 2;
-        }
+        if (run > best) best = run;
       } else run = 0;
     }
-    return { length: best, center: bestCenter };
+    return best;
   }
 
   function verticalRunAt(x) {
-    let best = 0, run = 0, bestCenter = null;
+    let best = 0, run = 0;
     for (let y = 0; y < canvas.height; y += step) {
       if (isFramePixel(x, y)) {
         run += 1;
-        if (run > best) {
-          best = run;
-          bestCenter = y - (run * step) / 2;
-        }
+        if (run > best) best = run;
       } else run = 0;
     }
-    return { length: best, center: bestCenter };
+    return best;
   }
 
   function findHorizontal(from, direction) {
     const limit = direction < 0 ? 0 : canvas.height - 1;
     for (let y = from; direction < 0 ? y >= limit : y <= limit; y += direction * step) {
-      const run = horizontalRunAt(y);
-      if (run.length >= minHRun) return y;
+      if (horizontalRunAt(y) >= minHRun) return y;
     }
     return null;
   }
@@ -1915,8 +1908,7 @@ function detectCurrentFrameScreenBounds() {
   function findVertical(from, direction) {
     const limit = direction < 0 ? 0 : canvas.width - 1;
     for (let x = from; direction < 0 ? x >= limit : x <= limit; x += direction * step) {
-      const run = verticalRunAt(x);
-      if (run.length >= minVRun) return x;
+      if (verticalRunAt(x) >= minVRun) return x;
     }
     return null;
   }
@@ -1927,8 +1919,8 @@ function detectCurrentFrameScreenBounds() {
   const right = findVertical(px, 1);
   if (top === null || bottom === null || left === null || right === null) return null;
 
-  const minWidth = canvas.width * 0.35;
-  const minHeight = canvas.height * 0.15;
+  const minWidth = canvas.width * (options.allowSmallFrame ? 0.10 : 0.35);
+  const minHeight = canvas.height * (options.allowSmallFrame ? 0.06 : 0.15);
   if (right - left < minWidth || bottom - top < minHeight) return null;
 
   return {
@@ -1947,9 +1939,27 @@ async function waitForDrawingFrame() {
 async function captureCurrentDrawing() {
   if (!canvas || !canvas.width || !canvas.height) return;
 
-  const frame = detectCurrentFrameScreenBounds();
   const savedCamera = { ...camera };
+  let frame = detectCurrentFrameScreenBounds();
   let crop = null;
+
+  // On phones the complete cyan frame can be larger than the viewport.
+  // Temporarily zoom out and center on the searched item until all four
+  // frame borders are visible. The user's current zoom is restored afterwards.
+  if (!frame && searchHighlightState?.matches?.length && searchHighlightState.currentIndex >= 0) {
+    const match = searchHighlightState.matches[searchHighlightState.currentIndex];
+    if (match && Number.isFinite(match.x) && Number.isFinite(match.y)) {
+      for (let attempt = 0; attempt < 7 && !frame; attempt += 1) {
+        const factor = attempt === 0 ? 0.72 : 0.68;
+        camera.scale = Math.max(camera.scale * factor, 0.000001);
+        camera.x = canvas.clientWidth / 2 - match.x * camera.scale;
+        camera.y = canvas.clientHeight / 2 + match.y * camera.scale;
+        scheduleRender();
+        await waitForDrawingFrame();
+        frame = detectCurrentFrameScreenBounds({ allowSmallFrame: true });
+      }
+    }
+  }
 
   if (frame) {
     const ratio = Math.max(1, Math.min(devicePixelRatio || 1, 2));
