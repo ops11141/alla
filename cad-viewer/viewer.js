@@ -1956,18 +1956,32 @@ async function captureCurrentDrawing() {
   // On phones the complete cyan frame can be larger than the viewport.
   // Temporarily zoom out and center on the searched item until all four
   // frame borders are visible. The user's current zoom is restored afterwards.
-  if (!frame && searchHighlightState?.matches?.length && searchHighlightState.currentIndex >= 0) {
-    const match = searchHighlightState.matches[searchHighlightState.currentIndex];
-    if (match && Number.isFinite(match.x) && Number.isFinite(match.y)) {
-      for (let attempt = 0; attempt < 7 && !frame; attempt += 1) {
-        const factor = attempt === 0 ? 0.72 : 0.68;
-        camera.scale = Math.max(camera.scale * factor, 0.000001);
-        camera.x = canvas.clientWidth / 2 - match.x * camera.scale;
-        camera.y = canvas.clientHeight / 2 + match.y * camera.scale;
-        scheduleRender();
-        await waitForDrawingFrame();
-        frame = detectCurrentFrameScreenBounds({ allowSmallFrame: true });
-      }
+  if (!frame) {
+    const state = searchHighlightState;
+    const hasSearchTarget = Boolean(
+      state?.matches?.length &&
+      state.currentIndex >= 0 &&
+      Number.isFinite(state.matches[state.currentIndex]?.x) &&
+      Number.isFinite(state.matches[state.currentIndex]?.y),
+    );
+    const targetWorldX = hasSearchTarget
+      ? state.matches[state.currentIndex].x
+      : (canvas.clientWidth / 2 - savedCamera.x) / savedCamera.scale;
+    const targetWorldY = hasSearchTarget
+      ? state.matches[state.currentIndex].y
+      : (savedCamera.y - canvas.clientHeight / 2) / savedCamera.scale;
+
+    // If the current feeder is larger than the phone viewport, zoom out
+    // around the current view center (or the searched equipment when present)
+    // until its frame becomes detectable.
+    for (let attempt = 0; attempt < 7 && !frame; attempt += 1) {
+      const factor = attempt === 0 ? 0.72 : 0.68;
+      camera.scale = Math.max(camera.scale * factor, 0.000001);
+      camera.x = canvas.clientWidth / 2 - targetWorldX * camera.scale;
+      camera.y = canvas.clientHeight / 2 + targetWorldY * camera.scale;
+      scheduleRender();
+      await waitForDrawingFrame();
+      frame = detectCurrentFrameScreenBounds({ allowSmallFrame: true });
     }
   }
 
