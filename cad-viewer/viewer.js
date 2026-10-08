@@ -1941,7 +1941,7 @@ async function captureCurrentDrawing() {
 
   const savedCamera = { ...camera };
   let frame = detectCurrentFrameScreenBounds();
-  let crop = null;
+  let captureWorld = null;
 
   // On phones the complete cyan frame can be larger than the viewport.
   // Temporarily zoom out and center on the searched item until all four
@@ -1962,62 +1962,98 @@ async function captureCurrentDrawing() {
   }
 
   if (frame) {
-    const ratio = Math.max(1, Math.min(devicePixelRatio || 1, 2));
+    // Frame coordinates must be converted using the camera that produced
+    // the detected frame (important when the phone had to zoom out first).
+    const frameCamera = { ...camera };
     const pad = 5;
     const left = Math.max(0, frame.left - pad);
     const top = Math.max(0, frame.top - pad);
     const right = Math.min(canvas.clientWidth, frame.right + pad);
     const bottom = Math.min(canvas.clientHeight, frame.bottom + pad);
-    const worldLeft = (left - savedCamera.x) / savedCamera.scale;
-    const worldRight = (right - savedCamera.x) / savedCamera.scale;
-    const worldTop = (savedCamera.y - top) / savedCamera.scale;
-    const worldBottom = (savedCamera.y - bottom) / savedCamera.scale;
+    const worldLeft = (left - frameCamera.x) / frameCamera.scale;
+    const worldRight = (right - frameCamera.x) / frameCamera.scale;
+    const worldTop = (frameCamera.y - top) / frameCamera.scale;
+    const worldBottom = (frameCamera.y - bottom) / frameCamera.scale;
     const worldWidth = Math.max(worldRight - worldLeft, 1e-9);
     const worldHeight = Math.max(worldTop - worldBottom, 1e-9);
-    camera.scale = Math.min(canvas.clientWidth / worldWidth, canvas.clientHeight / worldHeight) * 0.94;
-    camera.x = canvas.clientWidth / 2 - (worldLeft + worldRight) / 2 * camera.scale;
-    camera.y = canvas.clientHeight / 2 + (worldTop + worldBottom) / 2 * camera.scale;
-    scheduleRender();
+    const centerX = (worldLeft + worldRight) / 2;
+    const centerY = (worldTop + worldBottom) / 2;
+
+    // Render the vector drawing again into a large temporary canvas.
+    // This is the key mobile improvement: we do NOT enlarge a tiny phone
+    // screenshot. Lines and text are redrawn at high resolution.
+    const outputCssWidth = 1600;
+    const outputCssHeight = Math.max(800, Math.round(outputCssWidth * worldHeight / worldWidth));
+    const outputPixelRatio = 2;
+    const outputWidth = outputCssWidth * outputPixelRatio;
+    const outputHeight = outputCssHeight * outputPixelRatio;
+
+    const originalStyle = canvas.getAttribute('style');
+    const originalWidth = canvas.width;
+    const originalHeight = canvas.height;
+
+    camera = {
+      scale: Math.min(outputCssWidth / worldWidth, outputCssHeight / worldHeight) * 0.97,
+      x: outputCssWidth / 2 - centerX * Math.min(outputCssWidth / worldWidth, outputCssHeight / worldHeight) * 0.97,
+      y: outputCssHeight / 2 + centerY * Math.min(outputCssWidth / worldWidth, outputCssHeight / worldHeight) * 0.97,
+    };
+
+    // Move the real canvas off-screen while it is temporarily enlarged.
+    // Keeping it mounted preserves all existing rendering code and text/font
+    // handling, while the user never sees the temporary capture surface.
+    canvas.style.position = 'fixed';
+    canvas.style.left = '-20000px';
+    canvas.style.top = '0';
+    canvas.style.width = outputCssWidth + 'px';
+    canvas.style.height = outputCssHeight + 'px';
+    canvas.style.visibility = 'hidden';
+    canvas.width = outputWidth;
+    canvas.height = outputHeight;
+
+    render();
     await waitForDrawingFrame();
 
-    const newLeft = canvas.clientWidth / 2 - worldWidth * camera.scale / 2;
-    const newTop = canvas.clientHeight / 2 - worldHeight * camera.scale / 2;
-    crop = {
-      x: Math.max(0, Math.floor((newLeft - 4) * ratio)),
-      y: Math.max(0, Math.floor((newTop - 4) * ratio)),
-      width: Math.min(canvas.width, Math.ceil((worldWidth * camera.scale + 8) * ratio)),
-      height: Math.min(canvas.height, Math.ceil((worldHeight * camera.scale + 8) * ratio)),
-    };
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+
+    canvas.width = originalWidth;
+    canvas.height = originalHeight;
+    if (originalStyle === null) canvas.removeAttribute('style');
+    else canvas.setAttribute('style', originalStyle);
+
+    camera = savedCamera;
+    interactionCache = undefined;
+    interactionCacheCamera = undefined;
+    scheduleRender();
+
+    if (!blob) throw new Error('تعذر إنشاء صورة الرسم');
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const name = 'feeder-frame-hq-' + stamp + '.png';
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = name;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    return;
   }
 
-  let blob;
-  if (crop) {
-    const output = document.createElement('canvas');
-    output.width = crop.width;
-    output.height = crop.height;
-    const outputContext = output.getContext('2d');
-    outputContext.drawImage(canvas, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
-    blob = await new Promise((resolve) => output.toBlob(resolve, 'image/png'));
-  } else {
-    blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
-  }
-
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
   camera = savedCamera;
   scheduleRender();
 
   if (!blob) throw new Error('تعذر إنشاء صورة الرسم');
   const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const name = crop ? 'feeder-frame-' + stamp + '.png' : 'feeder-drawing-' + stamp + '.png';
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = name;
+  link.download = 'feeder-drawing-' + stamp + '.png';
   document.body.appendChild(link);
   link.click();
   link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
-
 async function shareCurrentDrawingFromViewer() {
   if (!canvas || !canvas.width || !canvas.height) return;
   const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
