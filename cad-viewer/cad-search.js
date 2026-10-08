@@ -7,12 +7,13 @@
     #feederCadSearch button.nav{background:#334155}
     #feederCadSearch button:disabled{opacity:.45;cursor:not-allowed}
     #feederCadSearch span{color:#e5e7eb;font-size:12px;white-space:nowrap}
+    #feederCadSearchCount{min-width:52px;text-align:center;padding:7px 6px;border:1px solid #475569;border-radius:7px;background:#1e293b;color:#fff;font-weight:800;font-variant-numeric:tabular-nums}
     @media(max-width:600px){#feederCadSearch{top:5px;gap:4px;padding:5px}#feederCadSearch span{display:none}#feederCadSearch input{font-size:13px;padding:8px}#feederCadSearch button{padding:8px 9px;font-size:12px}}
   `;
   document.head.appendChild(style);
   const box = document.createElement('div');
   box.id = 'feederCadSearch';
-  box.innerHTML = '<input id="feederCadSearchInput" placeholder="🔎 ابحث داخل الرسم مثل F-8.13" autocomplete="off"><button id="feederCadSearchBtn">بحث</button><button id="feederCadSearchPrev" class="nav" type="button" disabled>السابق</button><button id="feederCadSearchNext" class="nav" type="button" disabled>التالي</button><span id="feederCadSearchStatus">جاهز</span>';
+  box.innerHTML = '<input id="feederCadSearchInput" placeholder="🔎 ابحث داخل الرسم مثل F-8.13" autocomplete="off"><button id="feederCadSearchBtn">بحث</button><button id="feederCadSearchPrev" class="nav" type="button" disabled>السابق</button><span id="feederCadSearchCount">0/0</span><button id="feederCadSearchNext" class="nav" type="button" disabled>التالي</button><span id="feederCadSearchStatus">جاهز</span>';
   const host = document.querySelector('.viewer-canvas-area') || document.body;
   host.appendChild(box);
 
@@ -25,11 +26,13 @@
   const prevBtn = document.getElementById('feederCadSearchPrev');
   const nextBtn = document.getElementById('feederCadSearchNext');
   const status = document.getElementById('feederCadSearchStatus');
+  const countBox = document.getElementById('feederCadSearchCount');
 
   function updateButtons() {
     const enabled = resultCount > 1;
     prevBtn.disabled = !enabled;
     nextBtn.disabled = !enabled;
+    countBox.textContent = resultCount ? ((occurrence + 1) + '/' + resultCount) : '0/0';
   }
 
   function runSearch(reset = true) {
