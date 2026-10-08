@@ -23,6 +23,9 @@ const toolBackgroundButton = document.querySelector('#toolBackgroundButton');
 const fileSidebarColumn = document.querySelector('#fileSidebarColumn');
 const zoomWindow = document.querySelector('#zoomWindow');
 const loadingInteractionHint = document.querySelector('#loadingInteractionHint');
+const loadingProgress = document.querySelector('#loadingProgress');
+const loadingProgressBar = document.querySelector('#loadingProgressBar');
+const loadingProgressText = document.querySelector('#loadingProgressText');
 const viewerPane = document.querySelector('#viewerPane');
 const metalFinishPanel = document.querySelector('#metalFinishPanel');
 const metalFinishButtons = [...document.querySelectorAll('[data-metal-finish]')];
@@ -343,6 +346,25 @@ function zoomToWindow(start, end) {
   camera.x = canvas.clientWidth / 2 - (worldLeft + worldRight) / 2 * camera.scale;
   camera.y = canvas.clientHeight / 2 + (worldTop + worldBottom) / 2 * camera.scale;
   scheduleRender();
+}
+
+function updateLoadingProgress(progress) {
+  if (!loadingProgress || !loadingProgressBar || !loadingProgressText || !progress) return;
+  const total = Number(progress.total) || 0;
+  const current = Math.max(0, Number(progress.current) || 0);
+  const percent = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
+  loadingProgressBar.style.width = `${percent}%`;
+  if (progress.phase === 'scan') {
+    loadingProgressText.textContent = `قراءة بيانات الرسم: ${current.toLocaleString()} / ${total.toLocaleString()} (${percent}%)`;
+  } else if (progress.phase === 'scan-complete') {
+    const estimated = Number(progress.estimatedEntities) || 0;
+    loadingProgressText.textContent = estimated
+      ? `تمت القراءة — جاري تحويل ${estimated.toLocaleString()} عنصر...`
+      : 'تمت القراءة — جاري تحويل العناصر...';
+    loadingProgressBar.style.width = '100%';
+  } else if (progress.phase === 'entities') {
+    loadingProgressText.textContent = `تحويل العناصر: ${current.toLocaleString()} / ${total.toLocaleString()} (${percent}%)`;
+  }
 }
 
 function setLoading(isLoading) {
@@ -1388,6 +1410,7 @@ async function openCadBuffer(name, buffer, options = {}) {
   worker.onmessage = ({ data }) => {
     if (generation !== loadGeneration) return;
     if (data.type === 'phase') setStatus(data.phase === 'decode' ? 'decoding' : 'initializingParser');
+    if (data.type === 'progress') updateLoadingProgress(data.progress);
     if (data.type === 'batch') {
       consumeBatch(data.batch);
       hasOpenedFile = true;
