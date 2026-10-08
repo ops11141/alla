@@ -1948,23 +1948,13 @@ async function captureCurrentDrawing() {
   // Temporarily zoom out and center on the searched item until all four
   // frame borders are visible. The user's current zoom is restored afterwards.
   if (!frame) {
-    const state = searchHighlightState;
-    const hasSearchTarget = Boolean(
-      state?.matches?.length &&
-      state.currentIndex >= 0 &&
-      Number.isFinite(state.matches[state.currentIndex]?.x) &&
-      Number.isFinite(state.matches[state.currentIndex]?.y),
-    );
-    const targetWorldX = hasSearchTarget
-      ? state.matches[state.currentIndex].x
-      : (canvas.clientWidth / 2 - savedCamera.x) / savedCamera.scale;
-    const targetWorldY = hasSearchTarget
-      ? state.matches[state.currentIndex].y
-      : (savedCamera.y - canvas.clientHeight / 2) / savedCamera.scale;
+    // Search is deliberately ignored during capture. Zoom out around
+    // the CURRENT viewport center until the feeder frame is detectable.
+    const targetWorldX = (canvas.clientWidth / 2 - savedCamera.x) / savedCamera.scale;
+    const targetWorldY = (savedCamera.y - canvas.clientHeight / 2) / savedCamera.scale;
 
     // If the current feeder is larger than the phone viewport, zoom out
-    // around the current view center (or the searched equipment when present)
-    // until its frame becomes detectable.
+    // around the current view center until its frame becomes detectable.
     for (let attempt = 0; attempt < 7 && !frame; attempt += 1) {
       const factor = attempt === 0 ? 0.72 : 0.68;
       camera.scale = Math.max(camera.scale * factor, 0.000001);
