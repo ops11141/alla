@@ -6140,12 +6140,12 @@ const _LibreDwg = class _LibreDwg {
    * Streams the visual subset of a DWG in bounded batches without constructing the full
    * editing database. Intended for large, read-only viewer workloads.
    */
-  convertForViewer(data, onBatch, batchSize = 2e3) {
+  convertForViewer(data, onBatch, batchSize = 2e3, options = {}) {
     const codepage = this.dwg_get_codepage(data);
     const encoding = dwgCodePageToEncoding(codepage);
     this.decoder = new TextDecoder(encoding);
     const converter = new LibreDwgConverter(this);
-    return converter.convertForViewer(data, onBatch, batchSize);
+    return converter.convertForViewer(data, onBatch, batchSize, options);
   }
   /**
    * Converts DwgDatabase instance to svg string.
